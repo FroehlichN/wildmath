@@ -1,6 +1,10 @@
 use num::Zero;
 use std::ops::{Mul, Add, Sub, Div};
 
+pub trait Point {
+    fn is_collinear(&self, a2: &Self, a3: &Self) -> bool;
+}
+
 /// Represents a 2D point
 pub struct TwoPoint<T> {
     x : T,
@@ -32,6 +36,22 @@ where
         let c = x1 * y2 - x2 * y1;
         TwoLine::new(a, b, c)
     }
+
+}
+
+impl<T> Point for TwoPoint<T>
+where
+    T: Mul<T, Output = T>,
+    T: Add<T, Output = T>,
+    T: Sub<T, Output = T>,
+    T: Div<T, Output = T>,
+    T: Zero,
+    T: Clone,
+{
+    fn is_collinear(&self, a2: &Self, a3: &Self) -> bool {
+        let l = self.join(&a2);
+        a3.lies_on(&l)
+    }
 }
 
 /// Represents a 2D line a*x+b*y+c=0
@@ -48,7 +68,7 @@ impl<T> TwoLine<T> {
     }
 }
 
-impl<T: Clone + Zero> TwoLine<T>
+impl<T> TwoLine<T>
 where
     T: Mul<T, Output = T>,
     T: Add<T, Output = T>,
@@ -82,8 +102,27 @@ where
         let y = yn / d;
         TwoPoint { x: x, y: y }
     }
+
+    pub fn is_concurrent(&self, l2: &Self, l3: &Self) -> bool {
+        let m = self.meet(&l2);
+        m.lies_on(&l3)
+    }
 }
 
+/// Represents a triangle
+/// T is type of the points
+pub struct Triangle<T> {
+    points: [T; 3],
+}
+
+impl<T: Point> Triangle<T> {
+    pub fn new(a1: T, a2: T, a3: T) -> Triangle<T> {
+        if a1.is_collinear(&a2, &a3) {
+            panic!("Triangle cannot have collinear points");
+        }
+        Triangle { points: [a1, a2, a3] }
+    }
+}
 
 #[cfg(test)]
 mod tests {
@@ -134,5 +173,12 @@ mod tests {
         let a = l1.meet(&l2);
         assert!(a.lies_on(&l1));
         assert!(a.lies_on(&l2));
+    }
+    #[test]
+    fn create_triangle() {
+        let p1 = TwoPoint {x: Ratio::new(-3,1), y: Ratio::new(4,1)};
+        let p2 = TwoPoint {x: Ratio::new(4,1), y: Ratio::new(5,1)};
+        let p3 = TwoPoint {x: Ratio::new(1,1), y: Ratio::new(1,1)};
+        let _t = Triangle::new(p1, p2, p3);
     }
 }
