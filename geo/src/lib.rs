@@ -1,5 +1,5 @@
 use num::Zero;
-use std::ops::{Mul, Add, Sub};
+use std::ops::{Mul, Add, Sub, Div};
 
 /// Represents a 2D point
 pub struct TwoPoint<T> {
@@ -12,11 +12,13 @@ where
     T: Mul<T, Output = T>,
     T: Add<T, Output = T>,
     T: Sub<T, Output = T>,
+    T: Div<T, Output = T>,
     T: Zero,
     T: Clone,
 {
-    pub fn lies_on(self, l: &TwoLine<T>) -> bool {
-        let r = l.a.clone() * self.x + l.b.clone() * self.y + l.c.clone();
+    pub fn lies_on(&self, l: &TwoLine<T>) -> bool {
+        let r = l.a.clone() * self.x.clone()
+              + l.b.clone() * self.y.clone() + l.c.clone();
         r.is_zero()
     }
 
@@ -51,6 +53,7 @@ where
     T: Mul<T, Output = T>,
     T: Add<T, Output = T>,
     T: Sub<T, Output = T>,
+    T: Div<T, Output = T>,
     T: Zero,
     T: Clone,
 {
@@ -70,13 +73,22 @@ where
         let r = self.a * other.a.clone() + self.b * other.b.clone();
         r.is_zero()
     }
+
+    pub fn meet(&self, other: &Self) -> TwoPoint<T> {
+        let xn = self.b.clone() * other.c.clone() - other.b.clone() * self.c.clone();
+        let yn = self.c.clone() * other.a.clone() - other.c.clone() * self.a.clone();
+        let d  = self.a.clone() * other.b.clone() - other.a.clone() * self.b.clone();
+        let x = xn / d.clone();
+        let y = yn / d;
+        TwoPoint { x: x, y: y }
+    }
 }
 
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use num::rational::Ratio;
+    use num::rational::{Ratio, Rational};
 
     #[test]
     #[should_panic]
@@ -112,5 +124,15 @@ mod tests {
         let l1 = TwoLine::new(3, 4, -1);
         let l2 = TwoLine::new(-4, 3, 2);
         assert!(l1.is_perpendicular(&l2));
+    }
+    #[test]
+    fn meet_lies_on_lines() {
+        let l1 = TwoLine::new(Rational::new(3, 1),
+            Rational::new(4, 1), Rational::new(-1, 1));
+        let l2 = TwoLine::new(Rational::new(-4, 1),
+            Rational::new(3, 1), Rational::new(2, 1));
+        let a = l1.meet(&l2);
+        assert!(a.lies_on(&l1));
+        assert!(a.lies_on(&l2));
     }
 }
