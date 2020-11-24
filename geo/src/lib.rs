@@ -46,12 +46,29 @@ impl<T> TwoLine<T> {
     }
 }
 
-impl<T: Clone + Zero> TwoLine<T> {
+impl<T: Clone + Zero> TwoLine<T>
+where
+    T: Mul<T, Output = T>,
+    T: Add<T, Output = T>,
+    T: Sub<T, Output = T>,
+    T: Zero,
+    T: Clone,
+{
     pub fn new(a: T, b: T, c: T) -> TwoLine<T> {
         if a.is_zero() && b.is_zero() {
             panic!("Line has proportion of <0:0:c>");
         }
         TwoLine::new_raw(a, b, c)
+    }
+
+    pub fn is_parallel(self, other: &Self) -> bool {
+        let r = self.a * other.b.clone() - other.a.clone() * self.b;
+        r.is_zero()
+    }
+
+    pub fn is_perpendicular(self, other: &Self) -> bool {
+        let r = self.a * other.a.clone() + self.b * other.b.clone();
+        r.is_zero()
     }
 }
 
@@ -83,5 +100,17 @@ mod tests {
         let l = a.join(&b);
         assert!(a.lies_on(&l));
         assert!(b.lies_on(&l));
+    }
+    #[test]
+    fn parallel_lines() {
+        let l1 = TwoLine::new(3, 4, -1);
+        let l2 = TwoLine::new(6, 8, 5);
+        assert!(l1.is_parallel(&l2));
+    }
+    #[test]
+    fn perpendicular_lines() {
+        let l1 = TwoLine::new(3, 4, -1);
+        let l2 = TwoLine::new(-4, 3, 2);
+        assert!(l1.is_perpendicular(&l2));
     }
 }
