@@ -127,6 +127,16 @@ where
         let m = self.meet(&l2);
         m.lies_on(&l3)
     }
+
+    pub fn spread(&self, other: &Self) -> T {
+        let cross = self.a.clone() * other.b.clone()
+                  - other.a.clone() * self.b.clone();
+        let q1 = self.a.clone() * self.a.clone()
+               + self.b.clone() * self.b.clone();
+        let q2 = other.a.clone() * other.a.clone()
+               + other.b.clone() * other.b.clone();
+        (cross.clone() * cross) / (q1 * q2)
+    }
 }
 
 /// Represents a triangle
@@ -213,5 +223,14 @@ mod tests {
         let p2 = TwoPoint {x: Ratio::new(6,1), y: Ratio::new(2,1)};
         let q  = Ratio::new(17,1);
         assert_eq!(p1.quadrance(&p2),q);
+    }
+    #[test]
+    fn spread() {
+        let l1 = TwoLine::new(Rational::new(3,1),
+            Rational::new(2,1), Rational::new(1,1));
+        let l2 = TwoLine::new(Rational::new(1,1),
+            Rational::new(-4,1), Rational::new(2,1));
+        let s  = Rational::new(196, 221);
+        assert_eq!(l1.spread(&l2),s);
     }
 }
