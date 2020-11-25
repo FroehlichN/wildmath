@@ -139,6 +139,54 @@ where
     }
 }
 
+/// Represents a 2D circle
+/// given in terms of the proportion (1:0:1:-2a:-2b:c)
+/// for the eq. dx²+exy+fy²+ax+by+c=0
+/// namly x²+y²-2ax-2by+c=0
+/// which can be rewritten as (x-a)²+(y-b)²=K
+/// with K = a²+b²-c
+/// T is type of the parameters a,b,c
+pub struct TwoCircle<T> {
+    a: T,
+    b: T,
+    c: T,
+}
+
+impl<T> TwoCircle<T>
+where
+    T: Mul<T, Output = T>,
+    T: Add<T, Output = T>,
+    T: Sub<T, Output = T>,
+    T: Div<T, Output = T>,
+    T: Zero,
+    T: Clone,
+{
+    pub fn center(&self) -> TwoPoint<T> {
+        TwoPoint{x: self.a.clone(), y: self.b.clone()}
+    }
+
+    pub fn quadrance(&self) -> T {
+        let k = self.a.clone()*self.a.clone()
+              + self.b.clone()*self.b.clone() - self.c.clone();
+        return k;
+    }
+
+    pub fn new(center: TwoPoint<T>, quadrance: T) -> TwoCircle<T> {
+        let cc = center.x.clone()*center.x.clone()
+               + center.y.clone()*center.y.clone() - quadrance;
+        TwoCircle {a: center.x, b: center.y, c: cc}
+    }
+
+    pub fn lies_on(&self, point: &TwoPoint<T>) -> bool {
+        let dx = point.x.clone() - self.a.clone();
+        let dy = point.y.clone() - self.b.clone();
+        let k = self.quadrance();
+        let r = dx.clone() * dx + dy.clone() * dy - k;
+        r.is_zero()
+    }
+
+}
+
 /// Represents a triangle
 /// T is type of the points
 pub struct Triangle<T> {
@@ -232,5 +280,12 @@ mod tests {
             Rational::new(-4,1), Rational::new(2,1));
         let s  = Rational::new(196, 221);
         assert_eq!(l1.spread(&l2),s);
+    }
+    #[test]
+    fn point_lies_on_circle() {
+        let c = TwoCircle {a: Rational::new(0,1), b: Rational::new(0,1),
+            c: Rational::new(-2,1)};
+        let p = TwoPoint { x: Rational::new(1,1), y: Rational::new(1,1) };
+        assert!(c.lies_on(&p));
     }
 }
