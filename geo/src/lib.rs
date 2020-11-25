@@ -6,6 +6,7 @@ pub trait Point {
 }
 
 /// Represents a 2D point
+#[derive(Debug)]
 pub struct TwoPoint<T> {
     x : T,
     y : T,
@@ -37,6 +38,11 @@ where
         TwoLine::new(a, b, c)
     }
 
+    pub fn quadrance(&self, other: &Self) -> T {
+        let dx = other.x.clone() - self.x.clone();
+        let dy = other.y.clone() - self.y.clone();
+        dx.clone()*dx + dy.clone()*dy
+    }
 }
 
 impl<T> Point for TwoPoint<T>
@@ -51,6 +57,20 @@ where
     fn is_collinear(&self, a2: &Self, a3: &Self) -> bool {
         let l = self.join(&a2);
         a3.lies_on(&l)
+    }
+}
+
+impl<T> PartialEq for TwoPoint<T>
+where
+    T: Mul<T, Output = T>,
+    T: Add<T, Output = T>,
+    T: Sub<T, Output = T>,
+    T: Div<T, Output = T>,
+    T: Zero,
+    T: Clone,
+{
+    fn eq(&self, other: &Self) -> bool {
+        self.quadrance(&other).is_zero()
     }
 }
 
@@ -180,5 +200,18 @@ mod tests {
         let p2 = TwoPoint {x: Ratio::new(4,1), y: Ratio::new(5,1)};
         let p3 = TwoPoint {x: Ratio::new(1,1), y: Ratio::new(1,1)};
         let _t = Triangle::new(p1, p2, p3);
+    }
+    #[test]
+    fn equal_points() {
+        let p1 = TwoPoint {x: Ratio::new(-3,1), y: Ratio::new(4,1)};
+        let p2 = TwoPoint {x: Ratio::new(-3,1), y: Ratio::new(4,1)};
+        assert_eq!(p1,p2);
+    }
+    #[test]
+    fn quadrance() {
+        let p1 = TwoPoint {x: Ratio::new(2,1), y: Ratio::new(1,1)};
+        let p2 = TwoPoint {x: Ratio::new(6,1), y: Ratio::new(2,1)};
+        let q  = Ratio::new(17,1);
+        assert_eq!(p1.quadrance(&p2),q);
     }
 }
