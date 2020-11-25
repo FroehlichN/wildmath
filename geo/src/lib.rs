@@ -202,6 +202,29 @@ impl<T: Point> Triangle<T> {
     }
 }
 
+/// Represents a 2D vector
+#[derive(Debug)]
+pub struct TwoVector<T> {
+    start: TwoPoint<T>,
+    end: TwoPoint<T>,
+}
+
+impl<T> PartialEq for TwoVector<T>
+where
+    T: Mul<T, Output = T>,
+    T: Add<T, Output = T>,
+    T: Sub<T, Output = T>,
+    T: Div<T, Output = T>,
+    T: Zero,
+    T: Clone,
+{
+    fn eq(&self, other: &Self) -> bool {
+        let r = self.end.x.clone() - self.start.x.clone()
+              - other.end.x.clone() + other.start.x.clone();
+        r.is_zero()
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -287,5 +310,15 @@ mod tests {
             c: Rational::new(-2,1)};
         let p = TwoPoint { x: Rational::new(1,1), y: Rational::new(1,1) };
         assert!(c.lies_on(&p));
+    }
+    #[test]
+    fn equal_vectors() {
+        let a1 = TwoPoint {x: Ratio::new(1,1), y: Ratio::new(1,1)};
+        let a2 = TwoPoint {x: Ratio::new(3,1), y: Ratio::new(4,1)};
+        let a3 = TwoPoint {x: Ratio::new(4,1), y: Ratio::new(2,1)};
+        let a4 = TwoPoint {x: Ratio::new(6,1), y: Ratio::new(5,1)};
+        let v1 = TwoVector {start: a1, end: a2};
+        let v2 = TwoVector {start: a3, end: a4};
+        assert_eq!(v1,v2);
     }
 }
