@@ -242,6 +242,21 @@ where
     }
 }
 
+impl<T> Add<TwoVector<T>> for TwoVector<T>
+where
+    T: Add<T, Output = T>,
+    T: Clone,
+{
+    type Output = TwoVector<T>;
+
+    fn add(self, rhs: TwoVector<T>) -> TwoVector<T> {
+        let s = TwoPoint {x: rhs.start.x.clone() + self.start.x.clone(),
+                          y: rhs.start.y.clone() + self.start.y.clone()};
+        let e = TwoPoint {x: rhs.end.x.clone() + self.end.x.clone(),
+                          y: rhs.end.y.clone() + self.end.y.clone()};
+        TwoVector {start: s, end: e}
+    }
+}
 
 impl<T> TwoVector<T>
 where
@@ -355,5 +370,12 @@ mod tests {
         let v1 = TwoVector::new(Ratio::new(2,1), Ratio::new(-4,1));
         let v2 = TwoVector::new(Ratio::new(6,1), Ratio::new(-12,1));
         assert_eq!(v1*s,v2);
+    }
+    #[test]
+    fn add_vectors() {
+        let v1 = TwoVector::new(Ratio::new(2,1), Ratio::new(3,1));
+        let v2 = TwoVector::new(Ratio::new(2,1), Ratio::new(-4,1));
+        let v3 = TwoVector::new(Ratio::new(4,1), Ratio::new(-1,1));
+        assert_eq!(v1+v2,v3);
     }
 }
