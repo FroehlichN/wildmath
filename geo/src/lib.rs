@@ -225,6 +225,34 @@ where
     }
 }
 
+
+impl<T> Mul<T> for TwoVector<T>
+where
+    T: Mul<T, Output = T>,
+    T: Clone,
+{
+    type Output = TwoVector<T>;
+
+    fn mul(self, rhs: T) -> TwoVector<T> {
+        let s = TwoPoint {x: rhs.clone() * self.start.x.clone(),
+                          y: rhs.clone() * self.start.y.clone()};
+        let e = TwoPoint {x: rhs.clone() * self.end.x.clone(),
+                          y: rhs.clone() * self.end.y.clone()};
+        TwoVector {start: s, end: e}
+    }
+}
+
+
+impl<T> TwoVector<T>
+where
+    T: Zero,
+{
+    pub fn new(a: T, b: T) -> TwoVector<T> {
+        TwoVector {start: TwoPoint {x: T::zero(), y: T::zero()},
+                   end: TwoPoint {x: a, y: b}}
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -320,5 +348,12 @@ mod tests {
         let v1 = TwoVector {start: a1, end: a2};
         let v2 = TwoVector {start: a3, end: a4};
         assert_eq!(v1,v2);
+    }
+    #[test]
+    fn scalar_vector_mul() {
+        let s = Ratio::new(3,1);
+        let v1 = TwoVector::new(Ratio::new(2,1), Ratio::new(-4,1));
+        let v2 = TwoVector::new(Ratio::new(6,1), Ratio::new(-12,1));
+        assert_eq!(v1*s,v2);
     }
 }
