@@ -1,4 +1,4 @@
-use num::{Zero, One};
+use num::{Num, Zero, One};
 use std::ops::{Mul, Add, Sub, Div};
 
 pub trait Point {
@@ -352,6 +352,41 @@ where
 
 }
 
+/// Represents a polygon
+pub struct Polygon<T> {
+    points: Vec<TwoPoint<T>>,
+}
+
+impl<T> Polygon<T>
+where
+    T: Num,
+    T: Clone,
+{
+    fn area(&self) -> T {
+        let mut a = T::zero();
+
+        if self.points.len() < 2 {
+            return a;
+        }
+
+        for i in 0..(self.points.len()-1) {
+            let v = TwoVector {start: self.points[i].clone(),
+                               end: self.points[i+1].clone()};
+            a = a + v.area();
+        }
+
+        let lp = self.points.last();
+        match lp {
+            Some(p) => {
+                    let v = TwoVector {start: p.clone(),
+                                       end: self.points[0].clone()};
+                    return a + v.area();
+                },
+            None => a,
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -487,5 +522,15 @@ mod tests {
         let a2 = TwoPoint {x: Ratio::new(7,1), y: Ratio::new(5,1)};
         let v1 = TwoVector {start: a1, end: a2};
         assert_eq!(v1.area(),Ratio::new(-27,2));
+    }
+    #[test]
+    fn polygon_area() {
+        let a1 = TwoPoint {x: Ratio::new(3,1), y: Ratio::new(6,1)};
+        let a2 = TwoPoint {x: Ratio::new(7,1), y: Ratio::new(5,1)};
+        let a3 = TwoPoint {x: Ratio::new(7,1), y: Ratio::new(1,1)};
+        let a4 = TwoPoint {x: Ratio::new(2,1), y: Ratio::new(2,1)};
+        let a5 = TwoPoint {x: Ratio::new(1,1), y: Ratio::new(4,1)};
+        let p1 = Polygon {points: vec![a1, a2, a3, a4, a5]};
+        assert_eq!(p1.area(), Ratio::new(-43,2));
     }
 }
