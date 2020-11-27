@@ -336,6 +336,22 @@ where
     }
 }
 
+impl<T> TwoVector<T>
+where
+    T: Add<T, Output = T>,
+    T: Sub<T, Output = T>,
+    T: Mul<T, Output = T>,
+    T: Div<T, Output = T>,
+    T: One,
+    T: Clone,
+{
+    pub fn area(&self) -> T {
+        (self.start.x.clone() * self.end.y.clone()
+         - self.end.x.clone() * self.start.y.clone()) / (T::one() + T::one())
+    }
+
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -464,5 +480,12 @@ mod tests {
         let a3 = TwoPoint {x: Ratio::new(2,1), y: Ratio::new(5,1)};
         let t = TwoTriangle::new(a1, a2, a3);
         assert_eq!(t.area(),Ratio::new(11,1));
+    }
+    #[test]
+    fn vector_area() {
+        let a1 = TwoPoint {x: Ratio::new(3,1), y: Ratio::new(6,1)};
+        let a2 = TwoPoint {x: Ratio::new(7,1), y: Ratio::new(5,1)};
+        let v1 = TwoVector {start: a1, end: a2};
+        assert_eq!(v1.area(),Ratio::new(-27,2));
     }
 }
