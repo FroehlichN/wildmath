@@ -1,4 +1,4 @@
-use num::Zero;
+use num::{Zero, One};
 use std::ops::{Mul, Add, Sub, Div};
 
 pub trait Point {
@@ -225,6 +225,40 @@ impl<T: Point> Triangle<T> {
     }
 }
 
+/// Represents a 2D triangle
+/// T is type of the coordinates of the points
+pub struct TwoTriangle<T> {
+    points: [TwoPoint<T>; 3],
+}
+
+impl<T> TwoTriangle<T>
+where
+    T: Add<T, Output = T>,
+    T: Sub<T, Output = T>,
+    T: Div<T, Output = T>,
+    T: Clone,
+    T: Zero,
+    T: One,
+    TwoPoint<T>: Point,
+    TwoPoint<T>: Clone,
+{
+    pub fn new(a1: TwoPoint<T>, a2: TwoPoint<T>, a3: TwoPoint<T>)
+        -> TwoTriangle<T> {
+        if a1.is_collinear(&a2, &a3) {
+            panic!("Triangle cannot have collinear points");
+        }
+        TwoTriangle { points: [a1, a2, a3] }
+    }
+
+    pub fn area(&self) -> T {
+        let v1 = TwoVector {start: self.points[0].clone(),
+                            end: self.points[1].clone()};
+        let v2 = TwoVector {start: self.points[0].clone(),
+                            end: self.points[2].clone()};
+        (v1.dx() * v2.dy() - v2.dx() * v1.dy()) / (T::one() + T::one())
+    }
+}
+
 /// Represents a 2D vector
 #[derive(Debug, Clone)]
 pub struct TwoVector<T> {
@@ -422,5 +456,13 @@ mod tests {
         assert!(a1.lies_on(&l1));
         assert!(a2.lies_on(&l1));
         assert!(a3.lies_on(&l1));
+    }
+    #[test]
+    fn triangle_area() {
+        let a1 = TwoPoint {x: Ratio::new(1,1), y: Ratio::new(1,1)};
+        let a2 = TwoPoint {x: Ratio::new(7,1), y: Ratio::new(3,1)};
+        let a3 = TwoPoint {x: Ratio::new(2,1), y: Ratio::new(5,1)};
+        let t = TwoTriangle::new(a1, a2, a3);
+        assert_eq!(t.area(),Ratio::new(11,1));
     }
 }
