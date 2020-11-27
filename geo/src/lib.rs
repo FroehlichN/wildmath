@@ -6,7 +6,7 @@ pub trait Point {
 }
 
 /// Represents a 2D point
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct TwoPoint<T> {
     x : T,
     y : T,
@@ -74,6 +74,21 @@ where
     }
 }
 
+impl<T> Add<TwoVector<T>> for TwoPoint<T>
+where
+    T: Mul<T, Output = T>,
+    T: Add<T, Output = T>,
+    T: Sub<T, Output = T>,
+    T: Div<T, Output = T>,
+    T: Zero,
+    T: Clone,
+{
+    type Output = TwoPoint<T>;
+
+    fn add(self, v: TwoVector<T>) -> TwoPoint<T> {
+        TwoPoint {x: self.x.clone() + v.dx(), y: self.y.clone() + v.dy() }
+    }
+}
 /// Represents a 2D line a*x+b*y+c=0
 pub struct TwoLine<T> {
     a : T,
@@ -102,6 +117,14 @@ where
             panic!("Line has proportion of <0:0:c>");
         }
         TwoLine::new_raw(a, b, c)
+    }
+
+    pub fn newpv(p: &TwoPoint<T>, v: &TwoVector<T>) -> TwoLine<T> {
+        let vx = v.dx();
+        let vy = v.dy();
+        let c1 = p.x.clone() * vy.clone() - p.y.clone() * vx.clone();
+        let c2 = p.y.clone() * vx.clone() - p.x.clone() * vy.clone();
+        TwoLine::new(c1.clone() * vy, c2.clone() * vx, c1*c2)
     }
 
     pub fn is_parallel(self, other: &Self) -> bool {
@@ -203,7 +226,7 @@ impl<T: Point> Triangle<T> {
 }
 
 /// Represents a 2D vector
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct TwoVector<T> {
     start: TwoPoint<T>,
     end: TwoPoint<T>,
@@ -260,11 +283,22 @@ where
 
 impl<T> TwoVector<T>
 where
+    T: Clone,
     T: Zero,
+    T: Sub<T, Output = T>,
 {
     pub fn new(a: T, b: T) -> TwoVector<T> {
         TwoVector {start: TwoPoint {x: T::zero(), y: T::zero()},
                    end: TwoPoint {x: a, y: b}}
+    }
+
+    pub fn dx(&self) -> T {
+        let dx = self.end.x.clone() - self.start.x.clone();
+        return dx;
+    }
+    pub fn dy(&self) -> T {
+        let dy = self.end.y.clone() - self.start.y.clone();
+        return dy;
     }
 }
 
@@ -377,5 +411,16 @@ mod tests {
         let v2 = TwoVector::new(Ratio::new(2,1), Ratio::new(-4,1));
         let v3 = TwoVector::new(Ratio::new(4,1), Ratio::new(-1,1));
         assert_eq!(v1+v2,v3);
+    }
+    #[test]
+    fn point_vector_line() {
+        let a1 = TwoPoint {x: Ratio::new(3,1), y: Ratio::new(2,1)};
+        let v1 = TwoVector::new(Ratio::new(1,1), Ratio::new(2,1));
+        let a2 = a1.clone() + v1.clone();
+        let a3 = a1.clone() + v1.clone() * Ratio::new(-12,5);
+        let l1 = TwoLine::newpv(&a1, &v1);
+        assert!(a1.lies_on(&l1));
+        assert!(a2.lies_on(&l1));
+        assert!(a3.lies_on(&l1));
     }
 }
