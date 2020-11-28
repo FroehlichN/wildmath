@@ -1,5 +1,5 @@
-use num::{Num, Zero, One};
-use std::ops::{Mul, Add, Sub, Div};
+use num::{Num, Zero};
+use std::ops::{Mul, Add, Sub};
 
 pub trait Point {
     fn is_collinear(&self, a2: &Self, a3: &Self) -> bool;
@@ -14,11 +14,7 @@ pub struct TwoPoint<T> {
 
 impl<T> TwoPoint<T>
 where
-    T: Mul<T, Output = T>,
-    T: Add<T, Output = T>,
-    T: Sub<T, Output = T>,
-    T: Div<T, Output = T>,
-    T: Zero,
+    T: Num,
     T: Clone,
 {
     pub fn lies_on(&self, l: &TwoLine<T>) -> bool {
@@ -47,11 +43,7 @@ where
 
 impl<T> Point for TwoPoint<T>
 where
-    T: Mul<T, Output = T>,
-    T: Add<T, Output = T>,
-    T: Sub<T, Output = T>,
-    T: Div<T, Output = T>,
-    T: Zero,
+    T: Num,
     T: Clone,
 {
     fn is_collinear(&self, a2: &Self, a3: &Self) -> bool {
@@ -62,11 +54,7 @@ where
 
 impl<T> PartialEq for TwoPoint<T>
 where
-    T: Mul<T, Output = T>,
-    T: Add<T, Output = T>,
-    T: Sub<T, Output = T>,
-    T: Div<T, Output = T>,
-    T: Zero,
+    T: Num,
     T: Clone,
 {
     fn eq(&self, other: &Self) -> bool {
@@ -76,11 +64,7 @@ where
 
 impl<T> Add<TwoVector<T>> for TwoPoint<T>
 where
-    T: Mul<T, Output = T>,
-    T: Add<T, Output = T>,
-    T: Sub<T, Output = T>,
-    T: Div<T, Output = T>,
-    T: Zero,
+    T: Num,
     T: Clone,
 {
     type Output = TwoPoint<T>;
@@ -105,11 +89,7 @@ impl<T> TwoLine<T> {
 
 impl<T> TwoLine<T>
 where
-    T: Mul<T, Output = T>,
-    T: Add<T, Output = T>,
-    T: Sub<T, Output = T>,
-    T: Div<T, Output = T>,
-    T: Zero,
+    T: Num,
     T: Clone,
 {
     pub fn new(a: T, b: T, c: T) -> TwoLine<T> {
@@ -177,11 +157,7 @@ pub struct TwoCircle<T> {
 
 impl<T> TwoCircle<T>
 where
-    T: Mul<T, Output = T>,
-    T: Add<T, Output = T>,
-    T: Sub<T, Output = T>,
-    T: Div<T, Output = T>,
-    T: Zero,
+    T: Num,
     T: Clone,
 {
     pub fn center(&self) -> TwoPoint<T> {
@@ -233,12 +209,8 @@ pub struct TwoTriangle<T> {
 
 impl<T> TwoTriangle<T>
 where
-    T: Add<T, Output = T>,
-    T: Sub<T, Output = T>,
-    T: Div<T, Output = T>,
+    T: Num,
     T: Clone,
-    T: Zero,
-    T: One,
     TwoPoint<T>: Point,
     TwoPoint<T>: Clone,
 {
@@ -268,11 +240,7 @@ pub struct TwoVector<T> {
 
 impl<T> PartialEq for TwoVector<T>
 where
-    T: Mul<T, Output = T>,
-    T: Add<T, Output = T>,
-    T: Sub<T, Output = T>,
-    T: Div<T, Output = T>,
-    T: Zero,
+    T: Num,
     T: Clone,
 {
     fn eq(&self, other: &Self) -> bool {
@@ -338,11 +306,7 @@ where
 
 impl<T> TwoVector<T>
 where
-    T: Add<T, Output = T>,
-    T: Sub<T, Output = T>,
-    T: Mul<T, Output = T>,
-    T: Div<T, Output = T>,
-    T: One,
+    T: Num,
     T: Clone,
 {
     pub fn area(&self) -> T {
