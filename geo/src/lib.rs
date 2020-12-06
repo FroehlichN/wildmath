@@ -419,6 +419,26 @@ where
     }
 }
 
+// Rotation
+#[derive(Clone)]
+pub struct Rotation<T> {
+    vector: TwoVector<T>,
+}
+
+impl<T> Mul<Rotation<T>> for TwoVector<T>
+where
+    T: Num,
+    T: Clone,
+{
+    type Output = TwoVector<T>;
+
+    fn mul(self, r: Rotation<T>) -> TwoVector<T> {
+        let a = r.vector.dx()*self.dx() - r.vector.dy()*self.dy();
+        let b = r.vector.dy()*self.dx() + r.vector.dx()*self.dy();
+        TwoVector::new(a, b)
+    }
+}
+
 
 #[cfg(test)]
 mod tests {
@@ -594,5 +614,15 @@ mod tests {
         let t2 = Translation {vector: v2};
         let t3 = Translation {vector: v3};
         assert_eq!(t1*t2,t3);
+    }
+    #[test]
+    fn rotation() {
+        let v1 = TwoVector::new(Ratio::new(1,1), Ratio::new(0,1));
+        let v2 = TwoVector::new(Ratio::new(0,1), Ratio::new(1,1));
+        let v3 = TwoVector::new(Ratio::new(2,1), Ratio::new(6,1));
+        let r1 = Rotation {vector: v3.clone()};
+        assert_eq!(v1*r1.clone(),v3);
+        let v4 = TwoVector::new(Ratio::new(-6,1), Ratio::new(2,1));
+        assert_eq!(v2*r1,v4);
     }
 }
