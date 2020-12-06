@@ -73,6 +73,19 @@ where
         TwoPoint {x: self.x.clone() + v.dx(), y: self.y.clone() + v.dy() }
     }
 }
+
+impl<T> Mul<Translation<T>> for TwoPoint<T>
+where
+    T: Num,
+    T: Clone,
+{
+    type Output = TwoPoint<T>;
+
+    fn mul(self, t: Translation<T>) -> TwoPoint<T> {
+        self + t.vector
+    }
+}
+
 /// Represents a 2D line a*x+b*y+c=0
 pub struct TwoLine<T> {
     a : T,
@@ -351,6 +364,11 @@ where
     }
 }
 
+/// Translation
+pub struct Translation<T> {
+    vector: TwoVector<T>,
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -496,5 +514,12 @@ mod tests {
         let a5 = TwoPoint {x: Ratio::new(1,1), y: Ratio::new(4,1)};
         let p1 = Polygon {points: vec![a1, a2, a3, a4, a5]};
         assert_eq!(p1.area(), Ratio::new(-43,2));
+    }
+    #[test]
+    fn translation_of_2D_point() {
+        let a1 = TwoPoint {x: Ratio::new(3,1), y: Ratio::new(6,1)};
+        let v1 = TwoVector::new(Ratio::new(1,1), Ratio::new(1,1));
+        let t1 = Translation {vector: v1.clone()};
+        assert_eq!(a1.clone()*t1,a1+v1);
     }
 }
