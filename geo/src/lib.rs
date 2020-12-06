@@ -459,6 +459,32 @@ where
     }
 }
 
+/// Represents a quidrilateral
+/// T is type of the points
+pub struct Quadrilateral<T> {
+    points: [T; 4],
+}
+
+impl<T: Point> Quadrilateral<T> {
+    pub fn new(a1: T, a2: T, a3: T, a4: T) -> Quadrilateral<T> {
+        if a1.is_collinear(&a2, &a3) {
+            panic!("Quadrilateral cannot have collinear points");
+        }
+        if a2.is_collinear(&a3, &a4) {
+            panic!("Quadrilateral cannot have collinear points");
+        }
+        if a3.is_collinear(&a4, &a1) {
+            panic!("Quadrilateral cannot have collinear points");
+        }
+        if a4.is_collinear(&a1, &a1) {
+            panic!("Quadrilateral cannot have collinear points");
+        }
+
+        Quadrilateral { points: [a1, a2, a3, a4] }
+    }
+}
+
+
 #[cfg(test)]
 mod tests {
     use super::*;
