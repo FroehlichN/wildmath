@@ -391,10 +391,34 @@ where
 }
 
 /// Translation
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct Translation<T> {
     vector: TwoVector<T>,
 }
+
+impl<T> Mul<Translation<T>> for Translation<T>
+where
+    T: Num,
+    T: Clone,
+{
+    type Output = Translation<T>;
+
+    fn mul(self, other: Translation<T>) -> Translation<T> {
+        let v = self.vector.clone() + other.vector.clone();
+        Translation {vector: v}
+    }
+}
+
+impl<T> PartialEq for Translation<T>
+where
+    T: Num,
+    T: Clone,
+{
+    fn eq(&self, other: &Self) -> bool {
+        self.vector == other.vector
+    }
+}
+
 
 #[cfg(test)]
 mod tests {
@@ -560,5 +584,15 @@ mod tests {
         let p4 = p2*t1.clone();
         let m1 = p3.join(&p4);
         assert_eq!(l1*t1,m1);
+    }
+    #[test]
+    fn addition_of_translations() {
+        let v1 = TwoVector::new(Ratio::new(3,1), Ratio::new(1,1));
+        let v2 = TwoVector::new(Ratio::new(2,1), Ratio::new(6,1));
+        let v3 = v1.clone() + v2.clone();
+        let t1 = Translation {vector: v1};
+        let t2 = Translation {vector: v2};
+        let t3 = Translation {vector: v3};
+        assert_eq!(t1*t2,t3);
     }
 }
