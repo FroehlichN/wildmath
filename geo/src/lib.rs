@@ -87,6 +87,7 @@ where
 }
 
 /// Represents a 2D line a*x+b*y+c=0
+#[derive(Debug)]
 pub struct TwoLine<T> {
     a : T,
     b : T,
@@ -152,6 +153,31 @@ where
         let q2 = other.a.clone() * other.a.clone()
                + other.b.clone() * other.b.clone();
         (cross.clone() * cross) / (q1 * q2)
+    }
+}
+
+impl<T> PartialEq for TwoLine<T>
+where
+    T: Num,
+    T: Clone,
+{
+    fn eq(&self, other: &Self) -> bool {
+        let d1 = self.a.clone()*other.b.clone() - other.a.clone()*self.b.clone();
+        let d2 = self.b.clone()*other.c.clone() - other.b.clone()*self.c.clone();
+        d1.is_zero() & d2.is_zero()
+    }
+}
+
+impl<T> Mul<Translation<T>> for TwoLine<T>
+where
+    T: Num,
+    T: Clone,
+{
+    type Output = TwoLine<T>;
+
+    fn mul(self, t: Translation<T>) -> TwoLine<T> {
+        TwoLine::new(self.a.clone(), self.b.clone(),
+            self.c.clone()-self.a.clone()*t.vector.dx()-self.b.clone()*t.vector.dy())
     }
 }
 
@@ -365,6 +391,7 @@ where
 }
 
 /// Translation
+#[derive(Clone)]
 pub struct Translation<T> {
     vector: TwoVector<T>,
 }
@@ -516,10 +543,22 @@ mod tests {
         assert_eq!(p1.area(), Ratio::new(-43,2));
     }
     #[test]
-    fn translation_of_2D_point() {
+    fn translation_of_2d_point() {
         let a1 = TwoPoint {x: Ratio::new(3,1), y: Ratio::new(6,1)};
         let v1 = TwoVector::new(Ratio::new(1,1), Ratio::new(1,1));
         let t1 = Translation {vector: v1.clone()};
         assert_eq!(a1.clone()*t1,a1+v1);
+    }
+    #[test]
+    fn translation_of_2d_line() {
+        let p1 = TwoPoint {x: Ratio::new(8,1), y: Ratio::new(3,1)};
+        let p2 = TwoPoint {x: Ratio::new(9,1), y: Ratio::new(1,1)};
+        let l1 = p1.join(&p2);
+        let v1 = TwoVector::new(Ratio::new(3,1), Ratio::new(1,1));
+        let t1 = Translation {vector: v1.clone()};
+        let p3 = p1*t1.clone();
+        let p4 = p2*t1.clone();
+        let m1 = p3.join(&p4);
+        assert_eq!(l1*t1,m1);
     }
 }
