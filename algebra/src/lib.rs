@@ -1,4 +1,5 @@
 use num::{Num};
+use std::ops::{Div};
 
 enum LinSummand<T> {
     Number(T),
@@ -20,19 +21,45 @@ where
        let mut m = T::zero();
        let mut n = T::zero();
 
-       for (index, s) in self.lhs.iter().enumerate() {
+       for (_, s) in self.lhs.iter().enumerate() {
             match s {
                 LinSummand::Number(a) => n = n - *a,
                 LinSummand::Unknown(b) => m = m + *b,
             }
         }
-        for (index, s) in self.rhs.iter().enumerate() {
+        for (_, s) in self.rhs.iter().enumerate() {
             match s {
                 LinSummand::Number(a) => n = n + *a,
                 LinSummand::Unknown(b) => m = m - *b,
             }
         }
         n/m
+    }
+}
+
+/// Represents a linear term in x
+pub struct LinTermInX<T> {
+    summands: Vec<LinSummand<T>>,
+}
+
+impl<T> Div<T> for LinTermInX<T>
+where
+    T: Num,
+    T: Copy,
+{
+    type Output = LinTermInX<T>;
+
+    fn div(self, other: T) -> LinTermInX<T> {
+        let mut q: Vec<LinSummand<T>> = Vec::new();
+
+        for (_, s) in self.summands.iter().enumerate() {
+            match s {
+                LinSummand::Number(a) => q.push( LinSummand::Number(*a / other) ),
+                LinSummand::Unknown(b) => q.push( LinSummand::Unknown(*b / other) ),
+            }
+        }
+
+        LinTermInX {summands: q}
     }
 }
 
@@ -70,5 +97,14 @@ mod tests {
         let eq1 = LinEq {lhs: vec![LinSummand::Unknown(3), LinSummand::Number(4)],
             rhs: vec![LinSummand::Number(11), LinSummand::Unknown(-2), LinSummand::Number(8)]};
         assert_eq!(eq1.x(), 3);
+    }
+    #[test]
+    fn terms_in_x() {
+        let lhs = LinTermInX {summands: vec![LinSummand::Unknown(Ratio::new(6, 1)),
+            LinSummand::Number(Ratio::new(-1, 1))]} / Ratio::new(2, 1);
+        let rhs = LinTermInX {summands: vec![LinSummand::Unknown(Ratio::new(3, 1)),
+            LinSummand::Number(Ratio::new(5, 1))]} / Ratio::new(7, 1);
+        let eq1 = LinEq {lhs: lhs.summands, rhs: rhs.summands};
+        assert_eq!(eq1.x(), Ratio::new(17, 36));
     }
 }
