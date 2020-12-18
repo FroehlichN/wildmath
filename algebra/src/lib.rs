@@ -18,7 +18,7 @@ where
     T: Num,
     T: Copy,
 {
-    fn x(&self) -> T {
+    fn x(&self) -> Option<T> {
        let mut m = T::zero();
        let mut n = T::zero();
 
@@ -34,7 +34,11 @@ where
                 LinSummand::Unknown(b) => m = m - *b,
             }
         }
-        n/m
+        if m.is_zero() {
+            return None;
+        } else {
+            return Some(n/m);
+        }
     }
 }
 
@@ -171,31 +175,31 @@ mod tests {
     fn xplus2eq7() {
         let eq1 = LinEq {lhs: vec![LinSummand::Unknown(1), LinSummand::Number(2)],
             rhs: vec![LinSummand::Number(7)]};
-        assert_eq!(eq1.x(), 5);
+        assert_eq!(eq1.x(), Some(5));
     }
     #[test]
     fn xplus10eq2() {
         let eq1 = LinEq {lhs: vec![LinSummand::Unknown(1), LinSummand::Number(10)],
             rhs: vec![LinSummand::Number(2)]};
-        assert_eq!(eq1.x(), -8);
+        assert_eq!(eq1.x(), Some(-8));
     }
     #[test]
     fn threexeq12() {
         let eq1 = LinEq {lhs: vec![LinSummand::Unknown(3)],
             rhs: vec![LinSummand::Number(12)]};
-        assert_eq!(eq1.x(), 4);
+        assert_eq!(eq1.x(), Some(4));
     }
     #[test]
     fn fivexeq11() {
         let eq1 = LinEq {lhs: vec![LinSummand::Unknown(Ratio::new(5, 1))],
             rhs: vec![LinSummand::Number(Ratio::new(11, 1))]};
-        assert_eq!(eq1.x(), Ratio::new(11, 5));
+        assert_eq!( eq1.x(), Some(Ratio::new(11, 5)) );
     }
     #[test]
     fn solve_lin_eq() {
         let eq1 = LinEq {lhs: vec![LinSummand::Unknown(3), LinSummand::Number(4)],
             rhs: vec![LinSummand::Number(11), LinSummand::Unknown(-2), LinSummand::Number(8)]};
-        assert_eq!(eq1.x(), 3);
+        assert_eq!(eq1.x(), Some(3));
     }
     #[test]
     fn terms_in_x() {
@@ -204,7 +208,7 @@ mod tests {
         let rhs = LinTermInX {summands: vec![LinSummand::Unknown(Ratio::new(3, 1)),
             LinSummand::Number(Ratio::new(5, 1))]} / Ratio::new(7, 1);
         let eq1 = LinEq {lhs: lhs.summands, rhs: rhs.summands};
-        assert_eq!(eq1.x(), Ratio::new(17, 36));
+        assert_eq!( eq1.x(), Some(Ratio::new(17, 36)) );
     }
     #[test]
     fn arithmatic_with_terms_in_x() {
