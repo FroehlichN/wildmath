@@ -221,6 +221,45 @@ where
     return s;
 }
 
+fn nr_of_partitions<T>(i: T) -> T
+where
+    T: Integer,
+    T: Copy,
+{
+    let mut s = T::zero();
+    let mut n = T::zero() - i;
+
+    while n <= i {
+        let p_n = pentagonal_nr(n);
+
+        match p_n {
+            None => return T::one(),
+            Some(p) => {
+                let d = i - p;
+                let sd: T;
+
+                if d.is_zero() {
+                    sd = T::one();
+                } else if d > T::zero() && d < i {
+                    sd = nr_of_partitions(d);;
+                } else {
+                    sd = T::zero();
+                }
+
+                if n.is_odd() {
+                    s = s + sd;
+                } else {
+                    s = s - sd;
+                }
+            },
+        }
+
+        n = n + T::one();
+    }
+
+    return s;
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -291,5 +330,13 @@ mod tests {
         assert_eq!(sum_of_divisors(6),12);
         assert_eq!(sum_of_divisors(12),28);
         assert_eq!(sum_of_divisors(14),24);
+    }
+    #[test]
+    fn test_nr_of_partitions() {
+        assert_eq!(nr_of_partitions(1),1);
+        assert_eq!(nr_of_partitions(2),2);
+        assert_eq!(nr_of_partitions(12),77);
+        assert_eq!(nr_of_partitions(13),101);
+        assert_eq!(nr_of_partitions(14),135);
     }
 }
