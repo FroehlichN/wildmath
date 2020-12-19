@@ -166,6 +166,21 @@ where
     }
 }
 
+fn pentagonal_nr<T>(n: T) -> Option<T>
+where
+    T: Num,
+    T: Copy,
+{
+    let two = T::one() + T::one();
+    let three = T::one() + T::one() + T::one();
+
+    if two.is_zero() {
+        return None;
+    } else {
+        return Some(n*(three*n-T::one())/two);
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -220,5 +235,10 @@ mod tests {
         let t5 = t4 / 2;
         let t6 = t5 - LinSummand::Unknown(1);
         assert_eq!(t6, LinTermInX {summands: vec![LinSummand::Number(6)]});
+    }
+    #[test]
+    fn pentagonal_numbers() {
+        assert_eq!(pentagonal_nr(5),Some(35));
+        assert_eq!(pentagonal_nr(6),Some(51));
     }
 }
