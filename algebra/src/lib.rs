@@ -1,5 +1,6 @@
-use num::{Num};
+use num::{Num, Integer};
 use std::ops::{Div, Mul, Add, Sub, Neg};
+
 
 #[derive(Debug)]
 enum LinSummand<T> {
@@ -181,6 +182,45 @@ where
     }
 }
 
+fn sum_of_divisors<T>(i: T) -> T
+where
+    T: Integer,
+    T: Copy,
+{
+    let mut s = T::zero();
+    let mut n = T::zero() - i;
+
+    while n <= i {
+        let p_n = pentagonal_nr(n);
+
+        match p_n {
+            None => return T::one(),
+            Some(p) => {
+                let d = i - p;
+                let sd: T;
+
+                if d.is_zero() {
+                    sd = i;
+                } else if d > T::zero() && d < i {
+                    sd = sum_of_divisors(d);;
+                } else {
+                    sd = T::zero();
+                }
+
+                if n.is_odd() {
+                    s = s + sd;
+                } else {
+                    s = s - sd;
+                }
+            },
+        }
+
+        n = n + T::one();
+    }
+
+    return s;
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -240,5 +280,16 @@ mod tests {
     fn pentagonal_numbers() {
         assert_eq!(pentagonal_nr(5),Some(35));
         assert_eq!(pentagonal_nr(6),Some(51));
+    }
+    #[test]
+    fn sums_of_divisors() {
+        assert_eq!(sum_of_divisors(1),1);
+        assert_eq!(sum_of_divisors(2),3);
+        assert_eq!(sum_of_divisors(3),4);
+        assert_eq!(sum_of_divisors(4),7);
+        assert_eq!(sum_of_divisors(5),6);
+        assert_eq!(sum_of_divisors(6),12);
+        assert_eq!(sum_of_divisors(12),28);
+        assert_eq!(sum_of_divisors(14),24);
     }
 }
