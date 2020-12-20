@@ -202,7 +202,7 @@ where
                 if d.is_zero() {
                     sd = i;
                 } else if d > T::zero() && d < i {
-                    sd = sum_of_divisors(d);;
+                    sd = sum_of_divisors(d);
                 } else {
                     sd = T::zero();
                 }
@@ -241,7 +241,7 @@ where
                 if d.is_zero() {
                     sd = T::one();
                 } else if d > T::zero() && d < i {
-                    sd = nr_of_partitions(d);;
+                    sd = nr_of_partitions(d);
                 } else {
                     sd = T::zero();
                 }
@@ -272,6 +272,22 @@ where
         f = f + T::one();
     }
     return p;
+}
+
+fn pascal_array<T>(m: T, k: T) -> T
+where
+    T: Integer,
+    T: Copy,
+{
+    factorial(m+k)/(factorial(m)*factorial(k))
+}
+
+fn choose<T>(n: T, k: T) -> T
+where
+    T: Integer,
+    T: Copy,
+{
+    factorial(n)/(factorial(k)*factorial(n-k))
 }
 
 #[cfg(test)]
@@ -360,5 +376,17 @@ mod tests {
         assert_eq!(factorial(4),24);
         assert_eq!(factorial(5),120);
         assert_eq!(factorial(6),720);
+    }
+    #[test]
+    fn pascal_number() {
+        assert_eq!(pascal_array(0,0),1);
+        assert_eq!(pascal_array(1,1),2);
+        assert_eq!(pascal_array(3,4),35);
+        assert_eq!(pascal_array(3,5),56);
+        assert_eq!(pascal_array(3,6),84);
+        assert_eq!(pascal_array(4,5),126);
+        assert_eq!(pascal_array(4,6),210);
+        assert_eq!(choose(3,1),3);
+        assert_eq!(choose(4,2),6);
     }
 }
