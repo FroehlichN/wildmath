@@ -260,6 +260,20 @@ where
     return s;
 }
 
+fn factorial<T>(n: T) -> T
+where
+    T: Integer,
+    T: Copy,
+{
+    let mut f = T::one();
+    let mut p = T::one();
+    while f <= n {
+        p = p * f;
+        f = f + T::one();
+    }
+    return p;
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -338,5 +352,13 @@ mod tests {
         assert_eq!(nr_of_partitions(12),77);
         assert_eq!(nr_of_partitions(13),101);
         assert_eq!(nr_of_partitions(14),135);
+    }
+    #[test]
+    fn factorials() {
+        assert_eq!(factorial(1),1);
+        assert_eq!(factorial(2),2);
+        assert_eq!(factorial(4),24);
+        assert_eq!(factorial(5),120);
+        assert_eq!(factorial(6),720);
     }
 }
