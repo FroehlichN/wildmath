@@ -389,6 +389,24 @@ where
     }
 }
 
+impl<T> PolyNumber<T>
+where
+    T: Num,
+    T: Copy,
+{
+    fn eval(&self, c: T) -> T {
+        let mut ck = T::one();
+        let mut pc = T::zero();
+
+        for a in &self.n {
+            pc = pc + *a * ck;
+            ck = ck * c;
+        }
+
+        return pc;
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -521,5 +539,14 @@ mod tests {
         let s1 = 5;
         let p2 = PolyNumber { n: vec![10, 15] };
         assert_eq!(p1*s1,p2);
+    }
+    #[test]
+    fn evaluate_poly_number() {
+        let p1 = PolyNumber { n: vec![2, -3, 1] };
+        let c1 = 4;
+        assert_eq!(p1.eval(c1),6);
+        let p2 = PolyNumber { n: vec![1, -5] };
+        let c2 = 4;
+        assert_eq!(p2.eval(c2),-19);
     }
 }
