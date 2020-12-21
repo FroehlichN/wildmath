@@ -318,6 +318,33 @@ where
     }
 }
 
+impl<T> Add for PolyNumber<T>
+where
+    T: Num,
+    T: Copy,
+{
+    type Output = PolyNumber<T>;
+
+    fn add(self, other: Self) -> PolyNumber<T> {
+        let mut index: usize = 0;
+        let mut s: Vec<T> = Vec::new();
+
+        loop {
+            let a = self.n.get(index);
+            let b = other.n.get(index);
+
+            match (a, b) {
+                (Some(aa), Some(bb)) => s.push(*aa + *bb),
+                (Some(aa), None)     => s.push(*aa),
+                (None, Some(bb))     => s.push(*bb),
+                (None, None)         => return PolyNumber { n: s },
+            }
+
+            index += 1;
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -421,5 +448,12 @@ mod tests {
     fn eq_poly_numbers() {
         assert_eq!(PolyNumber { n: vec![1, 2, 0] }, PolyNumber { n: vec![1, 2, 0, 0] });
         assert_ne!(PolyNumber { n: vec![5, 2, 0, 3] }, PolyNumber { n: vec![5, 2, 3] });
+    }
+    #[test]
+    fn addition_of_poly_numbers() {
+        let p1 = PolyNumber { n: vec![1, 0, 2] };
+        let p2 = PolyNumber { n: vec![3, 4, 7, 1] };
+        let p3 = PolyNumber { n: vec![4, 4, 9, 1] };
+        assert_eq!(p1+p2,p3);
     }
 }
