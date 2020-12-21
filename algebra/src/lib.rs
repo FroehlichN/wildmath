@@ -345,6 +345,32 @@ where
     }
 }
 
+impl<T> Mul for PolyNumber<T>
+where
+    T: Num,
+    T: Copy,
+{
+    type Output = PolyNumber<T>;
+
+    fn mul(self, other: Self) -> PolyNumber<T> {
+        let mut p: Vec<T> = Vec::new();
+
+        for (ai, av) in self.n.iter().enumerate() {
+            for (bi, bv) in other.n.iter().enumerate() {
+                let ci = ai+bi;
+                let c = p.get(ci);
+
+                match c {
+                    Some(cv) => p[ci] = *cv + *av * *bv,
+                    None     => p.push(*av * *bv),
+                }
+            }
+        }
+
+        return PolyNumber { n: p };
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -455,5 +481,20 @@ mod tests {
         let p2 = PolyNumber { n: vec![3, 4, 7, 1] };
         let p3 = PolyNumber { n: vec![4, 4, 9, 1] };
         assert_eq!(p1+p2,p3);
+    }
+    #[test]
+    fn multiplication_of_poly_number() {
+        let p1 = PolyNumber { n: vec![1, 0, 2] };
+        let p2 = PolyNumber { n: vec![3, 4, 7, 1] };
+        let p3 = PolyNumber { n: vec![3, 4, 13, 9, 14, 2] };
+        assert_eq!(p1*p2,p3);
+        let p4 = PolyNumber { n: vec![0, 1, 5, 2] };
+        let p5 = PolyNumber { n: vec![4, 3] };
+        let p6 = PolyNumber { n: vec![0, 4, 23, 23, 6] };
+        assert_eq!(p4*p5,p6);
+        let p7 = PolyNumber { n: vec![2, 1, 3] };
+        let p8 = PolyNumber { n: vec![5, 7] };
+        let p9 = PolyNumber { n: vec![10, 19, 22, 21] };
+        assert_eq!(p7*p8,p9);
     }
 }
