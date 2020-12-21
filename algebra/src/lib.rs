@@ -290,6 +290,34 @@ where
     factorial(n)/(factorial(k)*factorial(n-k))
 }
 
+#[derive(Debug)]
+pub struct PolyNumber<T> {
+    n: Vec<T>,
+}
+
+impl<T> PartialEq for PolyNumber<T>
+where
+    T: Num,
+{
+    fn eq(&self, other: &Self) -> bool {
+        let mut index: usize = 0;
+
+        loop {
+            let a = self.n.get(index);
+            let b = other.n.get(index);
+
+            match (a, b) {
+                (Some(aa), Some(bb)) => if *aa != *bb       { return false; },
+                (Some(aa), None)     => if *aa != T::zero() { return false; },
+                (None, Some(bb))     => if *bb != T::zero() { return false; },
+                (None, None)         => return true,
+            }
+
+            index += 1;
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -388,5 +416,10 @@ mod tests {
         assert_eq!(pascal_array(4,6),210);
         assert_eq!(choose(3,1),3);
         assert_eq!(choose(4,2),6);
+    }
+    #[test]
+    fn eq_poly_numbers() {
+        assert_eq!(PolyNumber { n: vec![1, 2, 0] }, PolyNumber { n: vec![1, 2, 0, 0] });
+        assert_ne!(PolyNumber { n: vec![5, 2, 0, 3] }, PolyNumber { n: vec![5, 2, 3] });
     }
 }
