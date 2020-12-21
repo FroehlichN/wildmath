@@ -371,6 +371,24 @@ where
     }
 }
 
+impl<T> Mul<T> for PolyNumber<T>
+where
+    T: Num,
+    T: Copy,
+{
+    type Output = PolyNumber<T>;
+
+    fn mul(self, other: T) -> PolyNumber<T> {
+        let mut p: Vec<T> = Vec::new();
+
+        for a in self.n {
+            p.push(a * other);
+        }
+
+        return PolyNumber { n: p };
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -496,5 +514,12 @@ mod tests {
         let p8 = PolyNumber { n: vec![5, 7] };
         let p9 = PolyNumber { n: vec![10, 19, 22, 21] };
         assert_eq!(p7*p8,p9);
+    }
+    #[test]
+    fn scalars_for_poly_number() {
+        let p1 = PolyNumber { n: vec![2, 3] };
+        let s1 = 5;
+        let p2 = PolyNumber { n: vec![10, 15] };
+        assert_eq!(p1*s1,p2);
     }
 }
