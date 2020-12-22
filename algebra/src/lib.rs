@@ -290,7 +290,7 @@ where
     factorial(n)/(factorial(k)*factorial(n-k))
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct PolyNumber<T> {
     n: Vec<T>,
 }
@@ -406,6 +406,45 @@ where
         return pc;
     }
 }
+
+impl<T> Div for PolyNumber<T>
+where
+    T: Num,
+    T: Copy,
+{
+    type Output = Option<PolyRatio<T>>;
+
+    fn div(self, other: PolyNumber<T>) -> Option<PolyRatio<T>> {
+        let zero = PolyNumber { n: vec![T::zero()] };
+        if other == zero {
+            return None;
+        } else {
+            return Some(PolyRatio { numer: self, denom: other });
+        }
+    }
+}
+
+/// Represents the ratio between two poly numbers
+#[derive(Debug)]
+pub struct PolyRatio<T> {
+    numer: PolyNumber<T>,
+    denom: PolyNumber<T>,
+}
+
+impl<T> PartialEq for PolyRatio<T>
+where
+    T: Num,
+    T: Copy,
+{
+    fn eq(&self, other: &Self) -> bool {
+        let p = self.numer.clone();
+        let q = self.denom.clone();
+        let r = other.numer.clone();
+        let s = other.denom.clone();
+        p * s == r * q
+    }
+}
+
 
 #[cfg(test)]
 mod tests {
@@ -548,5 +587,15 @@ mod tests {
         let p2 = PolyNumber { n: vec![1, -5] };
         let c2 = 4;
         assert_eq!(p2.eval(c2),-19);
+    }
+    #[test]
+    fn rational_poly_numbers() {
+        let p1 = PolyNumber { n: vec![1, 0, -2] };
+        let p2 = PolyNumber { n: vec![2, -5] };
+        let rp1 = p1/p2;
+        let p3 = PolyNumber { n: vec![2, 0, -4] };
+        let p4 = PolyNumber { n: vec![4, -10] };
+        let rp2 = p3/p4;
+        assert_eq!(rp1,rp2);
     }
 }
