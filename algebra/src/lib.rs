@@ -1,5 +1,6 @@
 use num::{Num, Integer};
 use std::ops::{Div, Mul, Add, Sub, Neg};
+use std::fmt::Debug;
 
 
 #[derive(Debug)]
@@ -295,6 +296,21 @@ pub struct PolyNumber<T> {
     n: Vec<T>,
 }
 
+impl<T> PolyNumber<T>
+where
+    T: Num,
+{
+    fn lowest_order(&self) -> Option<usize> {
+
+        for (di, dv) in self.n.iter().enumerate() {
+            if *dv != T::zero() {
+                return Some(di);
+            }
+        }
+        return None;
+    }
+}
+
 impl<T> PartialEq for PolyNumber<T>
 where
     T: Num,
@@ -337,6 +353,33 @@ where
                 (Some(aa), Some(bb)) => s.push(*aa + *bb),
                 (Some(aa), None)     => s.push(*aa),
                 (None, Some(bb))     => s.push(*bb),
+                (None, None)         => return PolyNumber { n: s },
+            }
+
+            index += 1;
+        }
+    }
+}
+
+impl<T> Sub for PolyNumber<T>
+where
+    T: Num,
+    T: Copy,
+{
+    type Output = PolyNumber<T>;
+
+    fn sub(self, other: Self) -> PolyNumber<T> {
+        let mut index: usize = 0;
+        let mut s: Vec<T> = Vec::new();
+
+        loop {
+            let a = self.n.get(index);
+            let b = other.n.get(index);
+
+            match (a, b) {
+                (Some(aa), Some(bb)) => s.push(*aa - *bb),
+                (Some(aa), None)     => s.push(*aa),
+                (None, Some(bb))     => s.push(T::zero() - *bb),
                 (None, None)         => return PolyNumber { n: s },
             }
 
@@ -407,19 +450,30 @@ where
     }
 }
 
-impl<T> Div for PolyNumber<T>
+impl<T> PolyNumber<T>
 where
     T: Num,
     T: Copy,
 {
+    fn zero() -> PolyNumber<T> {
+        return PolyNumber { n: vec![T::zero()] };
+    }
+}
+
+impl<T> Div for PolyNumber<T>
+where
+    T: Num,
+    T: Copy,
+    T: Debug,
+{
     type Output = Option<PolyRatio<T>>;
 
     fn div(self, other: PolyNumber<T>) -> Option<PolyRatio<T>> {
-        let zero = PolyNumber { n: vec![T::zero()] };
+        let zero : PolyNumber<T> = PolyNumber::zero();
         if other == zero {
             return None;
         } else {
-            return Some(PolyRatio { numer: self, denom: other });
+            return Some( PolyRatio::new(self, other) );
         }
     }
 }
@@ -429,6 +483,66 @@ where
 pub struct PolyRatio<T> {
     numer: PolyNumber<T>,
     denom: PolyNumber<T>,
+}
+
+impl<T> PolyRatio<T>
+where
+    T: Num,
+    T: Copy,
+    T: Debug,
+{
+    fn new(numer: PolyNumber<T>, denom: PolyNumber<T>) -> PolyRatio<T> {
+        let dlo = denom.lowest_order();
+        let dlow = match dlo {
+            Some(i) => i,
+            None => panic!("Rational poly number has a denominator equal zero."),
+        };
+        let d1 = denom.n[dlow];
+
+        let mut res = numer.clone();
+        let mut q: Vec<T> = Vec::new();
+
+        for _i in 0..(numer.n.len()-denom.n.len()+1) {
+            let nlo = res.lowest_order();
+
+            let nlow = match nlo {
+                Some(i) => i,
+                None => 0,
+            };
+
+
+            if nlow < dlow {
+                return PolyRatio{numer: numer.clone(), denom: denom};
+            }
+
+            if nlow > 0 {
+                for _j in q.clone().len()..(nlow -1) {
+                    q.push(T::zero());
+                }
+            }
+
+            let n1 = res.n[nlow];
+
+            let q1 = n1/d1;
+
+            if q1*d1 == n1 {
+                q.push(q1);
+                let pq1 = PolyNumber { n: q.clone() };
+                let s1 = denom.clone() * PolyNumber { n: q.clone() };
+                res = numer.clone() - s1;
+                let zero : PolyNumber<T> =  PolyNumber::zero();
+
+                if res == zero {
+                    return PolyRatio{numer: pq1, denom: PolyNumber{n: vec![T::one()]}};
+                }
+
+            } else {
+                return PolyRatio{numer: numer, denom: denom};
+            }
+
+        }
+        PolyRatio{numer: numer, denom: denom}
+    }
 }
 
 impl<T> PartialEq for PolyRatio<T>
@@ -445,6 +559,73 @@ where
     }
 }
 
+impl<T> Add for PolyRatio<T>
+where
+    T: Num,
+    T: Copy,
+    T: Debug,
+{
+    type Output = PolyRatio<T>;
+
+    fn add(self, other: Self) -> PolyRatio<T> {
+        let p = self.numer.clone();
+        let q = self.denom.clone();
+        let r = other.numer.clone();
+        let s = other.denom.clone();
+        PolyRatio::new( p*s.clone() + r*q.clone(), q*s )
+    }
+}
+
+impl<T> Mul for PolyRatio<T>
+where
+    T: Num,
+    T: Copy,
+    T: Debug,
+{
+    type Output = PolyRatio<T>;
+
+    fn mul(self, other: Self) -> PolyRatio<T> {
+        let p = self.numer.clone();
+        let q = self.denom.clone();
+        let r = other.numer.clone();
+        let s = other.denom.clone();
+        PolyRatio::new( p*r, q*s )
+    }
+}
+
+impl<T> Sub for PolyRatio<T>
+where
+    T: Num,
+    T: Copy,
+    T: Debug,
+{
+    type Output = PolyRatio<T>;
+
+    fn sub(self, other: Self) -> PolyRatio<T> {
+        let p = self.numer.clone();
+        let q = self.denom.clone();
+        let r = other.numer.clone();
+        let s = other.denom.clone();
+        PolyRatio::new( p*s.clone() - r*q.clone(), q*s )
+    }
+}
+
+impl<T> Div for PolyRatio<T>
+where
+    T: Num,
+    T: Copy,
+    T: Debug,
+{
+    type Output = PolyRatio<T>;
+
+    fn div(self, other: Self) -> PolyRatio<T> {
+        let p = self.numer.clone();
+        let q = self.denom.clone();
+        let r = other.numer.clone();
+        let s = other.denom.clone();
+        PolyRatio::new( p*s, r*q )
+    }
+}
 
 #[cfg(test)]
 mod tests {
@@ -597,5 +778,30 @@ mod tests {
         let p4 = PolyNumber { n: vec![4, -10] };
         let rp2 = p3/p4;
         assert_eq!(rp1,rp2);
+    }
+    #[test]
+    fn dividing_poly_numbers() {
+        let p1 = PolyNumber { n: vec![2, 7, 2, -3] };
+        let p2 = PolyNumber { n: vec![2, 1, -1] };
+        let p3 = PolyNumber { n: vec![1, 3] };
+        let p4 = PolyNumber { n: vec![1] };
+        let rp1 = p1/p2;
+        match rp1 {
+            Some(PolyRatio { numer: n, denom: d }) => {
+                assert_eq!(n,p3);
+                assert_eq!(d,p4); },
+            None => panic!("Legal division of poly numbers returns None."),
+        }
+        let p21 = PolyNumber { n: vec![12, 8, -7, -2, 1] };
+        let p22 = PolyNumber { n: vec![4, 0, -1] };
+        let p23 = PolyNumber { n: vec![3, 2, -1] };
+        let p24 = PolyNumber { n: vec![1] };
+        let rp21 = p21/p22;
+        match rp21 {
+            Some(PolyRatio { numer: n, denom: d }) => {
+                assert_eq!(n,p23);
+                assert_eq!(d,p24); },
+            None => panic!("Legal division of poly numbers returns None."),
+        }
     }
 }
