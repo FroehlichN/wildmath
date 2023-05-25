@@ -627,6 +627,117 @@ where
     }
 }
 
+#[derive(Debug, Clone)]
+pub struct BiPolyNumber<T> {
+    n: Vec<Vec<T>>,
+}
+
+
+fn add<T>(a: Vec<T>, b: Vec<T>) -> Vec<T>
+where
+    T: Num,
+    T: Copy,
+{
+    let mut index: usize = 0;
+    let mut s: Vec<T> = Vec::new();
+
+    loop {
+        let ae = a.get(index);
+        let be = b.get(index);
+
+        match (ae, be) {
+            (Some(aa), Some(bb)) => s.push(*aa + *bb),
+            (Some(aa), None)     => s.push(*aa),
+            (None, Some(bb))     => s.push(*bb),
+            (None, None)         => return s,
+        }
+
+        index += 1;
+    }
+
+}
+
+fn eq<T>(a: Vec<T>, b: Vec<T>) -> bool
+where
+    T: Num,
+    T: Copy,
+{
+    let mut index: usize = 0;
+    let mut s: Vec<T> = Vec::new();
+
+    loop {
+        let ae = a.get(index);
+        let be = b.get(index);
+
+        match (ae, be) {
+            (Some(aa), Some(bb)) => if aa.clone() != bb.clone() { return false; },
+            (Some(aa), None)     => if aa.clone() != T::zero() { return false; },
+            (None, Some(bb))     => if bb.clone() != T::zero() { return false; },
+            (None, None)         => return true,
+        }
+
+        index += 1;
+    }
+
+}
+
+
+impl<T> Add for BiPolyNumber<T>
+where
+    T: Num,
+    T: Copy,
+{
+    type Output = BiPolyNumber<T>;
+
+    fn add(self, other: Self) -> BiPolyNumber<T> {
+        let mut row_index: usize = 0;
+        let mut s: Vec<Vec<T>> = Vec::new();
+        let this_n = self.n.clone();
+        let other_n = other.n.clone();
+
+        loop {
+
+            let row_a = this_n.get(row_index);
+            let row_b = other_n.get(row_index);
+
+            match (row_a, row_b) {
+                (Some(row_aa), Some(row_bb)) => s.push(add(row_aa.clone(), row_bb.clone())),
+                (Some(row_aa), None)         => s.push(row_aa.clone()),
+                (None, Some(row_bb))         => s.push(row_bb.clone()),
+                (None, None)                 => return BiPolyNumber { n: s },
+            }
+            row_index += 1;
+        }
+    }
+}
+
+impl<T> PartialEq for BiPolyNumber<T>
+where
+    T: Num,
+    T: Copy,
+{
+    fn eq(&self, other: &Self) -> bool {
+        let mut row_index: usize = 0;
+        let this_n = self.n.clone();
+        let other_n = other.n.clone();
+
+        loop {
+
+            let row_a = this_n.get(row_index);
+            let row_b = other_n.get(row_index);
+
+            match (row_a, row_b) {
+                (Some(row_aa), Some(row_bb)) => if !eq(row_aa.clone(), row_bb.clone()) { return false; },
+                (Some(row_aa), None)         => if !eq(row_aa.clone(), vec![T::zero()]) { return false; },
+                (None, Some(row_bb))         => if !eq(row_bb.clone(), vec![T::zero()]) { return false; },
+                (None, None)                 => return true,
+            }
+            row_index += 1;
+        }
+
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -803,5 +914,17 @@ mod tests {
                 assert_eq!(d,p24); },
             None => panic!("Legal division of poly numbers returns None."),
         }
+    }
+    #[test]
+    fn adding_bi_poly_numbers() {
+        let bp1 = BiPolyNumber { n: vec![ vec![1,  0, 5, 4],
+                                          vec![3, -1, 7],
+                                          vec![4,  2] ] };
+        let bp2 = BiPolyNumber { n: vec![ vec![2, -1, 3],
+                                          vec![1,  0, 2, -3] ] };
+        let bp3 = BiPolyNumber { n: vec![ vec![3, -1, 8,  4],
+                                          vec![4, -1, 9, -3],
+                                          vec![4,  2] ] };
+        assert_eq!(bp1+bp2,bp3);
     }
 }
