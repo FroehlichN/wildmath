@@ -1,6 +1,7 @@
 use num::{Num, Integer};
 use std::ops::{Div, Mul, Add, Sub, Neg};
 use std::fmt::Debug;
+use std::cmp;
 
 
 #[derive(Debug)]
@@ -663,7 +664,6 @@ where
     T: Copy,
 {
     let mut index: usize = 0;
-    let mut s: Vec<T> = Vec::new();
 
     loop {
         let ae = a.get(index);
@@ -735,6 +735,51 @@ where
             row_index += 1;
         }
 
+    }
+}
+
+impl<T> Mul for BiPolyNumber<T>
+where
+    T: Num,
+    T: Copy,
+{
+    type Output = BiPolyNumber<T>;
+
+    fn mul(self, other: Self) -> BiPolyNumber<T> {
+
+        let K = cmp::max(self.n.len(),1);
+        let M = cmp::max(other.n.len(),1);
+        let mut L = 1;
+        let mut N = 1;
+
+        for row_a in self.n.iter() {
+            L = cmp::max(L, row_a.len());
+        }
+
+        for row_b in other.n.iter() {
+            N = cmp::max(N, row_b.len());
+        }
+
+        let mut s: Vec<Vec<T>> = Vec::new();
+
+        for r in 0..(K+M-1) {
+            s.push(vec![]);
+            for c in 0..(L+N-1) {
+                s[r].push(T::zero());
+            }
+        }
+
+        for (k, row_a) in self.n.iter().enumerate() {
+            for (l, a) in row_a.iter().enumerate() {
+                for (m, row_b) in other.n.iter().enumerate() {
+                    for (n, b) in row_b.iter().enumerate() {
+                        s[k+m][l+n] = s[k+m][l+n] + *a * *b;
+                    }
+                }
+            }
+        }
+
+        BiPolyNumber { n: s }
     }
 }
 
@@ -926,5 +971,16 @@ mod tests {
                                           vec![4, -1, 9, -3],
                                           vec![4,  2] ] };
         assert_eq!(bp1+bp2,bp3);
+    }
+    #[test]
+    fn multiplication_of_bi_poly_numbers() {
+        let bp1 = BiPolyNumber { n: vec![ vec![1, 2],
+                                          vec![5, 3] ] };
+        let bp2 = BiPolyNumber { n: vec![ vec![4, 5, 1],
+                                          vec![2, 1, 3] ] };
+        let bp3 = BiPolyNumber { n: vec![ vec![ 4, 13, 11, 2],
+                                          vec![22, 42, 25, 9],
+                                          vec![10, 11, 18, 9] ] };
+        assert_eq!(bp1*bp2,bp3);
     }
 }
