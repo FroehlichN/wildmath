@@ -972,15 +972,20 @@ mod tests {
         let rp1 = PolyRatio{ numer: PolyNumber{ n: vec![2,1] }, denom: PolyNumber{ n: vec![3,-1] } };
         let rp2 = PolyRatio{ numer: PolyNumber{ n: vec![4,0,-1]}, denom: PolyNumber{ n: vec![1, 1] } };
         let rp3 = PolyRatio{ numer: PolyNumber{ n: vec![14,-1,-2,1]}, denom: PolyNumber{ n: vec![3,2,-1] } };
-        assert_eq!{rp1+rp2,rp3};
+        assert_eq!(rp1+rp2,rp3);
     }
     #[test]
     fn arithmetic_with_rat_poly_numbers2() {
         let rp1 = PolyRatio{ numer: PolyNumber{ n: vec![5,-1,0,1] }, denom: PolyNumber{ n: vec![1,0,0,0,-1] } };
         let rp2 = PolyRatio{ numer: PolyNumber{ n: vec![6,0,-1] }, denom: PolyNumber{ n: vec![0,0,0,0,0,1] } };
         let rp3 = PolyRatio{ numer: PolyNumber{ n: vec![30,-6,-5,7,0,-1] }, denom: PolyNumber{ n: vec![0,0,0,0,0,1,0,0,0,-1] } };
-        println!("{:?}",rp1*rp2);
-        //assert_eq!{rp1*rp2,rp3};
+        assert_eq!(rp1*rp2,rp3);
+    }
+    #[test]
+    fn equality_of_rational_polynumbers() {
+        let rp1 = PolyRatio{ numer: PolyNumber{ n: vec![1,0,-1] }, denom: PolyNumber{ n: vec![1,-1] } };
+        let rp2 = PolyRatio{ numer: PolyNumber{ n: vec![1,1] }, denom: PolyNumber{ n: vec![1] } };
+        assert_eq!(rp1,rp2);
     }
     #[test]
     fn adding_bi_poly_numbers() {
