@@ -474,6 +474,17 @@ where
     T: Num,
     T: Copy,
 {
+    fn ltrans(&self, c: T) -> PolyNumber<T> {
+        let q = PolyNumber { n: vec![c,T::one()] };
+        return self.compose(q);
+    }
+}
+
+impl<T> PolyNumber<T>
+where
+    T: Num,
+    T: Copy,
+{
     fn zero() -> PolyNumber<T> {
         return PolyNumber { n: vec![T::zero()] };
     }
@@ -963,6 +974,12 @@ mod tests {
         let q = PolyNumber { n: vec![37,1] };
         let pq = PolyNumber { n: vec![5588,299,4] };
         assert_eq!(p.compose(q),pq);
+    }
+    #[test]
+    fn left_translate_poly_numbers() {
+        let p = PolyNumber { n: vec![1,3,4] };
+        let L3p = PolyNumber { n: vec![46,27,4] };
+        assert_eq!(p.ltrans(3),L3p);
     }
     #[test]
     fn rational_poly_numbers() {
