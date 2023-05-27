@@ -474,6 +474,24 @@ where
     T: Num,
     T: Copy,
 {
+    fn composebpi(&self, c: BiPolyNumber<T>) -> BiPolyNumber<T> {
+        let mut ck = BiPolyNumber { n: vec![ vec![T::one()] ] };
+        let mut pc = BiPolyNumber { n: vec![ vec![T::zero()] ] };
+
+        for a in &self.n {
+            pc = pc + ck.clone() * *a;
+            ck = ck.clone() * c.clone();
+        }
+
+        return pc;
+    }
+}
+
+impl<T> PolyNumber<T>
+where
+    T: Num,
+    T: Copy,
+{
     fn ltrans(&self, c: T) -> PolyNumber<T> {
         let q = PolyNumber { n: vec![c,T::one()] };
         return self.compose(q);
@@ -819,6 +837,28 @@ where
     }
 }
 
+impl<T> Mul<T> for BiPolyNumber<T>
+where
+    T: Num,
+    T: Copy,
+{
+    type Output = BiPolyNumber<T>;
+
+    fn mul(self, other: T) -> BiPolyNumber<T> {
+
+        let mut s: Vec<Vec<T>> = Vec::new();
+
+        for (k, row_a) in self.n.iter().enumerate() {
+            s.push( vec![] );
+            for a in row_a.iter() {
+                s[k].push( *a * other );
+            }
+        }
+
+        BiPolyNumber { n: s }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -1070,5 +1110,17 @@ mod tests {
                                           vec![22, 42, 25, 9],
                                           vec![10, 11, 18, 9] ] };
         assert_eq!(bp1*bp2,bp3);
+    }
+    #[test]
+    fn evaluate_poly_number_at_bi_poly_number() {
+        let q = PolyNumber { n: vec![-4,7,10,-6,2] };
+        let p = BiPolyNumber { n: vec![ vec![0,1],
+                                        vec![1,0] ] };
+        let t = BiPolyNumber { n: vec![ vec![-4,  7, 10,-6,2],
+                                        vec![ 7, 20,-18, 8],
+                                        vec![10,-18,12],
+                                        vec![-6,  8],
+                                        vec![2] ] };
+        assert_eq!(q.composebpi(p),t);
     }
 }
