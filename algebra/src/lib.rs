@@ -994,6 +994,12 @@ mod tests {
         assert_eq!(rp1,rp2);
     }
     #[test]
+    fn equality_of_rational_polynumbers3() {
+        let rp1 = PolyRatio{ numer: PolyNumber{ n: vec![1,0,1,0,1] }, denom: PolyNumber{ n: vec![1,1,1] } };
+        let rp2 = PolyRatio{ numer: PolyNumber{ n: vec![1,-2,1,0,-1] }, denom: PolyNumber{ n: vec![1,-1,-1] } };
+        assert_eq!(rp1,rp2);
+    }
+    #[test]
     fn adding_bi_poly_numbers() {
         let bp1 = BiPolyNumber { n: vec![ vec![1,  0, 5, 4],
                                           vec![3, -1, 7],
