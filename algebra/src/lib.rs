@@ -456,6 +456,24 @@ where
     T: Num,
     T: Copy,
 {
+    fn compose(&self, c: PolyNumber<T>) -> PolyNumber<T> {
+        let mut ck = PolyNumber { n: vec![T::one()] };
+        let mut pc = PolyNumber { n: vec![T::zero()] };
+
+        for a in &self.n {
+            pc = pc + ck.clone() * *a;
+            ck = ck.clone() * c.clone();
+        }
+
+        return pc;
+    }
+}
+
+impl<T> PolyNumber<T>
+where
+    T: Num,
+    T: Copy,
+{
     fn zero() -> PolyNumber<T> {
         return PolyNumber { n: vec![T::zero()] };
     }
@@ -931,6 +949,20 @@ mod tests {
         let p2 = PolyNumber { n: vec![1, -5] };
         let c2 = 4;
         assert_eq!(p2.eval(c2),-19);
+    }
+    #[test]
+    fn composing_poly_numbers() {
+        let p = PolyNumber { n: vec![1,3,4] };
+        let q = PolyNumber { n: vec![2,1] };
+        let pq = PolyNumber { n: vec![23,19,4] };
+        assert_eq!(p.compose(q),pq);
+    }
+    #[test]
+    fn composing_poly_numbers2() {
+        let p = PolyNumber { n: vec![1,3,4] };
+        let q = PolyNumber { n: vec![37,1] };
+        let pq = PolyNumber { n: vec![5588,299,4] };
+        assert_eq!(p.compose(q),pq);
     }
     #[test]
     fn rational_poly_numbers() {
