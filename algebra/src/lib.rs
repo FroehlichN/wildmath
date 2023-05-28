@@ -883,6 +883,21 @@ where
     }
 }
 
+impl<T> PolyNumber<T>
+where
+    T: Num,
+    T: Copy,
+{
+    fn derivative(self, grade: usize) -> PolyNumber<T> {
+        let tp = self.taylor();
+        let  s = tp.n.get(grade);
+        match s {
+            Some(v) => return PolyNumber{ n: (*v).clone() },
+            None    => return Self::zero(),
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -1156,5 +1171,17 @@ mod tests {
                                         vec![-6,  8],
                                         vec![2] ] };
         assert_eq!(q.taylor(),t);
+    }
+    #[test]
+    fn subderivatives_of_poly_numbers() {
+        let q  = PolyNumber { n: vec![-4,7,10,-6,2] };
+        let d1 = PolyNumber { n: vec![7,20,-18,8] };
+        let d2 = PolyNumber { n: vec![10,-18,12] };
+        let d3 = PolyNumber { n: vec![-6,8] };
+        let d4 = PolyNumber { n: vec![2] };
+        assert_eq!(q.clone().derivative(1),d1);
+        assert_eq!(q.clone().derivative(2),d2);
+        assert_eq!(q.clone().derivative(3),d3);
+        assert_eq!(q.clone().derivative(4),d4);
     }
 }
