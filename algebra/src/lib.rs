@@ -871,6 +871,18 @@ where
     }
 }
 
+impl<T> PolyNumber<T>
+where
+    T: Num,
+    T: Copy,
+{
+    fn taylor(self) -> BiPolyNumber<T> {
+        let p = BiPolyNumber { n: vec! [ vec![T::zero(),T::one()],
+                                         vec![T::one(),T::zero()] ] };
+        return self.eval(p);
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -1134,5 +1146,15 @@ mod tests {
                                         vec![-6,  8],
                                         vec![2] ] };
         assert_eq!(q.eval(p),t);
+    }
+    #[test]
+    fn taylor_bi_poly_number() {
+        let q = PolyNumber { n: vec![-4,7,10,-6,2] };
+        let t = BiPolyNumber { n: vec![ vec![-4,  7, 10,-6,2],
+                                        vec![ 7, 20,-18, 8],
+                                        vec![10,-18,12],
+                                        vec![-6,  8],
+                                        vec![2] ] };
+        assert_eq!(q.taylor(),t);
     }
 }
