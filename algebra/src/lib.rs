@@ -1,4 +1,4 @@
-use num::{Num, Integer};
+use num::{Num, Integer,Zero,One};
 use std::ops::{Div, Mul, Add, Sub, Neg};
 use std::fmt::Debug;
 use std::cmp;
@@ -438,45 +438,17 @@ where
     T: Num,
     T: Copy,
 {
-    fn eval(&self, c: T) -> T {
-        let mut ck = T::one();
-        let mut pc = T::zero();
-
-        for a in &self.n {
-            pc = pc + *a * ck;
-            ck = ck * c;
-        }
-
-        return pc;
-    }
-}
-
-impl<T> PolyNumber<T>
-where
-    T: Num,
-    T: Copy,
-{
-    fn compose(&self, c: PolyNumber<T>) -> PolyNumber<T> {
-        let mut ck = PolyNumber { n: vec![T::one()] };
-        let mut pc = PolyNumber { n: vec![T::zero()] };
-
-        for a in &self.n {
-            pc = pc + ck.clone() * *a;
-            ck = ck.clone() * c.clone();
-        }
-
-        return pc;
-    }
-}
-
-impl<T> PolyNumber<T>
-where
-    T: Num,
-    T: Copy,
-{
-    fn composebpi(&self, c: BiPolyNumber<T>) -> BiPolyNumber<T> {
-        let mut ck = BiPolyNumber { n: vec![ vec![T::one()] ] };
-        let mut pc = BiPolyNumber { n: vec![ vec![T::zero()] ] };
+    fn eval<O>(&self, c: O) -> O
+    where
+        O: One,
+        O: Zero,
+        O: Mul,
+        O: Mul<T, Output = O>,
+        O: Add,
+        O: Clone,
+    {
+        let mut ck = O::one();
+        let mut pc = O::zero();
 
         for a in &self.n {
             pc = pc + ck.clone() * *a;
@@ -494,11 +466,11 @@ where
 {
     fn ltrans(&self, c: T) -> PolyNumber<T> {
         let q = PolyNumber { n: vec![c,T::one()] };
-        return self.compose(q);
+        return self.eval(q);
     }
 }
 
-impl<T> PolyNumber<T>
+impl<T> Zero for PolyNumber<T>
 where
     T: Num,
     T: Copy,
@@ -506,7 +478,23 @@ where
     fn zero() -> PolyNumber<T> {
         return PolyNumber { n: vec![T::zero()] };
     }
+
+    fn is_zero(&self) -> bool {
+        return *self == Self::zero();
+    }
 }
+
+impl<T> One for PolyNumber<T>
+where
+    T: Num,
+    T: Copy,
+{
+    fn one() -> PolyNumber<T> {
+        return PolyNumber { n: vec![T::one()] };
+    }
+}
+
+
 
 impl<T> Div for PolyNumber<T>
 where
@@ -859,6 +847,30 @@ where
     }
 }
 
+impl<T> Zero for BiPolyNumber<T>
+where
+    T: Num,
+    T: Copy,
+{
+    fn zero() -> BiPolyNumber<T> {
+        return BiPolyNumber { n: vec![ vec![T::zero()] ] };
+    }
+
+    fn is_zero(&self) -> bool {
+        return *self == Self::zero();
+    }
+}
+
+impl<T> One for BiPolyNumber<T>
+where
+    T: Num,
+    T: Copy,
+{
+    fn one() -> BiPolyNumber<T> {
+        return BiPolyNumber { n: vec![ vec![T::one()] ] };
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -1006,14 +1018,14 @@ mod tests {
         let p = PolyNumber { n: vec![1,3,4] };
         let q = PolyNumber { n: vec![2,1] };
         let pq = PolyNumber { n: vec![23,19,4] };
-        assert_eq!(p.compose(q),pq);
+        assert_eq!(p.eval(q),pq);
     }
     #[test]
     fn composing_poly_numbers2() {
         let p = PolyNumber { n: vec![1,3,4] };
         let q = PolyNumber { n: vec![37,1] };
         let pq = PolyNumber { n: vec![5588,299,4] };
-        assert_eq!(p.compose(q),pq);
+        assert_eq!(p.eval(q),pq);
     }
     #[test]
     fn left_translate_poly_numbers() {
@@ -1036,7 +1048,7 @@ mod tests {
         let p1 = PolyNumber { n: vec![2, 7, 2, -3] };
         let p2 = PolyNumber { n: vec![2, 1, -1] };
         let p3 = PolyNumber { n: vec![1, 3] };
-        let p4 = PolyNumber { n: vec![1] };
+        let p4 = PolyNumber::one();
         let rp1 = p1/p2;
         match rp1 {
             Some(PolyRatio { numer: n, denom: d }) => {
@@ -1047,7 +1059,7 @@ mod tests {
         let p21 = PolyNumber { n: vec![12, 8, -7, -2, 1] };
         let p22 = PolyNumber { n: vec![4, 0, -1] };
         let p23 = PolyNumber { n: vec![3, 2, -1] };
-        let p24 = PolyNumber { n: vec![1] };
+        let p24 = PolyNumber::one();
         let rp21 = p21/p22;
         match rp21 {
             Some(PolyRatio { numer: n, denom: d }) => {
@@ -1073,13 +1085,13 @@ mod tests {
     #[test]
     fn equality_of_rational_polynumbers() {
         let rp1 = PolyRatio{ numer: PolyNumber{ n: vec![1,0,-1] }, denom: PolyNumber{ n: vec![1,-1] } };
-        let rp2 = PolyRatio{ numer: PolyNumber{ n: vec![1,1] }, denom: PolyNumber{ n: vec![1] } };
+        let rp2 = PolyRatio{ numer: PolyNumber{ n: vec![1,1] }, denom: PolyNumber::one() };
         assert_eq!(rp1,rp2);
     }
     #[test]
     fn equality_of_rational_polynumbers2() {
         let rp1 = PolyRatio{ numer: PolyNumber{ n: vec![1,0,0,-1] }, denom: PolyNumber{ n: vec![1,-1] } };
-        let rp2 = PolyRatio{ numer: PolyNumber{ n: vec![1,1,1] }, denom: PolyNumber{ n: vec![1] } };
+        let rp2 = PolyRatio{ numer: PolyNumber{ n: vec![1,1,1] }, denom: PolyNumber::one() };
         assert_eq!(rp1,rp2);
     }
     #[test]
@@ -1121,6 +1133,6 @@ mod tests {
                                         vec![10,-18,12],
                                         vec![-6,  8],
                                         vec![2] ] };
-        assert_eq!(q.composebpi(p),t);
+        assert_eq!(q.eval(p),t);
     }
 }
