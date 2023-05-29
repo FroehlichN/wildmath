@@ -532,6 +532,18 @@ where
     }
 }
 
+impl<T> PolyNumber<T>
+where
+    T: Num,
+    T: Copy,
+{
+    fn tangent(self, k: usize, c: T) -> PolyNumber<T> {
+        let p_alpha_plus_c = self.ltrans(c);
+        let trunc = p_alpha_plus_c.truncate(k);
+        return trunc.ltrans(T::zero() - c);
+    }
+}
+
 /// Represents the ratio between two poly numbers
 #[derive(Debug)]
 pub struct PolyRatio<T> {
@@ -1211,5 +1223,16 @@ mod tests {
         assert_eq!(p.clone().truncate(1),t1p);
         assert_eq!(p.clone().truncate(2),t2p);
         assert_eq!(p.clone().truncate(3),t3p);
+    }
+    #[test]
+    fn tangents_of_polynumbers() {
+        let p = PolyNumber{ n: vec![8,-5,0,4,-1] };
+        let t0p1 = PolyNumber{ n: vec![6] };
+        let t1p1 = PolyNumber{ n: vec![3,3] };
+        let t2p1 = PolyNumber{ n: vec![9,-9,6] };
+        assert_eq!(p.clone().tangent(0,1),t0p1);
+        assert_eq!(p.clone().tangent(1,1),t1p1);
+        assert_eq!(p.clone().tangent(2,1),t2p1.clone());
+        assert_eq!(p.clone().tangent(3,1),t2p1);
     }
 }
