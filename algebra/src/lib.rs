@@ -514,6 +514,24 @@ where
     }
 }
 
+impl<T> PolyNumber<T>
+where
+    T: Num,
+    T: Copy,
+{
+    fn truncate(self, k: usize) -> PolyNumber<T> {
+        let mut v : Vec<T> = Vec::new();
+        for n in 0..k+1 {
+            let a = self.n.get(n);
+            match a {
+                Some(aa) => v.push(*aa),
+                None     => (),
+            }
+        }
+        return PolyNumber{ n: v };
+    }
+}
+
 /// Represents the ratio between two poly numbers
 #[derive(Debug)]
 pub struct PolyRatio<T> {
@@ -1183,5 +1201,15 @@ mod tests {
         assert_eq!(q.clone().derivative(2),d2);
         assert_eq!(q.clone().derivative(3),d3);
         assert_eq!(q.clone().derivative(4),d4);
+    }
+    #[test]
+    fn truncation_of_polynumbers() {
+        let p = PolyNumber { n: vec![8,-5,0,4,-1] };
+        let t1p = PolyNumber { n: vec![8,-5] };
+        let t2p = PolyNumber { n: vec![8,-5] };
+        let t3p = PolyNumber { n: vec![8,-5,0,4] };
+        assert_eq!(p.clone().truncate(1),t1p);
+        assert_eq!(p.clone().truncate(2),t2p);
+        assert_eq!(p.clone().truncate(3),t3p);
     }
 }
