@@ -1,5 +1,5 @@
-use num::{Num, Integer,Zero,One};
-use std::ops::{Div, Mul, Add, Sub, Neg};
+use num::{Num,Zero,One};
+use std::ops::{Div, Mul, Add, Sub};
 use std::fmt::Debug;
 use std::cmp;
 
@@ -26,7 +26,9 @@ where
 
 impl<T> PartialEq for PolyNumber<T>
 where
-    T: Num,
+    T: PartialEq,
+    T: Zero,
+    T: Clone,
 {
     fn eq(&self, other: &Self) -> bool {
         let mut index: usize = 0;
@@ -49,8 +51,8 @@ where
 
 impl<T> Add for PolyNumber<T>
 where
-    T: Num,
-    T: Copy,
+    T: Add<Output = T>,
+    T: Clone,
 {
     type Output = PolyNumber<T>;
 
@@ -63,9 +65,9 @@ where
             let b = other.n.get(index);
 
             match (a, b) {
-                (Some(aa), Some(bb)) => s.push(*aa + *bb),
-                (Some(aa), None)     => s.push(*aa),
-                (None, Some(bb))     => s.push(*bb),
+                (Some(aa), Some(bb)) => s.push((*aa).clone() + (*bb).clone()),
+                (Some(aa), None)     => s.push((*aa).clone()),
+                (None, Some(bb))     => s.push((*bb).clone()),
                 (None, None)         => return PolyNumber { n: s },
             }
 
@@ -444,8 +446,9 @@ where
 
 fn eq<T>(a: Vec<T>, b: Vec<T>) -> bool
 where
-    T: Num,
-    T: Copy,
+    T: PartialEq,
+    T: Zero,
+    T: Clone,
 {
     let mut index: usize = 0;
 
@@ -497,8 +500,9 @@ where
 
 impl<T> PartialEq for BiPolyNumber<T>
 where
-    T: Num,
-    T: Copy,
+    T: PartialEq,
+    T: Zero,
+    T: Clone,
 {
     fn eq(&self, other: &Self) -> bool {
         let mut row_index: usize = 0;
@@ -775,14 +779,14 @@ mod tests {
     }
     #[test]
     fn adding_bi_poly_numbers() {
-        let bp1 = BiPolyNumber { n: vec![ vec![1,  0, 5, 4],
-                                          vec![3, -1, 7],
-                                          vec![4,  2] ] };
-        let bp2 = BiPolyNumber { n: vec![ vec![2, -1, 3],
-                                          vec![1,  0, 2, -3] ] };
-        let bp3 = BiPolyNumber { n: vec![ vec![3, -1, 8,  4],
-                                          vec![4, -1, 9, -3],
-                                          vec![4,  2] ] };
+        let bp1 = PolyNumber { n: vec![ PolyNumber { n: vec![1,  0, 5, 4] },
+                                        PolyNumber { n: vec![3, -1, 7] },
+                                        PolyNumber { n: vec![4,  2] } ] };
+        let bp2 = PolyNumber { n: vec![ PolyNumber { n: vec![2, -1, 3] },
+                                        PolyNumber { n: vec![1,  0, 2, -3] } ] };
+        let bp3 = PolyNumber { n: vec![ PolyNumber { n: vec![3, -1, 8,  4] },
+                                        PolyNumber { n: vec![4, -1, 9, -3] } ,
+                                        PolyNumber { n: vec![4,  2] } ] };
         assert_eq!(bp1+bp2,bp3);
     }
     #[test]
