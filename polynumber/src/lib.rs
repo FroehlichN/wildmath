@@ -105,8 +105,9 @@ where
 
 impl<T> Mul for PolyNumber<T>
 where
-    T: Num,
-    T: Copy,
+    T: Mul<Output = T>,
+    T: Add<Output = T>,
+    T: Clone,
 {
     type Output = PolyNumber<T>;
 
@@ -119,8 +120,8 @@ where
                 let c = p.get(ci);
 
                 match c {
-                    Some(cv) => p[ci] = *cv + *av * *bv,
-                    None     => p.push(*av * *bv),
+                    Some(cv) => p[ci] = (*cv).clone() + (*av).clone() * (*bv).clone(),
+                    None     => p.push((*av).clone() * (*bv).clone()),
                 }
             }
         }
@@ -791,13 +792,13 @@ mod tests {
     }
     #[test]
     fn multiplication_of_bi_poly_numbers() {
-        let bp1 = BiPolyNumber { n: vec![ vec![1, 2],
-                                          vec![5, 3] ] };
-        let bp2 = BiPolyNumber { n: vec![ vec![4, 5, 1],
-                                          vec![2, 1, 3] ] };
-        let bp3 = BiPolyNumber { n: vec![ vec![ 4, 13, 11, 2],
-                                          vec![22, 42, 25, 9],
-                                          vec![10, 11, 18, 9] ] };
+        let bp1 = PolyNumber { n: vec![ PolyNumber { n: vec![1, 2] },
+                                        PolyNumber { n: vec![5, 3] } ] };
+        let bp2 = PolyNumber { n: vec![ PolyNumber { n: vec![4, 5, 1] },
+                                        PolyNumber { n: vec![2, 1, 3] } ] };
+        let bp3 = PolyNumber { n: vec![ PolyNumber { n: vec![ 4, 13, 11, 2] },
+                                        PolyNumber { n: vec![22, 42, 25, 9] },
+                                        PolyNumber { n: vec![10, 11, 18, 9] } ] };
         assert_eq!(bp1*bp2,bp3);
     }
     #[test]
