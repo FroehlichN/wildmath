@@ -148,6 +148,25 @@ where
     }
 }
 
+impl<T> Mul<T> for PolyNumber<PolyNumber<T>>
+where
+    T: Mul,
+    PolyNumber<T>: Mul<PolyNumber<T>, Output = PolyNumber<T>>,
+    T: Clone,
+{
+    type Output = PolyNumber<PolyNumber<T>>;
+
+    fn mul(self, other: T) -> PolyNumber<PolyNumber<T>> {
+        let mut p: Vec<PolyNumber<T>> = Vec::new();
+
+        for a in self.n {
+            p.push(a * PolyNumber{ n: vec![other.clone()] });
+        }
+
+        return PolyNumber { n: p };
+    }
+}
+
 impl<T> PolyNumber<T>
 where
     T: Num,
@@ -800,6 +819,14 @@ mod tests {
                                         PolyNumber { n: vec![22, 42, 25, 9] },
                                         PolyNumber { n: vec![10, 11, 18, 9] } ] };
         assert_eq!(bp1*bp2,bp3);
+    }
+    #[test]
+    fn scalar_multiplication_of_bi_poly_numbers() {
+        let bp1 = PolyNumber { n: vec![ PolyNumber { n: vec![1,  2] },
+                                        PolyNumber { n: vec![5,  3] } ] };
+        let bp2 = PolyNumber { n: vec![ PolyNumber { n: vec![3,  6] },
+                                        PolyNumber { n: vec![15, 9] } ] };
+        assert_eq!(bp1*3,bp2);
     }
     #[test]
     fn evaluate_poly_number_at_bi_poly_number() {
