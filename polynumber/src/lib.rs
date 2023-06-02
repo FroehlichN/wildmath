@@ -169,8 +169,7 @@ where
 
 impl<T> PolyNumber<T>
 where
-    T: Num,
-    T: Copy,
+    T: Clone,
 {
     fn eval<O>(&self, c: O) -> O
     where
@@ -185,7 +184,7 @@ where
         let mut pc = O::zero();
 
         for a in &self.n {
-            pc = pc + ck.clone() * *a;
+            pc = pc + ck.clone() * (*a).clone();
             ck = ck.clone() * c.clone();
         }
 
@@ -206,8 +205,9 @@ where
 
 impl<T> Zero for PolyNumber<T>
 where
-    T: Num,
-    T: Copy,
+    T: Zero,
+    T: PartialEq,
+    T: Clone,
 {
     fn zero() -> PolyNumber<T> {
         return PolyNumber { n: vec![T::zero()] };
@@ -220,8 +220,9 @@ where
 
 impl<T> One for PolyNumber<T>
 where
-    T: Num,
-    T: Copy,
+    T: One,
+    T: Add<Output = T>,
+    T: Clone,
 {
     fn one() -> PolyNumber<T> {
         return PolyNumber { n: vec![T::one()] };
@@ -831,13 +832,13 @@ mod tests {
     #[test]
     fn evaluate_poly_number_at_bi_poly_number() {
         let q = PolyNumber { n: vec![-4,7,10,-6,2] };
-        let p = BiPolyNumber { n: vec![ vec![0,1],
-                                        vec![1,0] ] };
-        let t = BiPolyNumber { n: vec![ vec![-4,  7, 10,-6,2],
-                                        vec![ 7, 20,-18, 8],
-                                        vec![10,-18,12],
-                                        vec![-6,  8],
-                                        vec![2] ] };
+        let p = PolyNumber { n: vec![ PolyNumber { n: vec![0,1] },
+                                      PolyNumber { n: vec![1,0] } ] };
+        let t = PolyNumber { n: vec![ PolyNumber { n: vec![-4,  7, 10,-6,2] },
+                                      PolyNumber { n: vec![ 7, 20,-18, 8] },
+                                      PolyNumber { n: vec![10,-18,12] },
+                                      PolyNumber { n: vec![-6,  8] },
+                                      PolyNumber { n: vec![2] } ] };
         assert_eq!(q.eval(p),t);
     }
     #[test]
