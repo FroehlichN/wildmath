@@ -435,221 +435,6 @@ where
     }
 }
 
-#[derive(Debug, Clone)]
-pub struct BiPolyNumber<T> {
-    n: Vec<Vec<T>>,
-}
-
-
-fn add<T>(a: Vec<T>, b: Vec<T>) -> Vec<T>
-where
-    T: Num,
-    T: Copy,
-{
-    let mut index: usize = 0;
-    let mut s: Vec<T> = Vec::new();
-
-    loop {
-        let ae = a.get(index);
-        let be = b.get(index);
-
-        match (ae, be) {
-            (Some(aa), Some(bb)) => s.push(*aa + *bb),
-            (Some(aa), None)     => s.push(*aa),
-            (None, Some(bb))     => s.push(*bb),
-            (None, None)         => return s,
-        }
-
-        index += 1;
-    }
-
-}
-
-fn eq<T>(a: Vec<T>, b: Vec<T>) -> bool
-where
-    T: PartialEq,
-    T: Zero,
-    T: Clone,
-{
-    let mut index: usize = 0;
-
-    loop {
-        let ae = a.get(index);
-        let be = b.get(index);
-
-        match (ae, be) {
-            (Some(aa), Some(bb)) => if aa.clone() != bb.clone() { return false; },
-            (Some(aa), None)     => if aa.clone() != T::zero() { return false; },
-            (None, Some(bb))     => if bb.clone() != T::zero() { return false; },
-            (None, None)         => return true,
-        }
-
-        index += 1;
-    }
-
-}
-
-
-impl<T> Add for BiPolyNumber<T>
-where
-    T: Num,
-    T: Copy,
-{
-    type Output = BiPolyNumber<T>;
-
-    fn add(self, other: Self) -> BiPolyNumber<T> {
-        let mut row_index: usize = 0;
-        let mut s: Vec<Vec<T>> = Vec::new();
-        let this_n = self.n.clone();
-        let other_n = other.n.clone();
-
-        loop {
-
-            let row_a = this_n.get(row_index);
-            let row_b = other_n.get(row_index);
-
-            match (row_a, row_b) {
-                (Some(row_aa), Some(row_bb)) => s.push(add(row_aa.clone(), row_bb.clone())),
-                (Some(row_aa), None)         => s.push(row_aa.clone()),
-                (None, Some(row_bb))         => s.push(row_bb.clone()),
-                (None, None)                 => return BiPolyNumber { n: s },
-            }
-            row_index += 1;
-        }
-    }
-}
-
-impl<T> PartialEq for BiPolyNumber<T>
-where
-    T: PartialEq,
-    T: Zero,
-    T: Clone,
-{
-    fn eq(&self, other: &Self) -> bool {
-        let mut row_index: usize = 0;
-        let this_n = self.n.clone();
-        let other_n = other.n.clone();
-
-        loop {
-
-            let row_a = this_n.get(row_index);
-            let row_b = other_n.get(row_index);
-
-            match (row_a, row_b) {
-                (Some(row_aa), Some(row_bb)) => if !eq(row_aa.clone(), row_bb.clone()) { return false; },
-                (Some(row_aa), None)         => if !eq(row_aa.clone(), vec![T::zero()]) { return false; },
-                (None, Some(row_bb))         => if !eq(row_bb.clone(), vec![T::zero()]) { return false; },
-                (None, None)                 => return true,
-            }
-            row_index += 1;
-        }
-
-    }
-}
-
-impl<T> Mul for BiPolyNumber<T>
-where
-    T: Num,
-    T: Copy,
-{
-    type Output = BiPolyNumber<T>;
-
-    fn mul(self, other: Self) -> BiPolyNumber<T> {
-
-        let K = cmp::max(self.n.len(),1);
-        let M = cmp::max(other.n.len(),1);
-        let mut L = 1;
-        let mut N = 1;
-
-        for row_a in self.n.iter() {
-            L = cmp::max(L, row_a.len());
-        }
-
-        for row_b in other.n.iter() {
-            N = cmp::max(N, row_b.len());
-        }
-
-        let mut s: Vec<Vec<T>> = Vec::new();
-
-        for r in 0..(K+M-1) {
-            s.push(vec![]);
-            for c in 0..(L+N-1) {
-                s[r].push(T::zero());
-            }
-        }
-
-        for (k, row_a) in self.n.iter().enumerate() {
-            for (l, a) in row_a.iter().enumerate() {
-                for (m, row_b) in other.n.iter().enumerate() {
-                    for (n, b) in row_b.iter().enumerate() {
-                        s[k+m][l+n] = s[k+m][l+n] + *a * *b;
-                    }
-                }
-            }
-        }
-
-        BiPolyNumber { n: s }
-    }
-}
-
-impl<T> Mul<T> for BiPolyNumber<T>
-where
-    T: Num,
-    T: Copy,
-{
-    type Output = BiPolyNumber<T>;
-
-    fn mul(self, other: T) -> BiPolyNumber<T> {
-
-        let mut s: Vec<Vec<T>> = Vec::new();
-
-        for (k, row_a) in self.n.iter().enumerate() {
-            s.push( vec![] );
-            for a in row_a.iter() {
-                s[k].push( *a * other );
-            }
-        }
-
-        BiPolyNumber { n: s }
-    }
-}
-
-impl<T> Zero for BiPolyNumber<T>
-where
-    T: Num,
-    T: Copy,
-{
-    fn zero() -> BiPolyNumber<T> {
-        return BiPolyNumber { n: vec![ vec![T::zero()] ] };
-    }
-
-    fn is_zero(&self) -> bool {
-        return *self == Self::zero();
-    }
-}
-
-impl<T> One for BiPolyNumber<T>
-where
-    T: Num,
-    T: Copy,
-{
-    fn one() -> BiPolyNumber<T> {
-        return BiPolyNumber { n: vec![ vec![T::one()] ] };
-    }
-}
-
-impl<T> PolyNumber<T>
-where
-    T: Num,
-    T: Copy,
-{
-    fn taylor(self) -> BiPolyNumber<T> {
-        let p = BiPolyNumber { n: vec! [ vec![T::zero(),T::one()],
-                                         vec![T::one(),T::zero()] ] };
-        return self.eval(p);
-    }
-}
-
 impl<T> PolyNumber<T>
 where
     T: Zero,
@@ -657,7 +442,7 @@ where
     T: PartialEq,
     T: Clone,
 {
-    fn taylor2(self) -> PolyNumber<PolyNumber<T>> {
+    fn taylor(self) -> PolyNumber<PolyNumber<T>> {
         let p = PolyNumber { n: vec! [ PolyNumber { n: vec![T::zero(),T::one()] },
                                        PolyNumber { n: vec![T::one(),T::zero()] } ] };
         return self.eval(p);
@@ -672,7 +457,7 @@ where
     T: Clone,
 {
     fn derivative(self, grade: usize) -> PolyNumber<T> {
-        let tp = self.taylor2();
+        let tp = self.taylor();
         let  s = tp.n.get(grade);
         match s {
             Some(v) => return (*v).clone(),
@@ -865,7 +650,7 @@ mod tests {
                                       PolyNumber { n: vec![10,-18,12] },
                                       PolyNumber { n: vec![-6,  8] },
                                       PolyNumber { n: vec![2] } ] };
-        assert_eq!(q.taylor2(),t);
+        assert_eq!(q.taylor(),t);
     }
     #[test]
     fn subderivatives_of_poly_numbers() {
