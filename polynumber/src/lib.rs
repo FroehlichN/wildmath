@@ -514,6 +514,35 @@ where
     }
 }
 
+impl<T> PolyNumber<PolyNumber<T>>
+where
+    T: Zero,
+    T: One,
+    T: PartialEq,
+    T: Clone,
+{
+    fn derivative2(self, i : usize, j : usize) -> PolyNumber<PolyNumber<T>> {
+        let tp = self.taylor2();
+
+        let bpol : PolyNumber<PolyNumber<PolyNumber<T>>>;
+        let s = tp.n.get(j);
+        match s {
+            Some(p) => bpol = (*p).clone(),
+            None    => return Self::zero(),
+        }
+
+        let mut v : Vec<PolyNumber<T>> = Vec::new();
+        for b in bpol.n {
+            let go = b.n.get(i);
+            match go {
+                Some(g) => v.push((*g).clone()),
+                None    => v.push(PolyNumber::<T>::zero()),
+            }
+        }
+        return PolyNumber{ n: v };
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -757,6 +786,24 @@ mod tests {
                         PolyNumber{ n: vec![ // b^0
                             PolyNumber{ n: vec![1] } ] } ] } ] }; // d^2
         assert_eq!(p.taylor2(),t);
+    }
+    #[test]
+    fn derivatives_of_by_polynumbers() {
+        let p = PolyNumber{ n: vec![PolyNumber{ n: vec![-1,0,1] }, // -1 + a^2
+                                    PolyNumber{ n: vec![0] },
+                                    PolyNumber{ n: vec![1] } ] }; // b^2
+        let d01 = PolyNumber{ n: vec![PolyNumber{ n: vec![0] },
+                                      PolyNumber{ n: vec![2] } ] }; // 2b
+        let d02 = PolyNumber{ n: vec![PolyNumber{ n: vec![1] } ] }; // 1
+        let d10 = PolyNumber{ n: vec![PolyNumber{ n: vec![0,2] } ] }; // 2a
+        let d11 = PolyNumber{ n: vec![PolyNumber{ n: vec![0] } ] }; // 0
+        let d20 = PolyNumber{ n: vec![PolyNumber{ n: vec![1] } ] }; // 1
+        assert_eq!(p.clone().derivative2(0,0),p.clone());
+        assert_eq!(p.clone().derivative2(0,1),d01);
+        assert_eq!(p.clone().derivative2(0,2),d02);
+        assert_eq!(p.clone().derivative2(1,0),d10);
+        assert_eq!(p.clone().derivative2(1,1),d11);
+        assert_eq!(p.clone().derivative2(2,0),d20);
     }
 }
 
