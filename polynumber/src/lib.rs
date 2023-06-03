@@ -655,7 +655,7 @@ where
     T: Zero,
     T: One,
     T: PartialEq,
-    T: Copy,
+    T: Clone,
 {
     fn taylor2(self) -> PolyNumber<PolyNumber<T>> {
         let p = PolyNumber { n: vec! [ PolyNumber { n: vec![T::zero(),T::one()] },
@@ -666,14 +666,16 @@ where
 
 impl<T> PolyNumber<T>
 where
-    T: Num,
-    T: Copy,
+    T: Zero,
+    T: One,
+    T: PartialEq,
+    T: Clone,
 {
     fn derivative(self, grade: usize) -> PolyNumber<T> {
-        let tp = self.taylor();
+        let tp = self.taylor2();
         let  s = tp.n.get(grade);
         match s {
-            Some(v) => return PolyNumber{ n: (*v).clone() },
+            Some(v) => return (*v).clone(),
             None    => return Self::zero(),
         }
     }
