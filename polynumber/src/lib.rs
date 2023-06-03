@@ -192,6 +192,29 @@ where
     }
 }
 
+impl<T> PolyNumber<PolyNumber<T>>
+where
+    T: Clone,
+{
+    fn eval2<O>(&self, c: O) -> PolyNumber<O>
+    where
+        O: One,
+        O: Zero,
+        O: Mul,
+        O: Mul<T, Output = O>,
+        O: Add,
+        O: Clone,
+    {
+        let mut v : Vec<O> = Vec::new();
+
+        for a in &self.n {
+            v.push((*a).eval(c.clone()));
+        }
+
+        return PolyNumber{ n: v };
+    }
+}
+
 impl<T> PolyNumber<T>
 where
     T: Num,
@@ -449,6 +472,31 @@ where
     }
 }
 
+impl<T> PolyNumber<PolyNumber<T>>
+where
+    T: Zero,
+    T: One,
+    T: PartialEq,
+    T: Clone,
+{
+    fn taylor2(self) -> PolyNumber<PolyNumber<PolyNumber<PolyNumber<T>>>> {
+        let apg = PolyNumber{ n: vec![PolyNumber{ n: vec![T::zero(),T::one()] }, // a
+                                      PolyNumber{ n: vec![T::one(),T::zero()] } ] }; // g
+        let bpd = PolyNumber{ n: vec![
+                      PolyNumber{ n: vec![ // d^0
+                          PolyNumber{ n: vec![ // b^0
+                              PolyNumber{ n: vec![T::zero()] } ] },
+                          PolyNumber{ n: vec![ // b^1
+                              PolyNumber{ n: vec![T::one()] } ] } ] }, // b
+                      PolyNumber{ n: vec![ // d^1
+                          PolyNumber{ n: vec![ // b^0
+                              PolyNumber{ n: vec![T::one()] } ] } ] } ] }; // d
+
+        let papg = self.eval2(apg);
+        return papg.eval(bpd);
+    }
+}
+
 impl<T> PolyNumber<T>
 where
     T: Zero,
@@ -684,6 +732,31 @@ mod tests {
         assert_eq!(p.clone().tangent(1,1),t1p1);
         assert_eq!(p.clone().tangent(2,1),t2p1.clone());
         assert_eq!(p.clone().tangent(3,1),t2p1);
+    }
+    #[test]
+    fn taylor_expansion_for_bi_polynumbers() {
+        let p = PolyNumber{ n: vec![PolyNumber{ n: vec![-1,0,1] }, // -1 + a^2
+                                    PolyNumber{ n: vec![0] },
+                                    PolyNumber{ n: vec![1] } ] }; // b^2
+        let t = PolyNumber{ n: vec![
+                    PolyNumber{ n: vec![ // d^0
+                        PolyNumber{ n: vec![ // b^0
+                            PolyNumber{ n: vec![-1,0,1] }, // -1 + a^2
+                            PolyNumber{ n: vec![0,2] }, // 2ag
+                            PolyNumber{ n: vec![1] } ] },  // g^2
+                        PolyNumber{ n: vec![ // b^1
+                            PolyNumber{ n: vec![0] } ] },
+                        PolyNumber{ n: vec![ // b^2
+                            PolyNumber{ n: vec![1] } ] } ] }, // b^2
+                    PolyNumber{ n: vec![ // d^1
+                        PolyNumber{ n: vec![ // b^0
+                            PolyNumber{ n: vec![0] } ] },
+                        PolyNumber{ n: vec![ // b^1
+                            PolyNumber{ n: vec![2] } ] } ] }, // 2bd
+                    PolyNumber{ n: vec![ // d^2
+                        PolyNumber{ n: vec![ // b^0
+                            PolyNumber{ n: vec![1] } ] } ] } ] }; // d^2
+        assert_eq!(p.taylor2(),t);
     }
 }
 
