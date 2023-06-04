@@ -1,7 +1,6 @@
 use num::{Num,Zero,One};
 use std::ops::{Div, Mul, Add, Sub};
 use std::fmt::Debug;
-use std::cmp;
 
 
 #[derive(Debug, Clone)]
@@ -132,8 +131,8 @@ where
 
 impl<T> Mul<T> for PolyNumber<T>
 where
-    T: Num,
-    T: Copy,
+    T: Mul<T, Output = T>,
+    T: Clone,
 {
     type Output = PolyNumber<T>;
 
@@ -141,7 +140,7 @@ where
         let mut p: Vec<T> = Vec::new();
 
         for a in self.n {
-            p.push(a * other);
+            p.push(a * other.clone());
         }
 
         return PolyNumber { n: p };
@@ -218,11 +217,25 @@ where
 impl<T> PolyNumber<T>
 where
     T: Num,
-    T: Copy,
+    T: Clone,
 {
     fn ltrans(&self, c: T) -> PolyNumber<T> {
         let q = PolyNumber { n: vec![c,T::one()] };
         return self.eval(q);
+    }
+}
+
+impl<T> PolyNumber<PolyNumber<T>>
+where
+    T: Num,
+    T: Clone,
+{
+    fn ltrans2(&self, r: T, s: T) -> PolyNumber<PolyNumber<T>> {
+        let a = PolyNumber { n: vec![r,T::one()] }; // r + a
+        let b = PolyNumber { n: vec![PolyNumber{ n: vec![s] }, // s
+                                     PolyNumber{ n: vec![T::one()] } ] }; // b
+        let s2 = self.eval2(a); // set a = a + r
+        return s2.eval(b); // set b = b + s
     }
 }
 
@@ -275,14 +288,32 @@ where
 impl<T> PolyNumber<T>
 where
     T: Num,
-    T: Copy,
+    T: Clone,
 {
     fn truncate(self, k: usize) -> PolyNumber<T> {
         let mut v : Vec<T> = Vec::new();
         for n in 0..k+1 {
             let a = self.n.get(n);
             match a {
-                Some(aa) => v.push(*aa),
+                Some(aa) => v.push((*aa).clone()),
+                None     => (),
+            }
+        }
+        return PolyNumber{ n: v };
+    }
+}
+
+impl<T> PolyNumber<PolyNumber<T>>
+where
+    T: Num,
+    T: Clone,
+{
+    fn truncate2(self, k: usize) -> PolyNumber<PolyNumber<T>> {
+        let mut v : Vec<PolyNumber<T>> = Vec::new();
+        for i in 0..k+1 {
+            let a = self.n.get(i);
+            match a {
+                Some(aa) => v.push((*aa).clone().truncate(k)),
                 None     => (),
             }
         }
@@ -293,12 +324,24 @@ where
 impl<T> PolyNumber<T>
 where
     T: Num,
-    T: Copy,
+    T: Clone,
 {
     fn tangent(self, k: usize, c: T) -> PolyNumber<T> {
-        let p_alpha_plus_c = self.ltrans(c);
+        let p_alpha_plus_c = self.ltrans(c.clone());
         let trunc = p_alpha_plus_c.truncate(k);
         return trunc.ltrans(T::zero() - c);
+    }
+}
+
+impl<T> PolyNumber<PolyNumber<T>>
+where
+    T: Num,
+    T: Copy,
+{
+    fn tangent2(self, k: usize, r: T, s: T) -> PolyNumber<PolyNumber<T>> {
+        let p_at_rs = self.ltrans2(r,s);
+        let trunc = p_at_rs.truncate2(k);
+        return trunc.ltrans2(T::zero() - r, T::zero() - s);
     }
 }
 
@@ -804,6 +847,20 @@ mod tests {
         assert_eq!(p.clone().derivative2(1,0),d10);
         assert_eq!(p.clone().derivative2(1,1),d11);
         assert_eq!(p.clone().derivative2(2,0),d20);
+    }
+    #[test]
+    fn tangent_plane() {
+        let p = PolyNumber{ n: vec![PolyNumber{ n: vec![-1,0,1] }, // -1 + a^2
+                                    PolyNumber{ n: vec![0] },
+                                    PolyNumber{ n: vec![1] } ] }; // b^2
+        let p35 = PolyNumber{ n: vec![PolyNumber{ n: vec![33, 6, 1] }, // 23 + 6a + a^2
+                                      PolyNumber{ n: vec![10] }, // 10b
+                                      PolyNumber{ n: vec![1] } ] }; // b^2
+        // first tangent,i.e. tangent plane, of p at [3,5]
+        let t35 = PolyNumber{ n: vec![PolyNumber{ n: vec![-35, 6] }, // -35 + 6a
+                                      PolyNumber{ n: vec![10] } ] }; // 10b
+        assert_eq!(p.clone().ltrans2(3,5),p35);
+        assert_eq!(p.tangent2(1,3,5),t35);
     }
 }
 
