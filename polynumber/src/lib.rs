@@ -932,7 +932,11 @@ mod tests {
         assert_eq!(p.eval2(2).eval(1),15);
         let t1 = PolyNumber{ n: vec![PolyNumber{ n: vec![-24,15] },
                                      PolyNumber{ n: vec![9] } ] };
-        assert_eq!(p.tangent2(1,2,1),t1);
+        assert_eq!(p.clone().tangent2(1,2,1),t1);
+        let t2 = PolyNumber{ n: vec![PolyNumber{ n: vec![3,-4,2] },
+                                     PolyNumber{ n: vec![-1,1] },
+                                     PolyNumber{ n: vec![1] } ] } * 3;
+        assert_eq!(p.tangent2(2,2,1),t2);
     }
 }
 
