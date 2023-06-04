@@ -363,7 +363,7 @@ where
 }
 
 /// Represents the ratio between two poly numbers
-#[derive(Debug)]
+#[derive(Debug,Clone)]
 pub struct PolyRatio<T> {
     numer: PolyNumber<T>,
     denom: PolyNumber<T>,
@@ -373,7 +373,6 @@ impl<T> PolyRatio<T>
 where
     T: Num,
     T: Copy,
-    T: Debug,
 {
     fn new(numer: PolyNumber<T>, denom: PolyNumber<T>) -> PolyRatio<T> {
         let dlo = denom.lowest_order();
@@ -454,7 +453,6 @@ impl<T> Add for PolyRatio<T>
 where
     T: Num,
     T: Copy,
-    T: Debug,
 {
     type Output = PolyRatio<T>;
 
@@ -471,7 +469,6 @@ impl<T> Mul for PolyRatio<T>
 where
     T: Num,
     T: Copy,
-    T: Debug,
 {
     type Output = PolyRatio<T>;
 
@@ -484,11 +481,24 @@ where
     }
 }
 
+impl<T> Mul<T> for PolyRatio<T>
+where
+    T: Num,
+    T: Copy,
+{
+    type Output = PolyRatio<T>;
+
+    fn mul(self, other: T) -> PolyRatio<T> {
+        let p = self.numer.clone();
+        let q = self.denom.clone();
+        PolyRatio::new( p*other, q )
+    }
+}
+
 impl<T> Sub for PolyRatio<T>
 where
     T: Num,
     T: Copy,
-    T: Debug,
 {
     type Output = PolyRatio<T>;
 
@@ -505,7 +515,6 @@ impl<T> Div for PolyRatio<T>
 where
     T: Num,
     T: Copy,
-    T: Debug,
 {
     type Output = PolyRatio<T>;
 
@@ -515,6 +524,32 @@ where
         let r = other.numer.clone();
         let s = other.denom.clone();
         PolyRatio::new( p*s, r*q )
+    }
+}
+
+impl<T> Zero for PolyRatio<T>
+where
+    T: Num,
+    T: Copy,
+{
+    fn zero() -> PolyRatio<T> {
+        return PolyRatio{ numer: PolyNumber::<T>::zero(),
+                          denom: PolyNumber::<T>::one() };
+    }
+
+    fn is_zero(&self) -> bool {
+        return *self == Self::zero();
+    }
+}
+
+impl<T> One for PolyRatio<T>
+where
+    T: Num,
+    T: Copy,
+{
+    fn one() -> PolyRatio<T> {
+        return PolyRatio{ numer: PolyNumber::<T>::one(),
+                          denom: PolyNumber::<T>::one() };
     }
 }
 
@@ -878,6 +913,22 @@ mod tests {
                                       PolyNumber{ n: vec![10] } ] }; // 10b
         assert_eq!(p.clone().ltrans2(3,5),p35);
         assert_eq!(p.tangent2(1,3,5),t35);
+    }
+    #[test]
+    fn folium_of_descartes() {
+        let p = PolyNumber{ n: vec![PolyNumber{ n: vec![0,0,0,1] }, // x^3
+                                    PolyNumber{ n: vec![0,3] }, // 3xy
+                                    PolyNumber{ n: vec![0] },
+                                    PolyNumber{ n: vec![1] } ] }; // y^3
+        let tx = PolyRatio{ numer: PolyNumber{ n: vec![0,-3] },
+                            denom: PolyNumber{ n: vec![1,0,0,1] } }; // -3t/(1+t^3)
+        let ty = PolyRatio{ numer: PolyNumber{ n: vec![0,0,-3] },
+                            denom: PolyNumber{ n: vec![1,0,0,1] } }; // -3t^2/(1+t^3)
+        let zero = PolyRatio{ numer: PolyNumber{ n: vec![0] },
+                              denom: PolyNumber{ n: vec![1] } };
+        let ptx = p.eval2(tx);
+        let pt = ptx.eval(ty);
+        assert_eq!(pt,zero);
     }
 }
 
