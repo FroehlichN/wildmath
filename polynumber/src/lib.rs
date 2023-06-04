@@ -330,7 +330,7 @@ where
         for i in 0..k+1 {
             let a = self.n.get(i);
             match a {
-                Some(aa) => v.push((*aa).clone().truncate(k)),
+                Some(aa) => v.push((*aa).clone().truncate(k-i)),
                 None     => (),
             }
         }
@@ -929,6 +929,10 @@ mod tests {
         let ptx = p.eval2(tx);
         let pt = ptx.eval(ty);
         assert_eq!(pt,zero);
+        assert_eq!(p.eval2(2).eval(1),15);
+        let t1 = PolyNumber{ n: vec![PolyNumber{ n: vec![-24,15] },
+                                     PolyNumber{ n: vec![9] } ] };
+        assert_eq!(p.tangent2(1,2,1),t1);
     }
 }
 
