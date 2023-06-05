@@ -938,7 +938,17 @@ mod tests {
                                      PolyNumber{ n: vec![-1,1] },
                                      PolyNumber{ n: vec![1] } ] } * 3;
         assert_eq!(p.clone().tangent2(2,2,1),t2);
-        assert_eq!(p.eval2(Ratio::new( -3, 2)).eval(Ratio::new( -3, 2)),Ratio::new( 0, 1));
+
+        let z = Ratio::new( 0, 1);
+        let o = Ratio::new( 1, 1);
+        assert_eq!(p.eval2(-o*3/2).eval(-o*3/2),z);
+        let pr = PolyNumber{ n: vec![PolyNumber{ n: vec![z,z,z,o] }, // x^3
+                                     PolyNumber{ n: vec![z,o*3] }, // 3xy
+                                     PolyNumber{ n: vec![z] },
+                                     PolyNumber{ n: vec![o] } ] }; // y^3
+        let t3 = PolyNumber{ n: vec![PolyNumber{ n: vec![o*27/4,o*9/4] },
+                                     PolyNumber{ n: vec![o*9/4] } ] };
+        assert_eq!(pr.clone().tangent2(1,-o*3/2,-o*3/2),t3)
     }
 }
 
