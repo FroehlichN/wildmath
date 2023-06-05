@@ -948,7 +948,11 @@ mod tests {
                                      PolyNumber{ n: vec![o] } ] }; // y^3
         let t3 = PolyNumber{ n: vec![PolyNumber{ n: vec![o*27/4,o*9/4] },
                                      PolyNumber{ n: vec![o*9/4] } ] };
-        assert_eq!(pr.clone().tangent2(1,-o*3/2,-o*3/2),t3)
+        assert_eq!(pr.clone().tangent2(1,-o*3/2,-o*3/2),t3);
+        let t4 = PolyNumber{ n: vec![PolyNumber{ n: vec![-o*27/4,-o*27/4,-o*9/2] },
+                                     PolyNumber{ n: vec![-o*27/4, o*3] },
+                                     PolyNumber{ n: vec![-o*9/2] } ] };
+        assert_eq!(pr.clone().tangent2(2,-o*3/2,-o*3/2),t4);
     }
 }
 
