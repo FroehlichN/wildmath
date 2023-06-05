@@ -641,6 +641,7 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
+    use num::rational::{Ratio};
     #[test]
     fn eq_poly_numbers() {
         assert_eq!(PolyNumber { n: vec![1, 2, 0] }, PolyNumber { n: vec![1, 2, 0, 0] });
@@ -936,7 +937,8 @@ mod tests {
         let t2 = PolyNumber{ n: vec![PolyNumber{ n: vec![3,-4,2] },
                                      PolyNumber{ n: vec![-1,1] },
                                      PolyNumber{ n: vec![1] } ] } * 3;
-        assert_eq!(p.tangent2(2,2,1),t2);
+        assert_eq!(p.clone().tangent2(2,2,1),t2);
+        assert_eq!(p.eval2(Ratio::new( -3, 2)).eval(Ratio::new( -3, 2)),Ratio::new( 0, 1));
     }
 }
 
