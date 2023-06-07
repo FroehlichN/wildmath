@@ -16,6 +16,9 @@ limitations under the License.
 */
 
 
+use std::ops::{Mul, Add};
+
+
 /// Represents the interval between two numbers
 #[derive(Debug,Clone)]
 pub struct Interval<T> {
@@ -36,6 +39,44 @@ where
     }
 }
 
+impl<T> Add for Interval<T>
+where
+    T: PartialOrd,
+    T: Add<Output = T>,
+{
+    type Output = Interval<T>;
+
+    fn add(self, other : Self) -> Interval<T> {
+        let sl = self.l + other.l;
+        let su = self.u + other.u;
+        return Interval::new(sl, su);
+    }
+}
+
+impl<T> Mul for Interval<T>
+where
+    T: PartialOrd,
+    T: Mul<Output = T>,
+{
+    type Output = Interval<T>;
+
+    fn mul(self, other : Self) -> Interval<T> {
+        let pl = self.l * other.l;
+        let pu = self.u * other.u;
+        return Interval::new(pl, pu);
+    }
+}
+
+impl<T> PartialEq for Interval<T>
+where
+    T: PartialEq,
+{
+    fn eq(&self, other: &Self) -> bool {
+        return self.l == other.l && self.u == other.u;
+    }
+}
+
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -45,6 +86,34 @@ mod tests {
         let n = 9;
         let i = Interval::new(m, n); 
         assert!(i.l < i.u);
+    }
+    #[test]
+    fn addition_of_intervals() {
+        let i1 = Interval::new(1,2);
+        let i2 = Interval::new(4,7);
+        let i3 = Interval::new(5,9);
+        assert_eq!(i1+i2,i3);
+    }
+    #[test]
+    fn addition_of_intervals2() {
+        let i1 = Interval::new(7,7);
+        let i2 = Interval::new(8,8);
+        let i3 = Interval::new(15,15);
+        assert_eq!(i1+i2,i3);
+    }
+    #[test]
+    fn multiplication_of_intervals() {
+        let i1 = Interval::new(1,2);
+        let i2 = Interval::new(4,7);
+        let i3 = Interval::new(4,14);
+        assert_eq!(i1*i2,i3);
+    }
+    #[test]
+    fn multiplication_of_intervals2() {
+        let i1 = Interval::new(7,7);
+        let i2 = Interval::new(8,8);
+        let i3 = Interval::new(56,56);
+        assert_eq!(i1*i2,i3);
     }
 }
 
