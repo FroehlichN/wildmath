@@ -76,6 +76,14 @@ where
     }
 }
 
+impl<T> Interval<T>
+where
+    T: PartialOrd,
+{
+    fn is_between(&self, other : &T) -> bool {
+        return self.l <= *other && *other <= self.u;
+    }
+}
 
 #[cfg(test)]
 mod tests {
@@ -114,6 +122,14 @@ mod tests {
         let i2 = Interval::new(8,8);
         let i3 = Interval::new(56,56);
         assert_eq!(i1*i2,i3);
+    }
+    #[test]
+    fn is_between() {
+        let i = Interval::new(-3,4);
+        assert!(i.is_between(&-3));
+        assert!(!i.is_between(&-4));
+        assert!(i.is_between(&4));
+        assert!(!i.is_between(&5));
     }
 }
 
