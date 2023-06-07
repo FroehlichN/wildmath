@@ -16,7 +16,7 @@ limitations under the License.
 */
 
 
-use std::ops::{Mul, Add};
+use std::ops::{Mul, Add, Sub};
 
 
 /// Represents the interval between two numbers
@@ -82,6 +82,20 @@ where
 {
     fn is_between(&self, other : &T) -> bool {
         return self.l <= *other && *other <= self.u;
+    }
+}
+
+impl<T> Sub for Interval<T>
+where
+    T: PartialOrd,
+    T: Sub<Output = T>,
+{
+    type Output = Interval<T>;
+
+    fn sub(self, other : Self) -> Interval<T> {
+        let dl = self.l - other.u;
+        let du = self.u - other.l;
+        return Interval::new(dl, du);
     }
 }
 
