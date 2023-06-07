@@ -17,6 +17,7 @@ limitations under the License.
 
 
 use std::ops::{Mul, Add, Sub};
+use std::cmp::{min, max};
 
 
 /// Represents the interval between two numbers
@@ -55,15 +56,20 @@ where
 
 impl<T> Mul for Interval<T>
 where
-    T: PartialOrd,
+    T: Ord,
     T: Mul<Output = T>,
+    T: Clone,
 {
     type Output = Interval<T>;
 
     fn mul(self, other : Self) -> Interval<T> {
-        let pl = self.l * other.l;
-        let pu = self.u * other.u;
-        return Interval::new(pl, pu);
+        let p1 = self.l.clone() * other.l.clone();
+        let p2 = self.l * other.u.clone();
+        let p3 = self.u.clone() * other.l;
+        let p4 = self.u * other.u;
+        let pl = min(min(p1.clone(),p2.clone()),min(p3.clone(),p4.clone()));
+        let pu = max(max(p1,p2),max(p3,p4));
+        return Interval{ l: pl, u: pu};
     }
 }
 
@@ -144,6 +150,20 @@ mod tests {
         assert!(!i.is_between(&-4));
         assert!(i.is_between(&4));
         assert!(!i.is_between(&5));
+    }
+    #[test]
+    fn multiplication_of_intervals3() {
+        let i1 = Interval::new(-7,7);
+        let i2 = Interval::new(8,10);
+        let i3 = Interval::new(-70,70);
+        assert_eq!(i1*i2,i3);
+    }
+    #[test]
+    fn multiplication_of_intervals4() {
+        let i1 = Interval::new(-7,-5);
+        let i2 = Interval::new(-10,8);
+        let i3 = Interval::new(-56,70);
+        assert_eq!(i1*i2,i3);
     }
 }
 
