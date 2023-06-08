@@ -135,6 +135,7 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
+    use num::rational::{Ratio};
     #[test]
     fn new_interval_is_ordered() {
         let m = 10;
@@ -239,6 +240,22 @@ mod tests {
         let i1 = Interval::new(-6,12);
         let i2 = Interval::new(-11,13);
         assert!(i1<=i2);
+    }
+    #[test]
+    fn addition_of_rational_intervals() {
+        let one = Ratio::new(1,1);
+        let i1 = Interval::new(one/2,one*3/4);
+        let i2 = Interval::new(-one/3,one/4);
+        let i3 = Interval::new(one/6,one);
+        assert!(i1+i2==i3);
+    }
+    #[test]
+    fn multiplication_of_rational_intervals() {
+        let one = Ratio::new(1,1);
+        let i1 = Interval::new(one/2,one*3/4);
+        let i2 = Interval::new(-one/3,one/4);
+        let i3 = Interval::new(-one/4,one*3/16);
+        assert!(i1*i2==i3);
     }
 }
 
