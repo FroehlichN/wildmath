@@ -17,7 +17,7 @@ limitations under the License.
 
 
 use std::ops::{Mul, Add, Sub};
-use std::cmp::{min, max};
+use std::cmp::{min, max, Ordering};
 
 
 /// Represents the interval between two numbers
@@ -102,6 +102,33 @@ where
         let dl = self.l - other.u;
         let du = self.u - other.l;
         return Interval::new(dl, du);
+    }
+}
+
+impl<T> PartialOrd for Interval<T>
+where
+    T: PartialOrd,
+{
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        if self.l > other.l && self.u < other.u {
+            return Some(Ordering::Less);
+        }
+        if self.l < other.l && self.u > other.u {
+            return Some(Ordering::Greater);
+        }
+        if self.l == other.l && self.u == other.u {
+            return Some(Ordering::Equal);
+        }
+        return None;
+    }
+
+    // Provided methods
+    fn le(&self, other: &Self) -> bool {
+        return self.l >= other.l && self.u <= other.u;
+    }
+
+    fn ge(&self, other: &Self) -> bool {
+        return self.l <= other.l && self.u >= other.u;
     }
 }
 
@@ -206,6 +233,12 @@ mod tests {
         let i2 = Interval::new(-1,0);
         let i3 = Interval::new(0,7);
         assert_eq!(i1*i2,i3);
+    }
+    #[test]
+    fn interval_contains_interval() {
+        let i1 = Interval::new(-6,12);
+        let i2 = Interval::new(-11,13);
+        assert!(i1<=i2);
     }
 }
 
