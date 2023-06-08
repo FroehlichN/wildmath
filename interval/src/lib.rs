@@ -165,5 +165,47 @@ mod tests {
         let i3 = Interval::new(-56,70);
         assert_eq!(i1*i2,i3);
     }
+    #[test]
+    fn subtraction_of_intervals() {
+        let i1 = Interval::new(-1,3);
+        let i2 = Interval::new(-2,4);
+        let i3 = Interval::new(-5,5);
+        assert_eq!(i1-i2,i3);
+    }
+    #[test]
+    fn multiplication_of_intervals5() {
+        let i1 = Interval::new(-1,2);
+        let i2 = Interval::new(3,5);
+        let i3 = Interval::new(-5,10);
+        assert_eq!(i1*i2,i3);
+    }
+    #[test]
+    fn multiplication_of_intervals6() {
+        let i1 = Interval::new(-4,-3);
+        let i2 = Interval::new(1,2);
+        let i3 = Interval::new(-8,-3);
+        assert_eq!(i1*i2,i3);
+    }
+    #[test]
+    fn multiplication_of_intervals7() {
+        let i1 = Interval::new(-5,1);
+        let i2 = Interval::new(-2,3);
+        let i3 = Interval::new(-15,10);
+        assert_eq!(i1*i2,i3);
+    }
+    #[test]
+    fn multiplication_of_intervals8() {
+        let i1 = Interval::new(-1,2);
+        let i2 = Interval::new(-6,-4);
+        let i3 = Interval::new(-12,6);
+        assert_eq!(i1*i2,i3);
+    }
+    #[test]
+    fn multiplication_of_intervals9() {
+        let i1 = Interval::new(-7,-5);
+        let i2 = Interval::new(-1,0);
+        let i3 = Interval::new(0,7);
+        assert_eq!(i1*i2,i3);
+    }
 }
 
