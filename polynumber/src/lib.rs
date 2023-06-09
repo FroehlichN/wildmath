@@ -638,6 +638,20 @@ where
     }
 }
 
+impl<T> PolyNumber<T>
+where
+    T: Num,
+    T: Clone,
+    T: Copy,
+{
+    fn newton_approx(self, k : T, r1 : T) -> T {
+        let t = self.tangent(1,r1);
+        let o = t.n[0];
+        let s = t.n[1];
+        return (k - o)/s;
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -953,6 +967,19 @@ mod tests {
                                      PolyNumber{ n: vec![-o*27/4, o*3] },
                                      PolyNumber{ n: vec![-o*9/2] } ] };
         assert_eq!(pr.clone().tangent2(2,-o*3/2,-o*3/2),t4);
+    }
+    #[test]
+    fn newton_approximation() {
+        let one = Ratio::new(1,1);
+        let p = PolyNumber{ n: vec![one*0, one*0, one] };
+        let a1 = p.clone().newton_approx(one*2,one*2);
+        assert_eq!(a1,one*3/2);
+        let a2 = p.clone().newton_approx(one*2,a1);
+        assert_eq!(a2,one*17/12);
+        let a3 = p.clone().newton_approx(one*2,a2);
+        assert_eq!(a3,one*577/408);
+        let a4 = p.clone().newton_approx(one*2,a3);
+        assert_eq!(a4,one*665857/470832);
     }
 }
 
