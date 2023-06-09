@@ -981,5 +981,16 @@ mod tests {
         let a4 = p.clone().newton_approx(one*2,a3);
         assert_eq!(a4,one*665857/470832);
     }
+    #[test]
+    fn cube_root_of_five() {
+        let one : Ratio<i64> = Ratio::new(1,1);
+        let p = PolyNumber{ n: vec![one*0, one*0, one*0, one] };
+        let a1 = p.clone().newton_approx(one*5,one*1);
+        assert_eq!(a1,one*7/3);
+        let a2 = p.clone().newton_approx(one*5,a1);
+        assert_eq!(a2,one*821/441);
+        let a3 = p.clone().newton_approx(one*5,a2);
+        assert_eq!(a3,one*1535605927/891756243);
+    }
 }
 
