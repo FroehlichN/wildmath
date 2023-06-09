@@ -15,8 +15,8 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-
-use std::ops::{Mul, Add, Sub};
+use num::{Zero};
+use std::ops::{Mul, Add, Sub, Div};
 use std::cmp::{min, max, Ordering};
 
 
@@ -129,6 +129,29 @@ where
 
     fn ge(&self, other: &Self) -> bool {
         return self.l <= other.l && self.u >= other.u;
+    }
+}
+
+impl<T> Div for Interval<T>
+where
+    T: Div<Output = T>,
+    T: Zero,
+    T: Clone,
+    T: Ord,
+{
+    type Output = Interval<T>;
+
+    fn div(self, other: Self) -> Interval<T> {
+        if other.is_between(&T::zero()) {
+            panic!("Division by Interval containing zero not allowed!");
+        }
+        let i1 = self.u.clone() / other.u.clone();
+        let i2 = self.u / other.l.clone();
+        let i3 = self.l.clone() / other.u;
+        let i4 = self.l / other.l;
+        let qu = max(max(i1.clone(),i2.clone()),max(i3.clone(),i4.clone()));
+        let ql = min(min(i1,i2),min(i3,i4));
+        return Interval::new(ql,qu);
     }
 }
 
@@ -256,6 +279,22 @@ mod tests {
         let i2 = Interval::new(-one/3,one/4);
         let i3 = Interval::new(-one/4,one*3/16);
         assert!(i1*i2==i3);
+    }
+    #[test]
+    #[should_panic]
+    fn division_of_rational_intervals_by_zero() {
+        let one = Ratio::new(1,1);
+        let i1 = Interval::new(one/2,one*3/4);
+        let i2 = Interval::new(-one/3,one/4);
+        let i3 = i1/i2;
+    }
+    #[test]
+    fn division_of_rational_intervals() {
+        let one = Ratio::new(1,1);
+        let i1 = Interval::new(-one/3,one/4);
+        let i2 = Interval::new(one/2,one*3/4);
+        let i3 = Interval::new(-one*2/3,one/2);
+        assert!(i1/i2==i3);
     }
 }
 
