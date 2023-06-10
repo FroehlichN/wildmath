@@ -8,4 +8,6 @@ edition = "2018"
 
 [dependencies]
 num = "0.3"
+geo = { path = "geo" }
+polynumber = { path = "polynumber" }
 

@@ -355,7 +355,7 @@ where
     T: Num,
     T: Copy,
 {
-    fn tangent2(self, k: usize, r: T, s: T) -> PolyNumber<PolyNumber<T>> {
+    pub fn tangent2(self, k: usize, r: T, s: T) -> PolyNumber<PolyNumber<T>> {
         let p_at_rs = self.ltrans2(r,s);
         let trunc = p_at_rs.truncate2(k);
         return trunc.ltrans2(T::zero() - r, T::zero() - s);
@@ -648,6 +648,27 @@ where
         let o = &t.n[0];
         let s = &t.n[1];
         return (k - (*o).clone()) / (*s).clone();
+    }
+}
+
+impl<T> PolyNumber<T>
+where
+    T: Zero,
+    T: Clone,
+{
+    pub fn get(&self, i : usize) -> T {
+        let ni = self.n.get(i);
+        match ni {
+            Some(nni) => return (*nni).clone(),
+            None      => return T::zero(),
+        }
+    }
+}
+
+impl<T> PolyNumber<T>
+{
+    pub fn new(v : Vec<T>) -> PolyNumber<T> {
+        return PolyNumber{ n: v };
     }
 }
 

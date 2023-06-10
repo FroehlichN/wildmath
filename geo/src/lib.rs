@@ -26,8 +26,8 @@ pub trait Point {
 /// Represents a 2D point
 #[derive(Debug, Clone)]
 pub struct TwoPoint<T> {
-    x : T,
-    y : T,
+    pub x : T,
+    pub y : T,
 }
 
 impl<T> TwoPoint<T>
