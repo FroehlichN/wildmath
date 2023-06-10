@@ -656,6 +656,7 @@ mod tests {
     use super::*;
     use num::rational::{Ratio};
     use num::{BigInt};
+    use assert_approx_eq::assert_approx_eq;
     #[test]
     fn eq_poly_numbers() {
         assert_eq!(PolyNumber { n: vec![1, 2, 0] }, PolyNumber { n: vec![1, 2, 0, 0] });
@@ -987,14 +988,26 @@ mod tests {
         let bzero = BigInt::from(0);
         let one : Ratio<BigInt> = Ratio::new(bone.clone(),bone.clone());
         let zero : Ratio<BigInt> = Ratio::new(bzero.clone(),bone.clone());
+        let five : Ratio<BigInt> = one.clone()*(bone.clone()*5);
         let p = PolyNumber{ n: vec![zero.clone(), zero.clone(), zero.clone(), one.clone()] };
-        let a1 = p.clone().newton_approx(one.clone()*(bone.clone()*5),one.clone());
+        let a1 = p.clone().newton_approx(five.clone(),one.clone());
         assert_eq!(a1,one.clone()*(bone.clone()*7)/(bone.clone()*3));
-        let a2 = p.clone().newton_approx(one.clone()*(bone.clone()*5),a1);
+        let a2 = p.clone().newton_approx(five.clone(),a1);
         assert_eq!(a2,one.clone()*(bone.clone()*821)/(bone.clone()*441));
-        let a3 = p.clone().newton_approx(one.clone()*(bone.clone()*5),a2);
+        let a3 = p.clone().newton_approx(five.clone(),a2);
         assert_eq!(a3,one.clone()*(bone.clone()*1535605927)/(bone.clone()*891756243));
-        let a4 = p.clone().newton_approx(one.clone()*(bone.clone()*5),a3.clone());
+        let a4 = p.clone().newton_approx(five.clone(),a3.clone());
+    }
+    #[test]
+    fn float_cube_root_of_five() {
+        let p = PolyNumber{ n: vec![0.0f64, 0.0f64, 0.0f64, 1.0f64] };
+        let a1 = p.clone().newton_approx(5.0f64,1.0f64);
+        assert_approx_eq!(a1, 7.0f64/3.0f64, 0.0000001f64);
+        let a2 = p.clone().newton_approx(5.0f64,a1);
+        assert_approx_eq!(a2, 821.0f64/441.0f64, 0.0000001f64);
+        let a3 = p.clone().newton_approx(5.0f64,a2);
+        assert_approx_eq!(a3, 1535605927.0f64/891756243.0f64, 0.0000001f64);
+        let a4 = p.clone().newton_approx(5.0f64,a3);
     }
 }
 
