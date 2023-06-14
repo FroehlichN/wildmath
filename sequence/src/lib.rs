@@ -15,12 +15,11 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-use std::collections::BTreeSet;
 use num::{Zero,One,Integer};
 use num::rational::Ratio;
 
 
-type Sequence<T> = BTreeSet<T>;
+type Sequence<T> = Vec<T>;
 
 
 pub fn farey<T>(n : T) -> Sequence<Ratio<T>>
@@ -43,7 +42,16 @@ where
     while denom <= n {
         let mut numer = T::one();
         while numer < denom {
-            f.insert(Ratio::new(numer,denom));
+            let new = Ratio::new(numer,denom);
+            for (i, n) in f.iter().enumerate() {
+                if new == *n {
+                    break;
+                }
+                if new < *n {
+                    f.insert(i, new);
+                    break;
+                }
+            }
             numer = numer + T::one();
         }
         denom = denom + T::one();
