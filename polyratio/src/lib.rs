@@ -16,10 +16,12 @@ limitations under the License.
 */
 
 
-use num::{Num,Zero,One};
+use num::{Num,Zero,One,Integer};
+use num::rational::{Ratio};
 use std::ops::{Mul, Add, Sub, Div};
 use std::fmt::Debug;
 use polynumber::PolyNumber;
+
 
 
 /// Represents the ratio between two poly numbers
@@ -66,7 +68,7 @@ where
             }
 
             if nlow > 0 {
-                for _j in q.clone().len()..(nlow -1) {
+                for _j in q.clone().len()..nlow {
                     q.push(T::zero());
                 }
             }
@@ -213,11 +215,44 @@ where
     }
 }
 
+impl<T> PolyRatio<T>
+where
+    T: Num,
+    T: Integer,
+    T: Clone,
+    T: Copy,
+{
+    pub fn eval(&self, c: T) -> Option<Ratio<T>> {
+        let mut numer = self.numer.clone();
+        let mut denom = self.denom.clone();
+
+        loop {
+            let num = numer.eval(c);
+            let den = denom.eval(c);
+
+            if den.is_zero() {
+                if !num.is_zero() {
+                    return Option::None;
+                }
+
+                let numer_reduced = PolyRatio::new(numer.clone(),
+                                    PolyNumber::new(vec![T::zero() - c, T::one()]));
+                let denom_reduced = PolyRatio::new(denom.clone(),
+                                    PolyNumber::new(vec![T::zero() - c, T::one()]));
+
+                numer = numer_reduced.numer;
+                denom = denom_reduced.numer;
+            } else {
+                return Option::Some(Ratio::new(num,den));
+            }
+        }
+    }
+}
+
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use num::rational::{Ratio};
     #[test]
     fn new_rational_poly_numbers() {
         let p1 = PolyNumber::new( vec![2, 7, 2, -3] );
@@ -324,4 +359,27 @@ mod tests {
                                      PolyNumber::new( vec![-o*9/2] ) ] );
         assert_eq!(pr.clone().tangent2(2,-o*3/2,-o*3/2),t4);
     }
+    #[test]
+    fn evaluation_of_rational_poly_numbers() {
+        let numer = PolyNumber::new(vec![0,1,-1]);
+        let denom = PolyNumber::new(vec![1,0,-1]);
+        let p = PolyRatio::new(numer.clone(),denom.clone());
+
+        assert_eq!(p.eval(0),Option::Some(Ratio::new(0,1)));
+        assert_eq!(p.eval(1),Option::Some(Ratio::new(1,2)));
+        assert_eq!(p.eval(-1),Option::None);
+    }
+    #[test]
+    fn evaluation_of_rational_poly_numbers2() {
+        let numer = PolyNumber::new(vec![6,-5,1]);
+        let denom = PolyNumber::new(vec![-16,20,-8,1]);
+        let p = PolyRatio::new(numer.clone(),denom.clone());
+
+        assert_eq!(p.eval(1),Option::Some(Ratio::new(-2,3)));
+        assert_eq!(p.eval(2),Option::None);
+        assert_eq!(p.eval(3),Option::Some(Ratio::new(0,1)));
+        assert_eq!(p.eval(4),Option::None);
+        assert_eq!(p.eval(5),Option::Some(Ratio::new(2,3)));
+    }
 }
+
