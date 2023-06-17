@@ -16,7 +16,7 @@ limitations under the License.
 */
 
 use num::{Num,Zero,One};
-use std::ops::{Div, Mul, Add, Sub};
+use std::ops::{Mul, Add, Sub};
 use std::fmt::Debug;
 
 
@@ -26,10 +26,17 @@ pub struct PolyNumber<T> {
 }
 
 impl<T> PolyNumber<T>
+{
+    pub fn order(&self) -> usize {
+        return self.n.len();
+    }
+}
+
+impl<T> PolyNumber<T>
 where
     T: Num,
 {
-    fn lowest_order(&self) -> Option<usize> {
+    pub fn lowest_order(&self) -> Option<usize> {
 
         for (di, dv) in self.n.iter().enumerate() {
             if *dv != T::zero() {
@@ -187,7 +194,7 @@ impl<T> PolyNumber<T>
 where
     T: Clone,
 {
-    fn eval<O>(&self, c: O) -> O
+    pub fn eval<O>(&self, c: O) -> O
     where
         O: One,
         O: Zero,
@@ -212,7 +219,7 @@ impl<T> PolyNumber<PolyNumber<T>>
 where
     T: Clone,
 {
-    fn eval2<O>(&self, c: O) -> PolyNumber<O>
+    pub fn eval2<O>(&self, c: O) -> PolyNumber<O>
     where
         O: One,
         O: Zero,
@@ -282,26 +289,6 @@ where
     }
 }
 
-
-
-impl<T> Div for PolyNumber<T>
-where
-    T: Num,
-    T: Copy,
-    T: Debug,
-{
-    type Output = Option<PolyRatio<T>>;
-
-    fn div(self, other: PolyNumber<T>) -> Option<PolyRatio<T>> {
-        let zero : PolyNumber<T> = PolyNumber::zero();
-        if other == zero {
-            return None;
-        } else {
-            return Some( PolyRatio::new(self, other) );
-        }
-    }
-}
-
 impl<T> PolyNumber<T>
 where
     T: Num,
@@ -359,197 +346,6 @@ where
         let p_at_rs = self.ltrans2(r,s);
         let trunc = p_at_rs.truncate2(k);
         return trunc.ltrans2(T::zero() - r, T::zero() - s);
-    }
-}
-
-/// Represents the ratio between two poly numbers
-#[derive(Debug,Clone)]
-pub struct PolyRatio<T> {
-    numer: PolyNumber<T>,
-    denom: PolyNumber<T>,
-}
-
-impl<T> PolyRatio<T>
-where
-    T: Num,
-    T: Copy,
-{
-    fn new(numer: PolyNumber<T>, denom: PolyNumber<T>) -> PolyRatio<T> {
-        let dlo = denom.lowest_order();
-        let dlow = match dlo {
-            Some(i) => i,
-            None => panic!("Rational poly number has a denominator equal zero."),
-        };
-        let d1 = denom.n[dlow];
-
-        let mut res = numer.clone();
-        let mut q: Vec<T> = Vec::new();
-
-
-        if numer.n.len() < denom.n.len() {
-            return PolyRatio{numer: numer, denom: denom};
-        }
-
-        let order = numer.n.len()-denom.n.len()+1;
-
-        for _i in 0..order {
-            let nlo = res.lowest_order();
-
-            let nlow = match nlo {
-                Some(i) => i,
-                None => 0,
-            };
-
-
-            if nlow < dlow {
-                return PolyRatio{numer: numer.clone(), denom: denom};
-            }
-
-            if nlow > 0 {
-                for _j in q.clone().len()..(nlow -1) {
-                    q.push(T::zero());
-                }
-            }
-
-            let n1 = res.n[nlow];
-
-            let q1 = n1/d1;
-
-            if q1*d1 == n1 {
-                q.push(q1);
-                let pq1 = PolyNumber { n: q.clone() };
-                let s1 = denom.clone() * PolyNumber { n: q.clone() };
-                res = numer.clone() - s1;
-                let zero : PolyNumber<T> =  PolyNumber::zero();
-
-                if res == zero {
-                    return PolyRatio{numer: pq1, denom: PolyNumber{n: vec![T::one()]}};
-                }
-
-            } else {
-                return PolyRatio{numer: numer, denom: denom};
-            }
-
-        }
-        PolyRatio{numer: numer, denom: denom}
-    }
-}
-
-impl<T> PartialEq for PolyRatio<T>
-where
-    T: Num,
-    T: Copy,
-{
-    fn eq(&self, other: &Self) -> bool {
-        let p = self.numer.clone();
-        let q = self.denom.clone();
-        let r = other.numer.clone();
-        let s = other.denom.clone();
-        p * s == r * q
-    }
-}
-
-impl<T> Add for PolyRatio<T>
-where
-    T: Num,
-    T: Copy,
-{
-    type Output = PolyRatio<T>;
-
-    fn add(self, other: Self) -> PolyRatio<T> {
-        let p = self.numer.clone();
-        let q = self.denom.clone();
-        let r = other.numer.clone();
-        let s = other.denom.clone();
-        PolyRatio::new( p*s.clone() + r*q.clone(), q*s )
-    }
-}
-
-impl<T> Mul for PolyRatio<T>
-where
-    T: Num,
-    T: Copy,
-{
-    type Output = PolyRatio<T>;
-
-    fn mul(self, other: Self) -> PolyRatio<T> {
-        let p = self.numer.clone();
-        let q = self.denom.clone();
-        let r = other.numer.clone();
-        let s = other.denom.clone();
-        PolyRatio::new( p*r, q*s )
-    }
-}
-
-impl<T> Mul<T> for PolyRatio<T>
-where
-    T: Num,
-    T: Copy,
-{
-    type Output = PolyRatio<T>;
-
-    fn mul(self, other: T) -> PolyRatio<T> {
-        let p = self.numer.clone();
-        let q = self.denom.clone();
-        PolyRatio::new( p*other, q )
-    }
-}
-
-impl<T> Sub for PolyRatio<T>
-where
-    T: Num,
-    T: Copy,
-{
-    type Output = PolyRatio<T>;
-
-    fn sub(self, other: Self) -> PolyRatio<T> {
-        let p = self.numer.clone();
-        let q = self.denom.clone();
-        let r = other.numer.clone();
-        let s = other.denom.clone();
-        PolyRatio::new( p*s.clone() - r*q.clone(), q*s )
-    }
-}
-
-impl<T> Div for PolyRatio<T>
-where
-    T: Num,
-    T: Copy,
-{
-    type Output = PolyRatio<T>;
-
-    fn div(self, other: Self) -> PolyRatio<T> {
-        let p = self.numer.clone();
-        let q = self.denom.clone();
-        let r = other.numer.clone();
-        let s = other.denom.clone();
-        PolyRatio::new( p*s, r*q )
-    }
-}
-
-impl<T> Zero for PolyRatio<T>
-where
-    T: Num,
-    T: Copy,
-{
-    fn zero() -> PolyRatio<T> {
-        return PolyRatio{ numer: PolyNumber::<T>::zero(),
-                          denom: PolyNumber::<T>::one() };
-    }
-
-    fn is_zero(&self) -> bool {
-        return *self == Self::zero();
-    }
-}
-
-impl<T> One for PolyRatio<T>
-where
-    T: Num,
-    T: Copy,
-{
-    fn one() -> PolyRatio<T> {
-        return PolyRatio{ numer: PolyNumber::<T>::one(),
-                          denom: PolyNumber::<T>::one() };
     }
 }
 
@@ -742,73 +538,6 @@ mod tests {
         assert_eq!(p.ltrans(3),L3p);
     }
     #[test]
-    fn rational_poly_numbers() {
-        let p1 = PolyNumber { n: vec![1, 0, -2] };
-        let p2 = PolyNumber { n: vec![2, -5] };
-        let rp1 = p1/p2;
-        let p3 = PolyNumber { n: vec![2, 0, -4] };
-        let p4 = PolyNumber { n: vec![4, -10] };
-        let rp2 = p3/p4;
-        assert_eq!(rp1,rp2);
-    }
-    #[test]
-    fn dividing_poly_numbers() {
-        let p1 = PolyNumber { n: vec![2, 7, 2, -3] };
-        let p2 = PolyNumber { n: vec![2, 1, -1] };
-        let p3 = PolyNumber { n: vec![1, 3] };
-        let p4 = PolyNumber::one();
-        let rp1 = p1/p2;
-        match rp1 {
-            Some(PolyRatio { numer: n, denom: d }) => {
-                assert_eq!(n,p3);
-                assert_eq!(d,p4); },
-            None => panic!("Legal division of poly numbers returns None."),
-        }
-        let p21 = PolyNumber { n: vec![12, 8, -7, -2, 1] };
-        let p22 = PolyNumber { n: vec![4, 0, -1] };
-        let p23 = PolyNumber { n: vec![3, 2, -1] };
-        let p24 = PolyNumber::one();
-        let rp21 = p21/p22;
-        match rp21 {
-            Some(PolyRatio { numer: n, denom: d }) => {
-                assert_eq!(n,p23);
-                assert_eq!(d,p24); },
-            None => panic!("Legal division of poly numbers returns None."),
-        }
-    }
-    #[test]
-    fn arithmetic_with_rat_poly_numbers() {
-        let rp1 = PolyRatio{ numer: PolyNumber{ n: vec![2,1] }, denom: PolyNumber{ n: vec![3,-1] } };
-        let rp2 = PolyRatio{ numer: PolyNumber{ n: vec![4,0,-1]}, denom: PolyNumber{ n: vec![1, 1] } };
-        let rp3 = PolyRatio{ numer: PolyNumber{ n: vec![14,-1,-2,1]}, denom: PolyNumber{ n: vec![3,2,-1] } };
-        assert_eq!(rp1+rp2,rp3);
-    }
-    #[test]
-    fn arithmetic_with_rat_poly_numbers2() {
-        let rp1 = PolyRatio{ numer: PolyNumber{ n: vec![5,-1,0,1] }, denom: PolyNumber{ n: vec![1,0,0,0,-1] } };
-        let rp2 = PolyRatio{ numer: PolyNumber{ n: vec![6,0,-1] }, denom: PolyNumber{ n: vec![0,0,0,0,0,1] } };
-        let rp3 = PolyRatio{ numer: PolyNumber{ n: vec![30,-6,-5,7,0,-1] }, denom: PolyNumber{ n: vec![0,0,0,0,0,1,0,0,0,-1] } };
-        assert_eq!(rp1*rp2,rp3);
-    }
-    #[test]
-    fn equality_of_rational_polynumbers() {
-        let rp1 = PolyRatio{ numer: PolyNumber{ n: vec![1,0,-1] }, denom: PolyNumber{ n: vec![1,-1] } };
-        let rp2 = PolyRatio{ numer: PolyNumber{ n: vec![1,1] }, denom: PolyNumber::one() };
-        assert_eq!(rp1,rp2);
-    }
-    #[test]
-    fn equality_of_rational_polynumbers2() {
-        let rp1 = PolyRatio{ numer: PolyNumber{ n: vec![1,0,0,-1] }, denom: PolyNumber{ n: vec![1,-1] } };
-        let rp2 = PolyRatio{ numer: PolyNumber{ n: vec![1,1,1] }, denom: PolyNumber::one() };
-        assert_eq!(rp1,rp2);
-    }
-    #[test]
-    fn equality_of_rational_polynumbers3() {
-        let rp1 = PolyRatio{ numer: PolyNumber{ n: vec![1,0,1,0,1] }, denom: PolyNumber{ n: vec![1,1,1] } };
-        let rp2 = PolyRatio{ numer: PolyNumber{ n: vec![1,-2,1,0,-1] }, denom: PolyNumber{ n: vec![1,-1,-1] } };
-        assert_eq!(rp1,rp2);
-    }
-    #[test]
     fn adding_bi_poly_numbers() {
         let bp1 = PolyNumber { n: vec![ PolyNumber { n: vec![1,  0, 5, 4] },
                                         PolyNumber { n: vec![3, -1, 7] },
@@ -950,45 +679,6 @@ mod tests {
                                       PolyNumber{ n: vec![10] } ] }; // 10b
         assert_eq!(p.clone().ltrans2(3,5),p35);
         assert_eq!(p.tangent2(1,3,5),t35);
-    }
-    #[test]
-    fn folium_of_descartes() {
-        let p = PolyNumber{ n: vec![PolyNumber{ n: vec![0,0,0,1] }, // x^3
-                                    PolyNumber{ n: vec![0,3] }, // 3xy
-                                    PolyNumber{ n: vec![0] },
-                                    PolyNumber{ n: vec![1] } ] }; // y^3
-        let tx = PolyRatio{ numer: PolyNumber{ n: vec![0,-3] },
-                            denom: PolyNumber{ n: vec![1,0,0,1] } }; // -3t/(1+t^3)
-        let ty = PolyRatio{ numer: PolyNumber{ n: vec![0,0,-3] },
-                            denom: PolyNumber{ n: vec![1,0,0,1] } }; // -3t^2/(1+t^3)
-        let zero = PolyRatio{ numer: PolyNumber{ n: vec![0] },
-                              denom: PolyNumber{ n: vec![1] } };
-        let ptx = p.eval2(tx);
-        let pt = ptx.eval(ty);
-        assert_eq!(pt,zero);
-        assert_eq!(p.eval2(2).eval(1),15);
-        let t1 = PolyNumber{ n: vec![PolyNumber{ n: vec![-24,15] },
-                                     PolyNumber{ n: vec![9] } ] };
-        assert_eq!(p.clone().tangent2(1,2,1),t1);
-        let t2 = PolyNumber{ n: vec![PolyNumber{ n: vec![3,-4,2] },
-                                     PolyNumber{ n: vec![-1,1] },
-                                     PolyNumber{ n: vec![1] } ] } * 3;
-        assert_eq!(p.clone().tangent2(2,2,1),t2);
-
-        let z = Ratio::new( 0, 1);
-        let o = Ratio::new( 1, 1);
-        assert_eq!(p.eval2(-o*3/2).eval(-o*3/2),z);
-        let pr = PolyNumber{ n: vec![PolyNumber{ n: vec![z,z,z,o] }, // x^3
-                                     PolyNumber{ n: vec![z,o*3] }, // 3xy
-                                     PolyNumber{ n: vec![z] },
-                                     PolyNumber{ n: vec![o] } ] }; // y^3
-        let t3 = PolyNumber{ n: vec![PolyNumber{ n: vec![o*27/4,o*9/4] },
-                                     PolyNumber{ n: vec![o*9/4] } ] };
-        assert_eq!(pr.clone().tangent2(1,-o*3/2,-o*3/2),t3);
-        let t4 = PolyNumber{ n: vec![PolyNumber{ n: vec![-o*27/4,-o*27/4,-o*9/2] },
-                                     PolyNumber{ n: vec![-o*27/4, o*3] },
-                                     PolyNumber{ n: vec![-o*9/2] } ] };
-        assert_eq!(pr.clone().tangent2(2,-o*3/2,-o*3/2),t4);
     }
     #[test]
     fn newton_approximation() {

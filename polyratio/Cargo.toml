@@ -1,0 +1,12 @@
+[package]
+name = "polyratio"
+version = "0.1.0"
+authors = ["Norbert Fröhlich <norbert.froehlich@alice.de>"]
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+polynumber = { path = "../polynumber" }
+num = "0.3"
+
