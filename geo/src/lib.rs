@@ -16,7 +16,7 @@ limitations under the License.
 */
 
 
-use num::{Num, Zero};
+use num::{Num, Zero, One};
 use std::ops::{Mul, Add, Sub, Div};
 
 pub trait Point {
@@ -173,6 +173,30 @@ where
         let nx = self.x.clone() * other.y.clone();
         let ny = self.y.clone() * other.x.clone();
         TwoPoint {x: nx, y: ny }
+    }
+}
+
+impl<T> Zero for TwoPoint<T>
+where
+    T: Num,
+    T: Clone,
+{
+    fn zero() -> TwoPoint<T> {
+        TwoPoint { x: T::zero(), y: T::one() }
+    }
+
+    fn is_zero(&self) -> bool {
+        self.x.is_zero()
+    }
+}
+
+impl<T> One for TwoPoint<T>
+where
+    T: Num,
+    T: Clone,
+{
+    fn one() -> TwoPoint<T> {
+        TwoPoint { x: T::one(), y: T::one() }
     }
 }
 
