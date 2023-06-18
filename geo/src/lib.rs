@@ -683,6 +683,24 @@ mod tests {
         assert_eq!((a1.clone()/a2.clone())*a3.clone(),a4.clone());
     }
     #[test]
+    fn distributive_laws_for_points() {
+        let a1 = TwoPoint {x: 2, y: 3};
+        let a2 = TwoPoint {x: 0, y: -1};
+        let a3 = TwoPoint {x: 4, y: 5};
+        let a4 = TwoPoint {x: 24, y: -45};
+        assert_eq!(a1.clone()*3*(a2.clone()-a3.clone()),a4.clone());
+        assert_eq!((a1.clone()*a2.clone())-(a1.clone()*a3.clone()),a4.clone());
+    }
+    #[test]
+    fn distributive_laws_for_points2() {
+        let a1 = TwoPoint {x: 2, y: 3};
+        let a2 = TwoPoint {x: 1, y: -1};
+        let a3 = TwoPoint {x: 5, y: 4};
+        let a4 = TwoPoint {x: -100, y: -75};
+        assert_eq!(((a1.clone()-a2.clone())/a3.clone())*5,a4.clone());
+        assert_eq!((a1.clone()/a3.clone())-(a2.clone()/a3.clone()),a4.clone());
+    }
+    #[test]
     fn parallel_lines() {
         let l1 = TwoLine::new(3, 4, -1);
         let l2 = TwoLine::new(6, 8, 5);
