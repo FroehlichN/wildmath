@@ -92,6 +92,21 @@ where
     }
 }
 
+impl<T> Add<TwoPoint<T>> for TwoPoint<T>
+where
+    T: Num,
+    T: Clone,
+{
+    type Output = TwoPoint<T>;
+
+    fn add(self, other: TwoPoint<T>) -> TwoPoint<T> {
+        let nx =   self.x.clone() * other.y.clone()
+                 + self.y.clone() * other.x.clone();
+        let ny = self.y.clone() * other.y.clone();
+        TwoPoint {x: nx, y: ny }
+    }
+}
+
 impl<T> Mul<Translation<T>> for TwoPoint<T>
 where
     T: Num,
@@ -101,6 +116,34 @@ where
 
     fn mul(self, t: Translation<T>) -> TwoPoint<T> {
         self + t.vector
+    }
+}
+
+impl<T> Mul<T> for TwoPoint<T>
+where
+    T: Num,
+    T: Clone,
+{
+    type Output = TwoPoint<T>;
+
+    fn mul(self, scalar: T) -> TwoPoint<T> {
+        let nx = self.x.clone() * scalar.clone();
+        let ny = self.y.clone() * scalar;
+        TwoPoint {x: nx, y: ny }
+    }
+}
+
+impl<T> Mul<TwoPoint<T>> for TwoPoint<T>
+where
+    T: Num,
+    T: Clone,
+{
+    type Output = TwoPoint<T>;
+
+    fn mul(self, other: TwoPoint<T>) -> TwoPoint<T> {
+        let nx = self.x.clone() * other.x.clone();
+        let ny = self.y.clone() * other.y.clone();
+        TwoPoint {x: nx, y: ny }
     }
 }
 
@@ -530,6 +573,40 @@ mod tests {
         let l = a.join(&b);
         assert!(a.lies_on(&l));
         assert!(b.lies_on(&l));
+    }
+    #[test]
+    fn addition_of_points() {
+        let a1 = TwoPoint {x: 2, y: 3};
+        let a2 = TwoPoint {x: 4, y: 5};
+        let a3 = TwoPoint {x: 22, y: 15};
+        assert_eq!(a1+a2,a3);
+
+        let b1 = TwoPoint {x: 3, y: -1};
+        let b2 = TwoPoint {x: 0, y: 2};
+        let b3 = TwoPoint {x: 6, y: -2};
+        assert_eq!(b1+b2,b3);
+
+        let c1 = TwoPoint {x: 6, y: 0};
+        let c2 = TwoPoint {x: 3, y: 1};
+        let c3 = TwoPoint {x: 6, y: 0};
+        assert_eq!(c1+c2,c3);
+    }
+    #[test]
+    fn multiplication_of_points() {
+        let a1 = TwoPoint {x: 2, y: 3};
+        let a2 = TwoPoint {x: 4, y: 5};
+        let a3 = TwoPoint {x: 8, y: 15};
+        assert_eq!(a1*a2,a3);
+
+        let b1 = TwoPoint {x: 3, y: -1};
+        let b2 = TwoPoint {x: 0, y: 2};
+        let b3 = TwoPoint {x: 0, y: -2};
+        assert_eq!(b1*b2,b3);
+
+        let c1 = TwoPoint {x: 6, y: 0};
+        let c2 = TwoPoint {x: 3, y: 1};
+        let c3 = TwoPoint {x: 18, y: 0};
+        assert_eq!(c1*c2,c3);
     }
     #[test]
     fn parallel_lines() {
