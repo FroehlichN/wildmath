@@ -17,7 +17,7 @@ limitations under the License.
 
 
 use num::{Num, Zero};
-use std::ops::{Mul, Add, Sub};
+use std::ops::{Mul, Add, Sub, Div};
 
 pub trait Point {
     fn is_collinear(&self, a2: &Self, a3: &Self) -> bool;
@@ -143,6 +143,35 @@ where
     fn mul(self, other: TwoPoint<T>) -> TwoPoint<T> {
         let nx = self.x.clone() * other.x.clone();
         let ny = self.y.clone() * other.y.clone();
+        TwoPoint {x: nx, y: ny }
+    }
+}
+
+impl<T> Sub<TwoPoint<T>> for TwoPoint<T>
+where
+    T: Num,
+    T: Clone,
+{
+    type Output = TwoPoint<T>;
+
+    fn sub(self, other: TwoPoint<T>) -> TwoPoint<T> {
+        let nx =   self.x.clone() * other.y.clone()
+                 - self.y.clone() * other.x.clone();
+        let ny = self.y.clone() * other.y.clone();
+        TwoPoint {x: nx, y: ny }
+    }
+}
+
+impl<T> Div<TwoPoint<T>> for TwoPoint<T>
+where
+    T: Num,
+    T: Clone,
+{
+    type Output = TwoPoint<T>;
+
+    fn div(self, other: TwoPoint<T>) -> TwoPoint<T> {
+        let nx = self.x.clone() * other.y.clone();
+        let ny = self.y.clone() * other.x.clone();
         TwoPoint {x: nx, y: ny }
     }
 }
@@ -607,6 +636,51 @@ mod tests {
         let c2 = TwoPoint {x: 3, y: 1};
         let c3 = TwoPoint {x: 18, y: 0};
         assert_eq!(c1*c2,c3);
+    }
+    #[test]
+    fn subtraction_of_points() {
+        let a1 = TwoPoint {x: 1, y: -1};
+        let a2 = TwoPoint {x: 2, y: 0};
+        let a3 = TwoPoint {x: -1, y: 3};
+        let a4 = TwoPoint {x: 6, y: 0};
+        assert_eq!(a1.clone()-(a2.clone()-a3.clone()),a4.clone());
+        assert_eq!(a1.clone()-a4.clone(),a4.clone());
+        assert_eq!((a1.clone()-a2.clone())+a3.clone(),a4.clone());
+        assert_eq!(a2.clone()+a3.clone(),a4.clone());
+
+        let b1 = TwoPoint {x: 2, y: 3};
+        let b2 = TwoPoint {x: 1, y: 4};
+        let b3 = TwoPoint {x: -1, y: 1};
+        let b4 = TwoPoint {x: 17, y: 12};
+        assert_eq!(b1.clone()-(b2.clone()+b3.clone()),b4.clone());
+        assert_eq!((b1.clone()-b2.clone())-b3.clone(),b4.clone());
+    }
+    #[test]
+    fn divition_of_points() {
+        let a1 = TwoPoint {x: 1, y: 2};
+        let a2 = TwoPoint {x: -1, y: 1};
+        let a3 = TwoPoint {x: 3, y: 4};
+        let a4 = TwoPoint {x: -4, y: 6};
+        assert_eq!(a1.clone()*(a2.clone()/a3.clone()),a4.clone());
+        assert_eq!((a1.clone()*a2.clone())/a3.clone(),a4.clone());
+    }
+    #[test]
+    fn divition_of_points2() {
+        let a1 = TwoPoint {x: 3, y: -1};
+        let a2 = TwoPoint {x: 1, y: 2};
+        let a3 = TwoPoint {x: 5, y: 0};
+        let a4 = TwoPoint {x: 0, y: -5};
+        assert_eq!(a1.clone()/(a2.clone()*a3.clone()),a4.clone());
+        assert_eq!((a1.clone()/a2.clone())/a3.clone(),a4.clone());
+    }
+    #[test]
+    fn divition_of_points3() {
+        let a1 = TwoPoint {x: 3, y: 4};
+        let a2 = TwoPoint {x: 0, y: 2};
+        let a3 = TwoPoint {x: -1, y: 5};
+        let a4 = TwoPoint {x: -6, y: 0};
+        assert_eq!(a1.clone()/(a2.clone()/a3.clone()),a4.clone());
+        assert_eq!((a1.clone()/a2.clone())*a3.clone(),a4.clone());
     }
     #[test]
     fn parallel_lines() {
