@@ -16,7 +16,8 @@ limitations under the License.
 */
 
 
-use num::{Num, Integer};
+use num::{Num, Integer, Zero, One};
+use std::ops::{Mul, Add, Sub, Div};
 
 
 
@@ -43,6 +44,14 @@ where
     pub fn new(a: T, b: T) -> RatInf<T> {
         RatInf {a: a, b: b}
     }
+
+    pub fn is_infinite(self) -> bool {
+        !self.a.is_zero() && self.b.is_zero()
+    }
+
+    pub fn is_nil(self) -> bool {
+        self.a.is_zero() && self.b.is_zero()
+    }
 }
 
 impl<T> PartialEq for RatInf<T>
@@ -58,6 +67,94 @@ where
         let o_non_zero = !other.a.is_zero() || !other.b.is_zero();
 
         return (lhs == rhs) && s_non_zero && o_non_zero ;
+    }
+}
+
+impl<T> Add for RatInf<T>
+where
+    T: Num,
+    T: Integer,
+    T: Clone,
+{
+    type Output = RatInf<T>;
+
+    fn add(self, other: Self) -> RatInf<T> {
+        let na = self.a.clone() * other.b.clone()
+                + self.b.clone() * other.a.clone();
+        let nb = self.b.clone() * other.b.clone();
+        return RatInf {a: na, b: nb };
+    }
+}
+
+impl<T> Sub for RatInf<T>
+where
+    T: Num,
+    T: Integer,
+    T: Clone,
+{
+    type Output = RatInf<T>;
+
+    fn sub(self, other: Self) -> RatInf<T> {
+        let na = self.a.clone() * other.b.clone()
+                - self.b.clone() * other.a.clone();
+        let nb = self.b.clone() * other.b.clone();
+        return RatInf {a: na, b: nb };
+    }
+}
+
+impl<T> Mul for RatInf<T>
+where
+    T: Num,
+    T: Integer,
+    T: Clone,
+{
+    type Output = RatInf<T>;
+
+    fn mul(self, other: Self) -> RatInf<T> {
+        let na = self.a.clone() * other.a.clone();
+        let nb = self.b.clone() * other.b.clone();
+        return RatInf {a: na, b: nb };
+    }
+}
+
+impl<T> Div for RatInf<T>
+where
+    T: Num,
+    T: Integer,
+    T: Clone,
+{
+    type Output = RatInf<T>;
+
+    fn div(self, other: Self) -> RatInf<T> {
+        let na = self.a.clone() * other.b.clone();
+        let nb = self.b.clone() * other.a.clone();
+        return RatInf {a: na, b: nb };
+    }
+}
+
+impl<T> Zero for RatInf<T>
+where
+    T: Num,
+    T: Integer,
+    T: Clone,
+{
+    fn zero() -> RatInf<T> {
+        RatInf {a: T::zero(), b: T::one()}
+    }
+
+    fn is_zero(&self) -> bool {
+        self.a.is_zero()
+    }
+}
+
+impl<T> One for RatInf<T>
+where
+    T: Num,
+    T: Integer,
+    T: Clone,
+{
+    fn one() -> RatInf<T> {
+        RatInf {a: T::one(), b: T::one()}
     }
 }
 
