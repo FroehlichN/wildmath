@@ -17,14 +17,14 @@ limitations under the License.
 
 
 use num::{Num, Integer, Zero, One};
-use std::ops::{Mul, Add, Sub, Div};
+use std::ops::{Mul, Add, Sub, Div, Neg};
 
 
 
 /// RatInf
 /// extended rational numbers
 /// rational numbers with infinity
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone,Copy)]
 pub struct RatInf<T>
 where
     T: Num,
@@ -155,6 +155,45 @@ where
 {
     fn one() -> RatInf<T> {
         RatInf {a: T::one(), b: T::one()}
+    }
+}
+
+impl<T> Neg for RatInf<T>
+where
+    T: Num,
+    T: Integer,
+    T: Clone,
+{
+    type Output = RatInf<T>;
+
+    fn neg(self) -> RatInf<T> {
+        RatInf::<T>::zero() - self
+    }
+}
+
+impl<T> Mul<T> for RatInf<T>
+where
+    T: Num,
+    T: Integer,
+    T: Clone,
+{
+    type Output = RatInf<T>;
+
+    fn mul(self, other: T) -> RatInf<T> {
+        self * RatInf::new(other,T::one())
+    }
+}
+
+impl<T> Div<T> for RatInf<T>
+where
+    T: Num,
+    T: Integer,
+    T: Clone,
+{
+    type Output = RatInf<T>;
+
+    fn div(self, other: T) -> RatInf<T> {
+        self / RatInf::new(other,T::one())
     }
 }
 

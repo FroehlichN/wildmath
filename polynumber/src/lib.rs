@@ -15,8 +15,8 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-use num::{Num,Zero,One};
-use std::ops::{Mul, Add, Sub};
+use num::{Zero,One};
+use std::ops::{Mul, Add, Sub, Div};
 use std::fmt::Debug;
 
 
@@ -34,7 +34,7 @@ impl<T> PolyNumber<T>
 
 impl<T> PolyNumber<T>
 where
-    T: Num,
+    T: PartialEq + Zero + One + Mul + Add + Sub + Clone,
 {
     pub fn lowest_order(&self) -> Option<usize> {
 
@@ -101,8 +101,8 @@ where
 
 impl<T> Sub for PolyNumber<T>
 where
-    T: Num,
-    T: Copy,
+    T: PartialEq + Zero + One + Mul + Add + Sub + Clone,
+    T: Sub<Output = T>,
 {
     type Output = PolyNumber<T>;
 
@@ -115,9 +115,9 @@ where
             let b = other.n.get(index);
 
             match (a, b) {
-                (Some(aa), Some(bb)) => s.push(*aa - *bb),
-                (Some(aa), None)     => s.push(*aa),
-                (None, Some(bb))     => s.push(T::zero() - *bb),
+                (Some(aa), Some(bb)) => s.push((*aa).clone() - (*bb).clone()),
+                (Some(aa), None)     => s.push((*aa).clone()),
+                (None, Some(bb))     => s.push(T::zero() - (*bb).clone()),
                 (None, None)         => return PolyNumber { n: s },
             }
 
@@ -240,8 +240,7 @@ where
 
 impl<T> PolyNumber<T>
 where
-    T: Num,
-    T: Clone,
+    T: PartialEq + Zero + One + Mul + Add + Sub + Clone,
 {
     fn ltrans(&self, c: T) -> PolyNumber<T> {
         let q = PolyNumber { n: vec![c,T::one()] };
@@ -251,8 +250,7 @@ where
 
 impl<T> PolyNumber<PolyNumber<T>>
 where
-    T: Num,
-    T: Clone,
+    T: PartialEq + Zero + One + Mul + Add + Sub + Clone,
 {
     fn ltrans2(&self, r: T, s: T) -> PolyNumber<PolyNumber<T>> {
         let a = PolyNumber { n: vec![r,T::one()] }; // r + a
@@ -291,8 +289,7 @@ where
 
 impl<T> PolyNumber<T>
 where
-    T: Num,
-    T: Clone,
+    T: PartialEq + Zero + One + Mul + Add + Sub + Clone,
 {
     fn truncate(self, k: usize) -> PolyNumber<T> {
         let mut v : Vec<T> = Vec::new();
@@ -309,8 +306,7 @@ where
 
 impl<T> PolyNumber<PolyNumber<T>>
 where
-    T: Num,
-    T: Clone,
+    T: PartialEq + Zero + One + Mul + Add + Sub + Clone,
 {
     fn truncate2(self, k: usize) -> PolyNumber<PolyNumber<T>> {
         let mut v : Vec<PolyNumber<T>> = Vec::new();
@@ -327,8 +323,8 @@ where
 
 impl<T> PolyNumber<T>
 where
-    T: Num,
-    T: Clone,
+    T: PartialEq + Zero + One + Mul + Add + Sub + Clone,
+    T: Sub<Output = T>,
 {
     fn tangent(self, k: usize, c: T) -> PolyNumber<T> {
         let p_alpha_plus_c = self.ltrans(c.clone());
@@ -339,11 +335,11 @@ where
 
 impl<T> PolyNumber<PolyNumber<T>>
 where
-    T: Num,
-    T: Copy,
+    T: PartialEq + Zero + One + Mul + Add + Sub + Clone,
+    T: Sub<Output = T>,
 {
     pub fn tangent2(self, k: usize, r: T, s: T) -> PolyNumber<PolyNumber<T>> {
-        let p_at_rs = self.ltrans2(r,s);
+        let p_at_rs = self.ltrans2(r.clone(),s.clone());
         let trunc = p_at_rs.truncate2(k);
         return trunc.ltrans2(T::zero() - r, T::zero() - s);
     }
@@ -436,8 +432,9 @@ where
 
 impl<T> PolyNumber<T>
 where
-    T: Num,
-    T: Clone,
+    T: PartialEq + Zero + One + Mul + Add + Sub + Clone,
+    T: Sub<Output = T>,
+    T: Div<Output = T>,
 {
     fn newton_approx(self, k : T, r1 : T) -> T {
         let t = self.tangent(1,r1);

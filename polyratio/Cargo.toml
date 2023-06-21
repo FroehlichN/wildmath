@@ -8,5 +8,6 @@ edition = "2021"
 
 [dependencies]
 polynumber = { path = "../polynumber" }
+extrational = { path = "../extrational" }
 num = "0.3"
 

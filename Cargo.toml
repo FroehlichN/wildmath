@@ -10,4 +10,6 @@ edition = "2018"
 num = "0.3"
 geo = { path = "geo" }
 polynumber = { path = "polynumber" }
+polyratio = { path = "polyratio" }
+extrational = { path = "extrational" }
 

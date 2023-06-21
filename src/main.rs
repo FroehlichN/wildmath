@@ -62,3 +62,18 @@ fn meet_of_fermat_and_bernoulli() {
     }
 }
 
+#[cfg(test)]
+mod tests {
+    use polyratio::*;
+    use polynumber::*;
+    use extrational::*;
+    #[test]
+    fn rational_poly_number_with_infinity() {
+        let numer = PolyNumber::new(vec![RatInf::new(1,1),RatInf::new(2,1)]);
+        let denom = PolyNumber::new(vec![RatInf::new(1,1),RatInf::new(-1,1)]);
+        let r = PolyRatio::new(numer,denom);
+        assert_eq!(r.eval(RatInf::new(1,1)),RatInf::new(1,0));
+        assert!(r.eval(RatInf::new(1,0)).is_nil());
+    }
+}
+

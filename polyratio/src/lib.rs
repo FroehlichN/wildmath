@@ -16,11 +16,11 @@ limitations under the License.
 */
 
 
-use num::{Num,Zero,One,Integer};
-use num::rational::{Ratio};
+use num::{Zero,One,Integer};
 use std::ops::{Mul, Add, Sub, Div};
 use std::fmt::Debug;
 use polynumber::PolyNumber;
+use extrational::RatInf;
 
 
 
@@ -33,10 +33,11 @@ pub struct PolyRatio<T> {
 
 impl<T> PolyRatio<T>
 where
-    T: Num,
-    T: Copy,
+    T: PartialEq + Zero + One + Mul + Add + Sub + Div + Clone,
+    T: Div<Output = T>,
+    PolyNumber<T>: Sub<Output = PolyNumber<T>>,
 {
-    fn new(numer: PolyNumber<T>, denom: PolyNumber<T>) -> PolyRatio<T> {
+    pub fn new(numer: PolyNumber<T>, denom: PolyNumber<T>) -> PolyRatio<T> {
         let dlo = denom.lowest_order();
         let dlow = match dlo {
             Some(i) => i,
@@ -75,9 +76,9 @@ where
 
             let n1 = res.get(nlow);
 
-            let q1 = n1/d1;
+            let q1 = n1.clone()/d1.clone();
 
-            if q1*d1 == n1 {
+            if q1.clone()*d1.clone() == n1 {
                 q.push(q1);
                 let pq1 = PolyNumber::new( q.clone() );
                 let s1 = denom.clone() * PolyNumber::new( q.clone() );
@@ -99,8 +100,7 @@ where
 
 impl<T> PartialEq for PolyRatio<T>
 where
-    T: Num,
-    T: Copy,
+    T: PartialEq + Zero + One + Mul + Add + Sub + Div + Clone,
 {
     fn eq(&self, other: &Self) -> bool {
         let p = self.numer.clone();
@@ -113,8 +113,9 @@ where
 
 impl<T> Add for PolyRatio<T>
 where
-    T: Num,
-    T: Copy,
+    T: PartialEq + Zero + One + Mul + Add + Sub + Div + Clone,
+    T: Div<Output = T>,
+    T: Sub<Output = T>,
 {
     type Output = PolyRatio<T>;
 
@@ -129,8 +130,9 @@ where
 
 impl<T> Mul for PolyRatio<T>
 where
-    T: Num,
-    T: Copy,
+    T: PartialEq + Zero + One + Mul + Add + Sub + Div + Clone,
+    T: Div<Output = T>,
+    T: Sub<Output = T>,
 {
     type Output = PolyRatio<T>;
 
@@ -145,8 +147,9 @@ where
 
 impl<T> Mul<T> for PolyRatio<T>
 where
-    T: Num,
-    T: Copy,
+    T: PartialEq + Zero + One + Mul + Add + Sub + Div + Clone,
+    T: Div<Output = T>,
+    T: Sub<Output = T>,
 {
     type Output = PolyRatio<T>;
 
@@ -159,8 +162,9 @@ where
 
 impl<T> Sub for PolyRatio<T>
 where
-    T: Num,
-    T: Copy,
+    T: PartialEq + Zero + One + Mul + Add + Sub + Div + Clone,
+    T: Div<Output = T>,
+    T: Sub<Output = T>,
 {
     type Output = PolyRatio<T>;
 
@@ -175,8 +179,9 @@ where
 
 impl<T> Div for PolyRatio<T>
 where
-    T: Num,
-    T: Copy,
+    T: PartialEq + Zero + One + Mul + Add + Sub + Div + Clone,
+    T: Div<Output = T>,
+    T: Sub<Output = T>,
 {
     type Output = PolyRatio<T>;
 
@@ -191,8 +196,9 @@ where
 
 impl<T> Zero for PolyRatio<T>
 where
-    T: Num,
-    T: Copy,
+    T: PartialEq + Zero + One + Mul + Add + Sub + Div + Clone,
+    T: Div<Output = T>,
+    T: Sub<Output = T>,
 {
     fn zero() -> PolyRatio<T> {
         return PolyRatio{ numer: PolyNumber::<T>::zero(),
@@ -206,8 +212,9 @@ where
 
 impl<T> One for PolyRatio<T>
 where
-    T: Num,
-    T: Copy,
+    T: PartialEq + Zero + One + Mul + Add + Sub + Div + Clone,
+    T: Div<Output = T>,
+    T: Sub<Output = T>,
 {
     fn one() -> PolyRatio<T> {
         return PolyRatio{ numer: PolyNumber::<T>::one(),
@@ -215,35 +222,33 @@ where
     }
 }
 
-impl<T> PolyRatio<T>
+impl<T> PolyRatio<RatInf<T>>
 where
-    T: Num,
     T: Integer,
     T: Clone,
-    T: Copy,
 {
-    pub fn eval(&self, c: T) -> Option<Ratio<T>> {
+    pub fn eval(&self, c: RatInf<T>) -> RatInf<T> {
         let mut numer = self.numer.clone();
         let mut denom = self.denom.clone();
 
         loop {
-            let num = numer.eval(c);
-            let den = denom.eval(c);
+            let num = numer.eval(c.clone());
+            let den = denom.eval(c.clone());
 
             if den.is_zero() {
                 if !num.is_zero() {
-                    return Option::None;
+                    return num/den;
                 }
 
                 let numer_reduced = PolyRatio::new(numer.clone(),
-                                    PolyNumber::new(vec![T::zero() - c, T::one()]));
+                                    PolyNumber::new(vec![-c.clone(), RatInf::<T>::one()]));
                 let denom_reduced = PolyRatio::new(denom.clone(),
-                                    PolyNumber::new(vec![T::zero() - c, T::one()]));
+                                    PolyNumber::new(vec![-c.clone(), RatInf::<T>::one()]));
 
                 numer = numer_reduced.numer;
                 denom = denom_reduced.numer;
             } else {
-                return Option::Some(Ratio::new(num,den));
+                return num/den;
             }
         }
     }
@@ -322,7 +327,7 @@ mod tests {
     }
     #[test]
     fn folium_of_descartes() {
-        let p = PolyNumber::new( vec![PolyNumber::new( vec![0,0,0,1] ), // x^3
+        let p = PolyNumber::new( vec![PolyNumber::<i128>::new( vec![0,0,0,1] ), // x^3
                                     PolyNumber::new( vec![0,3] ), // 3xy
                                     PolyNumber::new( vec![0] ),
                                     PolyNumber::new( vec![1] ) ] ); // y^3
@@ -344,8 +349,8 @@ mod tests {
                                      PolyNumber::new( vec![1] ) ] ) * 3;
         assert_eq!(p.clone().tangent2(2,2,1),t2);
 
-        let z = Ratio::new( 0, 1);
-        let o = Ratio::new( 1, 1);
+        let z = RatInf::new( 0, 1);
+        let o = RatInf::new( 1, 1);
         assert_eq!(p.eval2(-o*3/2).eval(-o*3/2),z);
         let pr = PolyNumber::new( vec![PolyNumber::new( vec![z,z,z,o] ), // x^3
                                      PolyNumber::new( vec![z,o*3] ), // 3xy
@@ -361,25 +366,28 @@ mod tests {
     }
     #[test]
     fn evaluation_of_rational_poly_numbers() {
-        let numer = PolyNumber::new(vec![0,1,-1]);
-        let denom = PolyNumber::new(vec![1,0,-1]);
+        let numer = PolyNumber::new(vec![RatInf::new(0,1),RatInf::new(1,1),
+                                         RatInf::new(-1,1)]);
+        let denom = PolyNumber::new(vec![RatInf::new(1,1),RatInf::new(0,1),
+                                         RatInf::new(-1,1)]);
         let p = PolyRatio::new(numer.clone(),denom.clone());
 
-        assert_eq!(p.eval(0),Option::Some(Ratio::new(0,1)));
-        assert_eq!(p.eval(1),Option::Some(Ratio::new(1,2)));
-        assert_eq!(p.eval(-1),Option::None);
+        assert_eq!(p.eval(RatInf::new(0,1)),RatInf::new(0,1));
+        assert_eq!(p.eval(RatInf::new(1,1)),RatInf::new(1,2));
+        assert!(p.eval(RatInf::new(-1,1)).is_infinite());
     }
     #[test]
     fn evaluation_of_rational_poly_numbers2() {
-        let numer = PolyNumber::new(vec![6,-5,1]);
-        let denom = PolyNumber::new(vec![-16,20,-8,1]);
+        let numer = PolyNumber::new(vec![RatInf::new(6,1),RatInf::new(-5,1),RatInf::new(1,1)]);
+        let denom = PolyNumber::new(vec![RatInf::new(-16,1),RatInf::new(20,1),
+                                         RatInf::new(-8,1),RatInf::new(1,1)]);
         let p = PolyRatio::new(numer.clone(),denom.clone());
 
-        assert_eq!(p.eval(1),Option::Some(Ratio::new(-2,3)));
-        assert_eq!(p.eval(2),Option::None);
-        assert_eq!(p.eval(3),Option::Some(Ratio::new(0,1)));
-        assert_eq!(p.eval(4),Option::None);
-        assert_eq!(p.eval(5),Option::Some(Ratio::new(2,3)));
+        assert_eq!(p.eval(RatInf::new(1,1)),RatInf::new(-2,3));
+        assert!(p.eval(RatInf::new(2,1)).is_infinite());
+        assert_eq!(p.eval(RatInf::new(3,1)),RatInf::new(0,1));
+        assert!(p.eval(RatInf::new(4,1)).is_infinite());
+        assert_eq!(p.eval(RatInf::new(5,1)),RatInf::new(2,3));
     }
 }
 
