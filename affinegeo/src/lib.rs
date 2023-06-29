@@ -16,11 +16,36 @@ limitations under the License.
 */
 
 
-use num::{Num, Zero, One};
+use num::{Num, Zero, One, Signed};
 use std::ops::{Mul, Add, Sub, Div};
 
 pub trait Point {
     fn is_collinear(&self, a2: &Self, a3: &Self) -> bool;
+}
+
+/// Represents a 1D point
+#[derive(Debug, Clone)]
+pub struct OnePoint<T> {
+    pub x : T,
+}
+
+impl<T> OnePoint<T>
+{
+    pub fn new(x : T) -> OnePoint<T> {
+        OnePoint{ x: x }
+    }
+}
+
+impl<T> OnePoint<T>
+where
+    T: Sub<T, Output = T>,
+    T: Signed,
+    T: Clone,
+{
+    pub fn length(&self, other: &Self) -> T {
+        let d = self.x.clone() - other.x.clone();
+        return d.abs();
+    }
 }
 
 /// Represents a 2D point
@@ -890,5 +915,11 @@ mod tests {
         assert_eq!(v1*r1.clone(),v3);
         let v4 = TwoVector::new(Ratio::new(6,1), Ratio::new(-2,1));
         assert_eq!(v2*r1,v4);
+    }
+    #[test]
+    fn length_between_one_points() {
+        let a = OnePoint::new(Ratio::new(3,2));
+        let b = OnePoint::new(Ratio::new(1,5));
+        assert_eq!(a.length(&b),Ratio::new(13,10));
     }
 }
