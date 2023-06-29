@@ -48,6 +48,29 @@ where
     }
 }
 
+impl<T> OnePoint<T>
+where
+    T: Sub<T, Output = T>,
+    T: Clone,
+{
+    /// displacement
+    pub fn disp(&self, other: &Self) -> T {
+        other.x.clone() - self.x.clone()
+    }
+}
+
+impl<T> OnePoint<T>
+where
+    T: Sub<T, Output = T>,
+    T: Mul<T, Output = T>,
+    T: Clone,
+{
+    pub fn quadrance(&self, other: &Self) -> T {
+        let dx = other.x.clone() - self.x.clone();
+        dx.clone()*dx
+    }
+}
+
 /// Represents a 2D point
 #[derive(Debug, Clone)]
 pub struct TwoPoint<T> {
@@ -921,5 +944,14 @@ mod tests {
         let a = OnePoint::new(Ratio::new(3,2));
         let b = OnePoint::new(Ratio::new(1,5));
         assert_eq!(a.length(&b),Ratio::new(13,10));
+    }
+    #[test]
+    fn quadrance_between_one_points() {
+        let a1 = OnePoint::new(2);
+        let a2 = OnePoint::new(5);
+        let a3 = OnePoint::new(7);
+        assert_eq!(a2.quadrance(&a3),4);
+        assert_eq!(a1.quadrance(&a3),25);
+        assert_eq!(a1.quadrance(&a2),9);
     }
 }
