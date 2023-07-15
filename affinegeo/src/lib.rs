@@ -83,6 +83,10 @@ where
     T: Num,
     T: Clone,
 {
+    pub fn new(x: T, y: T) -> TwoPoint<T> {
+        TwoPoint {x: x, y: y}
+    }
+
     pub fn lies_on(&self, l: &TwoLine<T>) -> bool {
         let r = l.a.clone() * self.x.clone()
               + l.b.clone() * self.y.clone() + l.c.clone();
@@ -621,7 +625,7 @@ where
     }
 }
 
-/// Represents a quidrilateral
+/// Represents a quadrilateral
 /// T is type of the points
 pub struct Quadrilateral<T> {
     points: [T; 4],
@@ -638,11 +642,29 @@ impl<T: Point> Quadrilateral<T> {
         if a3.is_collinear(&a4, &a1) {
             panic!("Quadrilateral cannot have collinear points");
         }
-        if a4.is_collinear(&a1, &a1) {
+        if a4.is_collinear(&a1, &a2) {
             panic!("Quadrilateral cannot have collinear points");
         }
 
         Quadrilateral { points: [a1, a2, a3, a4] }
+    }
+}
+
+impl<T> Quadrilateral<TwoPoint<T>>
+where
+    T: Num,
+    T: Clone,
+{
+    pub fn quadrea(&self) -> T {
+        let four = T::one() + T::one() + T::one() + T::one();
+        let q01 = self.points[0].quadrance(&self.points[1]);
+        let q02 = self.points[0].quadrance(&self.points[2]);
+        let q03 = self.points[0].quadrance(&self.points[3]);
+        let q12 = self.points[1].quadrance(&self.points[2]);
+        let q13 = self.points[1].quadrance(&self.points[3]);
+        let q23 = self.points[2].quadrance(&self.points[3]);
+        let s = q01+q23-q03-q12;
+        return four * q02*q13 - s.clone()*s;
     }
 }
 
@@ -953,5 +975,17 @@ mod tests {
         assert_eq!(a2.quadrance(&a3),4);
         assert_eq!(a1.quadrance(&a3),25);
         assert_eq!(a1.quadrance(&a2),9);
+    }
+    #[test]
+    fn bretschneider_von_staudt() {
+        let p1 = TwoPoint::new(Ratio::new(1,1), Ratio::new(1,2));
+        let p2 = TwoPoint::new(Ratio::new(2,1), Ratio::new(3,2));
+        let p3 = TwoPoint::new(Ratio::new(-1,1), Ratio::new(4,3));
+        let p4 = TwoPoint::new(Ratio::new(-3,1), Ratio::new(-4,3));
+
+        let q = Quadrilateral::new(p1.clone(),p2.clone(),p3.clone(),p4.clone());
+        let p = Polygon {points: vec![p1, p2, p3, p4]};
+        let a = p.area();
+        assert_eq!(Ratio::new(16,1)*a*a,q.quadrea());
     }
 }
