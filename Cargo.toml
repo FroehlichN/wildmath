@@ -8,8 +8,10 @@ edition = "2018"
 
 [dependencies]
 num = "0.3"
+paste = "1.0"
 affinegeo = { path = "affinegeo" }
 polynumber = { path = "polynumber" }
 polyratio = { path = "polyratio" }
 extrational = { path = "extrational" }
+finite = { path = "finite" }
 

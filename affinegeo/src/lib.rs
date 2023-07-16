@@ -80,7 +80,12 @@ pub struct TwoPoint<T> {
 
 impl<T> TwoPoint<T>
 where
-    T: Num,
+    T: Mul<Output = T>,
+    T: Add<Output = T>,
+    T: Sub<Output = T>,
+    T: Div<Output = T>,
+    T: Zero,
+    T: One,
     T: Clone,
 {
     pub fn new(x: T, y: T) -> TwoPoint<T> {
@@ -113,7 +118,12 @@ where
 
 impl<T> Point for TwoPoint<T>
 where
-    T: Num,
+    T: Mul<Output = T>,
+    T: Add<Output = T>,
+    T: Sub<Output = T>,
+    T: Div<Output = T>,
+    T: Zero,
+    T: One,
     T: Clone,
 {
     fn is_collinear(&self, a2: &Self, a3: &Self) -> bool {
@@ -124,7 +134,12 @@ where
 
 impl<T> PartialEq for TwoPoint<T>
 where
-    T: Num,
+    T: Mul<Output = T>,
+    T: Add<Output = T>,
+    T: Sub<Output = T>,
+    T: Div<Output = T>,
+    T: Zero,
+    T: One,
     T: Clone,
 {
     fn eq(&self, other: &Self) -> bool {
@@ -134,7 +149,10 @@ where
 
 impl<T> Add<TwoVector<T>> for TwoPoint<T>
 where
-    T: Num,
+    T: Mul<Output = T>,
+    T: Add<Output = T>,
+    T: Sub<Output = T>,
+    T: Zero,
     T: Clone,
 {
     type Output = TwoPoint<T>;
@@ -146,7 +164,10 @@ where
 
 impl<T> Add<TwoPoint<T>> for TwoPoint<T>
 where
-    T: Num,
+    T: Mul<Output = T>,
+    T: Add<Output = T>,
+    T: Sub<Output = T>,
+    T: Zero,
     T: Clone,
 {
     type Output = TwoPoint<T>;
@@ -161,7 +182,10 @@ where
 
 impl<T> Mul<Translation<T>> for TwoPoint<T>
 where
-    T: Num,
+    T: Mul<Output = T>,
+    T: Add<Output = T>,
+    T: Sub<Output = T>,
+    T: Zero,
     T: Clone,
 {
     type Output = TwoPoint<T>;
@@ -173,7 +197,10 @@ where
 
 impl<T> Mul<T> for TwoPoint<T>
 where
-    T: Num,
+    T: Mul<Output = T>,
+    T: Add<Output = T>,
+    T: Sub<Output = T>,
+    T: Zero,
     T: Clone,
 {
     type Output = TwoPoint<T>;
@@ -187,7 +214,10 @@ where
 
 impl<T> Mul<TwoPoint<T>> for TwoPoint<T>
 where
-    T: Num,
+    T: Mul<Output = T>,
+    T: Add<Output = T>,
+    T: Sub<Output = T>,
+    T: Zero,
     T: Clone,
 {
     type Output = TwoPoint<T>;
@@ -201,7 +231,10 @@ where
 
 impl<T> Sub<TwoPoint<T>> for TwoPoint<T>
 where
-    T: Num,
+    T: Mul<Output = T>,
+    T: Add<Output = T>,
+    T: Sub<Output = T>,
+    T: Zero,
     T: Clone,
 {
     type Output = TwoPoint<T>;
@@ -216,7 +249,10 @@ where
 
 impl<T> Div<TwoPoint<T>> for TwoPoint<T>
 where
-    T: Num,
+    T: Mul<Output = T>,
+    T: Add<Output = T>,
+    T: Sub<Output = T>,
+    T: Zero,
     T: Clone,
 {
     type Output = TwoPoint<T>;
@@ -230,7 +266,11 @@ where
 
 impl<T> Zero for TwoPoint<T>
 where
-    T: Num,
+    T: Mul<Output = T>,
+    T: Add<Output = T>,
+    T: Sub<Output = T>,
+    T: Zero,
+    T: One,
     T: Clone,
 {
     fn zero() -> TwoPoint<T> {
@@ -244,7 +284,11 @@ where
 
 impl<T> One for TwoPoint<T>
 where
-    T: Num,
+    T: Mul<Output = T>,
+    T: Add<Output = T>,
+    T: Sub<Output = T>,
+    T: Zero,
+    T: One,
     T: Clone,
 {
     fn one() -> TwoPoint<T> {
@@ -269,7 +313,12 @@ impl<T> TwoLine<T> {
 
 impl<T> TwoLine<T>
 where
-    T: Num,
+    T: Mul<Output = T>,
+    T: Add<Output = T>,
+    T: Sub<Output = T>,
+    T: Div<Output = T>,
+    T: Zero,
+    T: One,
     T: Clone,
 {
     pub fn new(a: T, b: T, c: T) -> TwoLine<T> {
@@ -362,7 +411,11 @@ pub struct TwoCircle<T> {
 
 impl<T> TwoCircle<T>
 where
-    T: Num,
+    T: Mul<Output = T>,
+    T: Add<Output = T>,
+    T: Sub<Output = T>,
+    T: Zero,
+    T: One,
     T: Clone,
 {
     pub fn center(&self) -> TwoPoint<T> {
@@ -445,7 +498,10 @@ pub struct TwoVector<T> {
 
 impl<T> PartialEq for TwoVector<T>
 where
-    T: Num,
+    T: Mul<Output = T>,
+    T: Add<Output = T>,
+    T: Sub<Output = T>,
+    T: Zero,
     T: Clone,
 {
     fn eq(&self, other: &Self) -> bool {
@@ -511,7 +567,12 @@ where
 
 impl<T> TwoVector<T>
 where
-    T: Num,
+    T: Mul<Output = T>,
+    T: Add<Output = T>,
+    T: Sub<Output = T>,
+    T: Div<Output = T>,
+    T: Zero,
+    T: One,
     T: Clone,
 {
     pub fn area(&self) -> T {
@@ -528,10 +589,19 @@ pub struct Polygon<T> {
 
 impl<T> Polygon<T>
 where
-    T: Num,
+    T: Mul<Output = T>,
+    T: Add<Output = T>,
+    T: Sub<Output = T>,
+    T: Div<Output = T>,
+    T: Zero,
+    T: One,
     T: Clone,
 {
-    fn area(&self) -> T {
+    pub fn new(p: Vec<TwoPoint<T>>) -> Polygon<T> {
+        Polygon { points: p }
+    }
+
+    pub fn area(&self) -> T {
         let mut a = T::zero();
 
         if self.points.len() < 2 {
@@ -652,7 +722,12 @@ impl<T: Point> Quadrilateral<T> {
 
 impl<T> Quadrilateral<TwoPoint<T>>
 where
-    T: Num,
+    T: Mul<Output = T>,
+    T: Add<Output = T>,
+    T: Sub<Output = T>,
+    T: Div<Output = T>,
+    T: Zero,
+    T: One,
     T: Clone,
 {
     pub fn quadrea(&self) -> T {

@@ -15,9 +15,9 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-use num::{Zero};
-use std::ops::{Add};
+
 use paste::paste;
+
 
 /// Creates a finite number field
 /// The argument N should be some prime number.
@@ -27,6 +27,9 @@ macro_rules! create_finite_field {
     ( $N:literal ) => {
 
         paste! {
+
+            use num::{Zero,One};
+            use std::ops::{Add,Sub,Mul,Div};
 
             #[derive(Debug, Clone, Copy)]
             pub struct [<Finite $N>] {
@@ -52,6 +55,37 @@ macro_rules! create_finite_field {
                 }
             }
 
+            impl Sub<[<Finite $N>]> for [<Finite $N>]
+            {
+                type Output = [<Finite $N>];
+
+                fn sub(self, other: [<Finite $N>]) -> [<Finite $N>] {
+                    Self::new(self.n.clone() - other.n.clone())
+                }
+            }
+
+            impl Mul<[<Finite $N>]> for [<Finite $N>]
+            {
+                type Output = [<Finite $N>];
+
+                fn mul(self, other: [<Finite $N>]) -> [<Finite $N>] {
+                    Self::new(self.n.clone() * other.n.clone())
+                }
+            }
+
+            impl Div<[<Finite $N>]> for [<Finite $N>]
+            {
+                type Output = [<Finite $N>];
+
+                fn div(self, other: [<Finite $N>]) -> [<Finite $N>] {
+                    let mut m : i64 = 1;
+                    while Self::new(other.n * m) != Self::one() {
+                        m += 1;
+                    }
+                    Self::new(self.n * m)
+                }
+            }
+
             impl Zero for [<Finite $N>] {
                 fn zero() -> [<Finite $N>] {
                     [<Finite $N>] { n: 0 }
@@ -59,6 +93,19 @@ macro_rules! create_finite_field {
 
                 fn is_zero(&self) -> bool {
                     self.n.is_zero()
+                }
+            }
+
+            impl One for [<Finite $N>] {
+                fn one() -> [<Finite $N>] {
+                    [<Finite $N>] { n: 1 }
+                }
+            }
+
+            impl PartialEq for [<Finite $N>]
+            {
+                fn eq(&self, other: &Self) -> bool {
+                    self.n == other.n
                 }
             }
 

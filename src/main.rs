@@ -64,9 +64,16 @@ fn meet_of_fermat_and_bernoulli() {
 
 #[cfg(test)]
 mod tests {
+    use super::*;
     use polyratio::*;
     use polynumber::*;
     use extrational::*;
+    use affinegeo::*;
+    use finite::*;
+    use paste::paste;
+
+    create_finite_field!(7);
+
     #[test]
     fn rational_poly_number_with_infinity() {
         let numer = PolyNumber::new(vec![RatInf::new(1,1),RatInf::new(2,1)]);
@@ -74,6 +81,18 @@ mod tests {
         let r = PolyRatio::new(numer,denom);
         assert_eq!(r.eval(RatInf::new(1,1)),RatInf::new(1,0));
         assert!(r.eval(RatInf::new(1,0)).is_nil());
+    }
+    #[test]
+    fn bretschneider_von_staudt_over_f7() {
+        let p1 = TwoPoint::new(Finite7::new(1), Finite7::new(1));
+        let p2 = TwoPoint::new(Finite7::new(2), Finite7::new(2));
+        let p3 = TwoPoint::new(Finite7::new(3), Finite7::new(4));
+        let p4 = TwoPoint::new(Finite7::new(5), Finite7::new(6));
+
+        let q = Quadrilateral::new(p1.clone(),p2.clone(),p3.clone(),p4.clone());
+        let p = Polygon::new(vec![p1, p2, p3, p4]);
+        let a = p.area();
+        assert_eq!(Finite7::new(16)*a*a,q.quadrea());
     }
 }
 
