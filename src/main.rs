@@ -70,9 +70,10 @@ mod tests {
     use extrational::*;
     use affinegeo::*;
     use finite::*;
-    use paste::paste;
 
     create_finite_field!(7);
+    create_finite_field!(11);
+    create_finite_field!(13);
 
     #[test]
     fn rational_poly_number_with_infinity() {
@@ -93,6 +94,30 @@ mod tests {
         let p = Polygon::new(vec![p1, p2, p3, p4]);
         let a = p.area();
         assert_eq!(Finite7::new(16)*a*a,q.quadrea());
+    }
+    #[test]
+    fn bretschneider_von_staudt_over_f11() {
+        let p1 = TwoPoint::new(Finite11::new(1), Finite11::new(1));
+        let p2 = TwoPoint::new(Finite11::new(2), Finite11::new(2));
+        let p3 = TwoPoint::new(Finite11::new(3), Finite11::new(4));
+        let p4 = TwoPoint::new(Finite11::new(5), Finite11::new(6));
+
+        let q = Quadrilateral::new(p1.clone(),p2.clone(),p3.clone(),p4.clone());
+        let p = Polygon::new(vec![p1, p2, p3, p4]);
+        let a = p.area();
+        assert_eq!(Finite11::new(16)*a*a,q.quadrea());
+    }
+    #[test]
+    fn bretschneider_von_staudt_over_f13() {
+        let p1 = TwoPoint::new(Finite13::new(1), Finite13::new(1));
+        let p2 = TwoPoint::new(Finite13::new(2), Finite13::new(2));
+        let p3 = TwoPoint::new(Finite13::new(3), Finite13::new(4));
+        let p4 = TwoPoint::new(Finite13::new(5), Finite13::new(6));
+
+        let q = Quadrilateral::new(p1.clone(),p2.clone(),p3.clone(),p4.clone());
+        let p = Polygon::new(vec![p1, p2, p3, p4]);
+        let a = p.area();
+        assert_eq!(Finite13::new(16)*a*a,q.quadrea());
     }
 }
 

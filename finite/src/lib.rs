@@ -16,7 +16,9 @@ limitations under the License.
 */
 
 
-use paste::paste;
+pub use num::{Zero,One};
+pub use std::ops::{Add,Sub,Mul,Div};
+pub use paste::paste;
 
 
 /// Creates a finite number field
@@ -27,9 +29,6 @@ macro_rules! create_finite_field {
     ( $N:literal ) => {
 
         paste! {
-
-            use num::{Zero,One};
-            use std::ops::{Add,Sub,Mul,Div};
 
             #[derive(Debug, Clone, Copy)]
             pub struct [<Finite $N>] {
