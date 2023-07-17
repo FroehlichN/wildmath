@@ -119,5 +119,25 @@ mod tests {
         let a = p.area();
         assert_eq!(Finite13::new(16)*a*a,q.quadrea());
     }
+    #[test]
+    fn unit_circle_in_f7() {
+        let center = TwoPoint::new(Finite7::new(0), Finite7::new(0));
+        let quadrance = Finite7::new(1);
+        let a1 = TwoPoint::new(Finite7::new(0), Finite7::new(1));
+        let a2 = TwoPoint::new(Finite7::new(2), Finite7::new(2));
+        let a3 = TwoPoint::new(Finite7::new(5), Finite7::new(5));
+        let a4 = TwoPoint::new(Finite7::new(6), Finite7::new(0));
+        let circle = TwoCircle::new(center, quadrance);
+        assert!(circle.lies_on(&a1));
+        assert!(circle.lies_on(&a2));
+        assert!(circle.lies_on(&a3));
+        assert!(circle.lies_on(&a4));
+        assert_eq!(a1.quadrance(&a2), Finite7::new(5));
+        assert_eq!(a2.quadrance(&a3), Finite7::new(4));
+        assert_eq!(a3.quadrance(&a4), Finite7::new(5));
+        assert_eq!(a1.quadrance(&a4), Finite7::new(2));
+        assert_eq!(a1.quadrance(&a3), Finite7::new(6));
+        assert_eq!(a2.quadrance(&a4), Finite7::new(6));
+    }
 }
 
