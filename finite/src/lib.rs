@@ -120,11 +120,62 @@ mod tests {
     use super::*;
 
     create_finite_field!(3);
+    create_finite_field!(7);
 
     #[test]
     fn three_equals_zero() {
         let f = Finite3::new(3);
         assert!(f.is_zero());
+    }
+    #[test]
+    fn division_in_f7() {
+        let n1 = Finite7::new(12);
+        let d1 = Finite7::new(17);
+        let n2 = Finite7::new(5);
+        let d2 = Finite7::new(3);
+        assert_eq!(n1/d1,n2/d2);
+    }
+    #[test]
+    fn division_in_f7_2() {
+        let n1 = Finite7::new(356);
+        let d1 = Finite7::new(95);
+        let n2 = Finite7::new(3);
+        let d2 = Finite7::new(2);
+        assert_eq!(n1/d1,n2/d2);
+    }
+    #[test]
+    fn division_in_f7_3() {
+        let n1 = Finite7::new(1);
+        let d1 = Finite7::new(2);
+        let n2 = Finite7::new(4);
+        assert_eq!(n1/d1,n2);
+    }
+    #[test]
+    fn division_in_f7_4() {
+        let n1 = Finite7::new(1);
+        let d1 = Finite7::new(3);
+        let n2 = Finite7::new(5);
+        assert_eq!(n1/d1,n2);
+    }
+    #[test]
+    fn division_in_f7_5() {
+        let n1 = Finite7::new(1);
+        let d1 = Finite7::new(6);
+        let n2 = Finite7::new(6);
+        assert_eq!(n1/d1,n2);
+    }
+    #[test]
+    fn arithmetic_in_f7() {
+        let n1 = Finite7::new(32);
+        let d1 = Finite7::new(19);
+        let n2 = Finite7::new(43);
+        let d2 = Finite7::new(101);
+        let n3 = Finite7::new(22);
+        let d3 = Finite7::new(5);
+        let n4 = Finite7::new(47);
+        let d4 = Finite7::new(11);
+        let n6 = Finite7::new(6);
+        assert_eq!(n1/d1*n2/d2+n3/d3*n4/d4,n6);
     }
 }
 
