@@ -114,6 +114,12 @@ where
         let dy = other.y.clone() - self.y.clone();
         dx.clone()*dx + dy.clone()*dy
     }
+
+    pub fn quadrance_red(&self, other: &Self) -> T {
+        let dx = other.x.clone() - self.x.clone();
+        let dy = other.y.clone() - self.y.clone();
+        dx.clone()*dx - dy.clone()*dy
+    }
 }
 
 impl<T> Point for TwoPoint<T>
@@ -428,9 +434,21 @@ where
         return k;
     }
 
+    pub fn quadrance_red(&self) -> T {
+        let k = self.a.clone()*self.a.clone()
+              - self.b.clone()*self.b.clone() - self.c.clone();
+        return k;
+    }
+
     pub fn new(center: TwoPoint<T>, quadrance: T) -> TwoCircle<T> {
         let cc = center.x.clone()*center.x.clone()
                + center.y.clone()*center.y.clone() - quadrance;
+        TwoCircle {a: center.x, b: center.y, c: cc}
+    }
+
+    pub fn new_red(center: TwoPoint<T>, quadrance: T) -> TwoCircle<T> {
+        let cc = center.x.clone()*center.x.clone()
+               - center.y.clone()*center.y.clone() - quadrance;
         TwoCircle {a: center.x, b: center.y, c: cc}
     }
 
@@ -442,6 +460,13 @@ where
         r.is_zero()
     }
 
+    pub fn lies_on_red(&self, point: &TwoPoint<T>) -> bool {
+        let dx = point.x.clone() - self.a.clone();
+        let dy = point.y.clone() - self.b.clone();
+        let k = self.quadrance_red();
+        let r = dx.clone() * dx - dy.clone() * dy - k;
+        r.is_zero()
+    }
 }
 
 /// Represents a triangle
@@ -1062,5 +1087,25 @@ mod tests {
         let p = Polygon {points: vec![p1, p2, p3, p4]};
         let a = p.area();
         assert_eq!(Ratio::new(16,1)*a*a,q.quadrea());
+    }
+    #[test]
+    fn unit_circle_in_red_geometry() {
+        let center = TwoPoint::new(Ratio::new(0,1), Ratio::new(0,1));
+        let quadrance = Ratio::new(1,1);
+        let a1 = TwoPoint::new(Ratio::new(1,1), Ratio::new(0,1));
+        let a2 = TwoPoint::new(Ratio::new(13,12), Ratio::new(5,12));
+        let a3 = TwoPoint::new(Ratio::new(-5,3), Ratio::new(4,3));
+        let a4 = TwoPoint::new(Ratio::new(-17,15), Ratio::new(-8,15));
+        let circle = TwoCircle::new_red(center, quadrance);
+        assert!(circle.lies_on_red(&a1));
+        assert!(circle.lies_on_red(&a2));
+        assert!(circle.lies_on_red(&a3));
+        assert!(circle.lies_on_red(&a4));
+        assert_eq!(a1.quadrance_red(&a2), Ratio::new(-1,6));
+        assert_eq!(a2.quadrance_red(&a3), Ratio::new(121,18));
+        assert_eq!(a3.quadrance_red(&a4), Ratio::new(-16,5));
+        assert_eq!(a1.quadrance_red(&a4), Ratio::new(64,15));
+        assert_eq!(a1.quadrance_red(&a3), Ratio::new(16,3));
+        assert_eq!(a2.quadrance_red(&a4), Ratio::new(361,90));
     }
 }
