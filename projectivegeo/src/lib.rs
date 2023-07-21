@@ -61,6 +61,24 @@ where
     }
 }
 
+impl<T> ProjOnePoint<T>
+where
+    T: Add<T, Output = T>,
+    T: Mul<T, Output = T>,
+    T: Zero,
+    T: Clone,
+{
+
+    pub fn is_perpendicular(&self, other: &Self) -> bool {
+        let x1 = self.x.a.clone();
+        let y1 = self.x.b.clone();
+        let x2 = other.x.a.clone();
+        let y2 = other.x.b.clone();
+        let r = x1*x2+y1*y2;
+        r.is_zero()
+    }
+}
+
 
 #[cfg(test)]
 mod tests {
@@ -78,6 +96,24 @@ mod tests {
         let a2 = ProjOnePoint::new(Ratio::new(1,1),Ratio::new(4,1));
         let q = Ratio::new(1,1)-Ratio::new(11*11,1)/Ratio::new(13*17,1);
         assert_eq!(a1.quadrance(&a2),q);
+    }
+    #[test]
+    fn one_dimensional_euclidean_projective_perpendicularity() {
+        let a1 = ProjOnePoint::new(Ratio::new(3,1),Ratio::new(4,1));
+        let a2 = ProjOnePoint::new(Ratio::new(-8,1),Ratio::new(6,1));
+        assert!(a1.is_perpendicular(&a2));
+    }
+    #[test]
+    fn one_dimensional_euclidean_projective_perpendicularity_2() {
+        let a1 = ProjOnePoint::new(Ratio::new(1,1),Ratio::new(0,1));
+        let a2 = ProjOnePoint::new(Ratio::new(0,1),Ratio::new(1,1));
+        assert!(a1.is_perpendicular(&a2));
+    }
+    #[test]
+    fn one_dimensional_euclidean_projective_perpendicularity_3() {
+        let a1 = ProjOnePoint::new(Ratio::new(2,3),Ratio::new(1,5));
+        let a2 = ProjOnePoint::new(Ratio::new(-3,1),Ratio::new(10,1));
+        assert!(a1.is_perpendicular(&a2));
     }
 }
 
