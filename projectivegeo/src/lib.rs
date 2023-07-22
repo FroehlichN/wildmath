@@ -195,6 +195,15 @@ mod tests {
         assert_eq!(a1.quadrance(&a3),a2.quadrance(&a4));
     }
     #[test]
+    fn rotation_of_one_dimensional_projective_points_2() {
+        let a1 = ProjOnePoint::new(Ratio::new(1,1),Ratio::new(2,1));
+        let a2 = ProjOnePoint::new(Ratio::new(3,1),Ratio::new(1,1));
+        let a3 = ProjOnePoint::new(Ratio::new(-2,1),Ratio::new(1,1));
+        let r = Rotation::new(Ratio::new(-1,1),Ratio::new(1,1));
+        assert_eq!(a1.clone()*r.clone(),a2.clone());
+        assert_eq!(a2*r,a3);
+    }
+    #[test]
     fn multiplication_of_rotations_of_one_dimensional_projective_points() {
         let a1 = ProjOnePoint::new(Ratio::new(3,1),Ratio::new(5,1));
         let r1 = Rotation::new(Ratio::new( 7,1),Ratio::new( 4,1));
