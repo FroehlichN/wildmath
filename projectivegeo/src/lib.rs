@@ -127,6 +127,27 @@ where
     }
 }
 
+impl<T> Mul<Rotation<T>> for Rotation<T>
+where
+    T: Add<T, Output = T>,
+    T: Sub<T, Output = T>,
+    T: Mul<T, Output = T>,
+    T: Zero,
+    T: Clone,
+{
+    type Output = Rotation<T>;
+
+    fn mul(self, other: Self) -> Rotation<T> {
+        let a = self.vector.a.clone();
+        let b = self.vector.b.clone();
+        let c = other.vector.a.clone();
+        let d = other.vector.b.clone();
+        let ra = a.clone()*c.clone() - b.clone()*d.clone();
+        let rb = a*d + b*c;
+        Rotation::new(ra,rb)
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -173,5 +194,13 @@ mod tests {
         assert_eq!(a3.clone()*r,a4.clone());
         assert_eq!(a1.quadrance(&a3),a2.quadrance(&a4));
     }
+    #[test]
+    fn multiplication_of_rotations_of_one_dimensional_projective_points() {
+        let a1 = ProjOnePoint::new(Ratio::new(3,1),Ratio::new(5,1));
+        let r1 = Rotation::new(Ratio::new( 7,1),Ratio::new( 4,1));
+        let r2 = Rotation::new(Ratio::new( 11,1),Ratio::new( 4,1));
+        assert_eq!((a1.clone()*r1.clone())*r2.clone(),a1*(r1*r2));
+    }
+
 }
 
