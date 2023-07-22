@@ -17,7 +17,7 @@ limitations under the License.
 
 
 use proportion::TwoProportion;
-use num::{Zero};
+use num::{Zero,One};
 use std::ops::{Mul, Add, Sub, Div};
 
 
@@ -145,6 +145,18 @@ where
         let ra = a.clone()*c.clone() - b.clone()*d.clone();
         let rb = a*d + b*c;
         Rotation::new(ra,rb)
+    }
+}
+
+impl<T> One for Rotation<T>
+where
+    T: Sub<T, Output = T>,
+    T: Zero,
+    T: One,
+    T: Clone,
+{
+    fn one() -> Rotation<T> {
+        Rotation::new(T::one(),T::zero())
     }
 }
 
