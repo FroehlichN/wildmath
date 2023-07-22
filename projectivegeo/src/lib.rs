@@ -79,6 +79,53 @@ where
     }
 }
 
+impl<T> PartialEq for ProjOnePoint<T>
+where
+    TwoProportion<T>: PartialEq,
+    T: Clone,
+{
+    fn eq(&self, other: &Self) -> bool {
+        self.x == other.x
+    }
+}
+
+
+/// Rotation
+#[derive(Debug,Clone)]
+pub struct Rotation<T> {
+    vector: TwoProportion<T>,
+}
+
+impl<T> Rotation<T>
+where
+    T: Zero,
+    T: Clone,
+{
+    pub fn new(a: T, b: T) -> Rotation<T> {
+        Rotation { vector: TwoProportion::new(a, b) }
+    }
+}
+
+impl<T> Mul<Rotation<T>> for ProjOnePoint<T>
+where
+    T: Add<T, Output = T>,
+    T: Sub<T, Output = T>,
+    T: Mul<T, Output = T>,
+    T: Zero,
+    T: Clone,
+{
+    type Output = ProjOnePoint<T>;
+
+    fn mul(self, r: Rotation<T>) -> ProjOnePoint<T> {
+        let x = self.x.a.clone();
+        let y = self.x.b.clone();
+        let a = r.vector.a.clone();
+        let b = r.vector.b.clone();
+        let rx = a.clone()*x.clone() - b.clone()*y.clone();
+        let ry = b*x + a*y;
+        ProjOnePoint::new(rx,ry)
+    }
+}
 
 #[cfg(test)]
 mod tests {
@@ -114,6 +161,17 @@ mod tests {
         let a1 = ProjOnePoint::new(Ratio::new(2,3),Ratio::new(1,5));
         let a2 = ProjOnePoint::new(Ratio::new(-3,1),Ratio::new(10,1));
         assert!(a1.is_perpendicular(&a2));
+    }
+    #[test]
+    fn rotation_of_one_dimensional_projective_points() {
+        let a1 = ProjOnePoint::new(Ratio::new(1,1),Ratio::new(0,1));
+        let a2 = ProjOnePoint::new(Ratio::new( 3,1),Ratio::new( 4,1));
+        let a3 = ProjOnePoint::new(Ratio::new( 0,1),Ratio::new( 1,1));
+        let a4 = ProjOnePoint::new(Ratio::new(-4,1),Ratio::new( 3,1));
+        let r = Rotation::new(Ratio::new( 3,1),Ratio::new( 4,1));
+        assert_eq!(a1.clone()*r.clone(),a2.clone());
+        assert_eq!(a3.clone()*r,a4.clone());
+        assert_eq!(a1.quadrance(&a3),a2.quadrance(&a4));
     }
 }
 
