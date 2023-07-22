@@ -148,6 +148,43 @@ where
     }
 }
 
+/// Reflection
+#[derive(Debug,Clone)]
+pub struct Reflection<T> {
+    vector: TwoProportion<T>,
+}
+
+impl<T> Reflection<T>
+where
+    T: Zero,
+    T: Clone,
+{
+    pub fn new(a: T, b: T) -> Reflection<T> {
+        Reflection { vector: TwoProportion::new(a, b) }
+    }
+}
+
+impl<T> Mul<Reflection<T>> for ProjOnePoint<T>
+where
+    T: Add<T, Output = T>,
+    T: Sub<T, Output = T>,
+    T: Mul<T, Output = T>,
+    T: Zero,
+    T: Clone,
+{
+    type Output = ProjOnePoint<T>;
+
+    fn mul(self, r: Reflection<T>) -> ProjOnePoint<T> {
+        let x = self.x.a.clone();
+        let y = self.x.b.clone();
+        let a = r.vector.a.clone();
+        let b = r.vector.b.clone();
+        let rx = a.clone()*x.clone() + b.clone()*y.clone();
+        let ry = b*x - a*y;
+        ProjOnePoint::new(rx,ry)
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -210,6 +247,25 @@ mod tests {
         let r2 = Rotation::new(Ratio::new( 11,1),Ratio::new( 4,1));
         assert_eq!((a1.clone()*r1.clone())*r2.clone(),a1*(r1*r2));
     }
+    #[test]
+    fn reflection_of_one_dimensional_projective_points() {
+        let a1 = ProjOnePoint::new(Ratio::new(1,1),Ratio::new(0,1));
+        let a2 = ProjOnePoint::new(Ratio::new(-1,1),Ratio::new(1,1));
+        let a3 = ProjOnePoint::new(Ratio::new(0,1),Ratio::new(1,1));
+        let a4 = ProjOnePoint::new(Ratio::new(1,1),Ratio::new(1,1));
+        let a5 = ProjOnePoint::new(Ratio::new(1,1),Ratio::new(2,1));
+        let a6 = ProjOnePoint::new(Ratio::new(1,1),Ratio::new(3,1));
+        let a7 = ProjOnePoint::new(Ratio::new(3,1),Ratio::new(1,1));
+        let a8 = ProjOnePoint::new(Ratio::new(-1,1),Ratio::new(2,1));
 
+        let s = Reflection::new(Ratio::new(-1,1),Ratio::new(1,1));
+
+        assert_eq!(a1.clone()*s.clone(),a2.clone());
+        assert_eq!(a3.clone()*s.clone(),a4.clone());
+        assert_eq!(a2.clone()*s.clone(),a1.clone());
+        assert_eq!(a4.clone()*s.clone(),a3.clone());
+        assert_eq!(a5.clone()*s.clone(),a6.clone());
+        assert_eq!(a7.clone()*s.clone(),a8.clone());
+    }
 }
 
