@@ -185,6 +185,69 @@ where
     }
 }
 
+impl<T> Mul<Reflection<T>> for Reflection<T>
+where
+    T: Add<T, Output = T>,
+    T: Sub<T, Output = T>,
+    T: Mul<T, Output = T>,
+    T: Zero,
+    T: Clone,
+{
+    type Output = Rotation<T>;
+
+    fn mul(self, other: Self) -> Rotation<T> {
+        let a = self.vector.a.clone();
+        let b = self.vector.b.clone();
+        let c = other.vector.a.clone();
+        let d = other.vector.b.clone();
+        let ra = a.clone()*c.clone() + b.clone()*d.clone();
+        let rb = a*d - b*c;
+        Rotation::new(ra,rb)
+    }
+}
+
+impl<T> Mul<Reflection<T>> for Rotation<T>
+where
+    T: Add<T, Output = T>,
+    T: Sub<T, Output = T>,
+    T: Mul<T, Output = T>,
+    T: Zero,
+    T: Clone,
+{
+    type Output = Reflection<T>;
+
+    fn mul(self, other: Reflection<T>) -> Reflection<T> {
+        let a = self.vector.a.clone();
+        let b = self.vector.b.clone();
+        let c = other.vector.a.clone();
+        let d = other.vector.b.clone();
+        let sa = a.clone()*c.clone() + b.clone()*d.clone();
+        let sb = a*d - b*c;
+        Reflection::new(sa,sb)
+    }
+}
+
+impl<T> Mul<Rotation<T>> for Reflection<T>
+where
+    T: Add<T, Output = T>,
+    T: Sub<T, Output = T>,
+    T: Mul<T, Output = T>,
+    T: Zero,
+    T: Clone,
+{
+    type Output = Reflection<T>;
+
+    fn mul(self, other: Rotation<T>) -> Reflection<T> {
+        let a = self.vector.a.clone();
+        let b = self.vector.b.clone();
+        let c = other.vector.a.clone();
+        let d = other.vector.b.clone();
+        let sa = a.clone()*c.clone() - b.clone()*d.clone();
+        let sb = a*d + b*c;
+        Reflection::new(sa,sb)
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
