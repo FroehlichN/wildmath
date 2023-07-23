@@ -196,5 +196,37 @@ mod tests {
         assert_eq!(ainf.clone()*rinf.clone(),a0);
         assert_eq!(am1.clone()*rinf.clone(),a1);
     }
+    #[test]
+    fn reflections_of_projective_one_points_in_f3() {
+        let am1 = ProjOnePoint::new(Finite3::new(1),Finite3::new(-1));
+        let a0 = ProjOnePoint::new(Finite3::new(1),Finite3::new(0));
+        let a1 = ProjOnePoint::new(Finite3::new(1),Finite3::new(1));
+        let ainf = ProjOnePoint::new(Finite3::new(0),Finite3::new(1));
+
+        let s0 = projectivegeo::Reflection::new(Finite3::new(1),Finite3::new(0));
+        let s1 = projectivegeo::Reflection::new(Finite3::new(1),Finite3::new(1));
+        let sm1 = projectivegeo::Reflection::new(Finite3::new(1),Finite3::new(-1));
+        let sinf = projectivegeo::Reflection::new(Finite3::new(0),Finite3::new(1));
+
+        assert_eq!(a0.clone()*s0.clone(),a0);
+        assert_eq!(a1.clone()*s0.clone(),am1);
+        assert_eq!(ainf.clone()*s0.clone(),ainf);
+        assert_eq!(am1.clone()*s0.clone(),a1);
+
+        assert_eq!(a0.clone()*s1.clone(),a1);
+        assert_eq!(a1.clone()*s1.clone(),a0);
+        assert_eq!(ainf.clone()*s1.clone(),am1);
+        assert_eq!(am1.clone()*s1.clone(),ainf);
+
+        assert_eq!(a0.clone()*sm1.clone(),am1);
+        assert_eq!(a1.clone()*sm1.clone(),ainf);
+        assert_eq!(ainf.clone()*sm1.clone(),a1);
+        assert_eq!(am1.clone()*sm1.clone(),a0);
+
+        assert_eq!(a0.clone()*sinf.clone(),ainf);
+        assert_eq!(a1.clone()*sinf.clone(),a1);
+        assert_eq!(ainf.clone()*sinf.clone(),a0);
+        assert_eq!(am1.clone()*sinf.clone(),am1);
+    }
 }
 
