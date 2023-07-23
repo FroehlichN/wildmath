@@ -66,9 +66,7 @@ fn meet_of_fermat_and_bernoulli() {
 mod tests {
     use super::*;
     use polyratio::*;
-    use polynumber::*;
     use extrational::*;
-    use affinegeo::*;
     use finite::*;
     use projectivegeo::*;
 
@@ -171,6 +169,32 @@ mod tests {
         assert_eq!(ainf.quadrance(&a0),one);
         assert_eq!(ainf.quadrance(&a1),half);
         assert_eq!(ainf.quadrance(&ainf),zero);
+    }
+    #[test]
+    fn rotations_of_projective_one_points_in_f3() {
+        let am1 = ProjOnePoint::new(Finite3::new(1),Finite3::new(-1));
+        let a0 = ProjOnePoint::new(Finite3::new(1),Finite3::new(0));
+        let a1 = ProjOnePoint::new(Finite3::new(1),Finite3::new(1));
+        let ainf = ProjOnePoint::new(Finite3::new(0),Finite3::new(1));
+
+        let r1 = projectivegeo::Rotation::new(Finite3::new(1),Finite3::new(1));
+        let rm1 = projectivegeo::Rotation::new(Finite3::new(1),Finite3::new(-1));
+        let rinf = projectivegeo::Rotation::new(Finite3::new(0),Finite3::new(1));
+
+        assert_eq!(a0.clone()*r1.clone(),a1);
+        assert_eq!(a1.clone()*r1.clone(),ainf);
+        assert_eq!(ainf.clone()*r1.clone(),am1);
+        assert_eq!(am1.clone()*r1.clone(),a0);
+
+        assert_eq!(a0.clone()*rm1.clone(),am1);
+        assert_eq!(a1.clone()*rm1.clone(),a0);
+        assert_eq!(ainf.clone()*rm1.clone(),a1);
+        assert_eq!(am1.clone()*rm1.clone(),ainf);
+
+        assert_eq!(a0.clone()*rinf.clone(),ainf);
+        assert_eq!(a1.clone()*rinf.clone(),am1);
+        assert_eq!(ainf.clone()*rinf.clone(),a0);
+        assert_eq!(am1.clone()*rinf.clone(),a1);
     }
 }
 
