@@ -70,7 +70,9 @@ mod tests {
     use extrational::*;
     use affinegeo::*;
     use finite::*;
+    use projectivegeo::*;
 
+    create_finite_field!(3);
     create_finite_field!(7);
     create_finite_field!(11);
     create_finite_field!(13);
@@ -138,6 +140,37 @@ mod tests {
         assert_eq!(a1.quadrance(&a4), Finite7::new(2));
         assert_eq!(a1.quadrance(&a3), Finite7::new(6));
         assert_eq!(a2.quadrance(&a4), Finite7::new(6));
+    }
+    #[test]
+    fn quadrance_of_projective_one_points_in_f3() {
+        let am1 = ProjOnePoint::new(Finite3::new(1),Finite3::new(-1));
+        let a0 = ProjOnePoint::new(Finite3::new(1),Finite3::new(0));
+        let a1 = ProjOnePoint::new(Finite3::new(1),Finite3::new(1));
+        let ainf = ProjOnePoint::new(Finite3::new(0),Finite3::new(1));
+
+        let half = Finite3::new(1)/Finite3::new(2);
+        let one = Finite3::new(1);
+        let zero = Finite3::new(0);
+
+        assert_eq!(am1.quadrance(&am1),zero);
+        assert_eq!(am1.quadrance(&a0),half);
+        assert_eq!(am1.quadrance(&a1),one);
+        assert_eq!(am1.quadrance(&ainf),half);
+
+        assert_eq!(a0.quadrance(&am1),half);
+        assert_eq!(a0.quadrance(&a0),zero);
+        assert_eq!(a0.quadrance(&a1),half);
+        assert_eq!(a0.quadrance(&ainf),one);
+
+        assert_eq!(a1.quadrance(&am1),one);
+        assert_eq!(a1.quadrance(&a0),half);
+        assert_eq!(a1.quadrance(&a1),zero);
+        assert_eq!(a1.quadrance(&ainf),half);
+
+        assert_eq!(ainf.quadrance(&am1),half);
+        assert_eq!(ainf.quadrance(&a0),one);
+        assert_eq!(ainf.quadrance(&a1),half);
+        assert_eq!(ainf.quadrance(&ainf),zero);
     }
 }
 
