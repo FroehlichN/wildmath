@@ -266,5 +266,22 @@ mod tests {
         assert_eq!(ainf.quadrance(&a1),half);
         assert_eq!(ainf.quadrance(&ainf),zero);
     }
+    #[test]
+    fn rotations_of_projective_one_points_in_f5() {
+        let am2 = ProjOnePoint::new(Finite5::new(1),Finite5::new(-2));
+        let am1 = ProjOnePoint::new(Finite5::new(1),Finite5::new(-1));
+        let a0 = ProjOnePoint::new(Finite5::new(1),Finite5::new(0));
+        let a1 = ProjOnePoint::new(Finite5::new(1),Finite5::new(1));
+        let a2 = ProjOnePoint::new(Finite5::new(1),Finite5::new(2));
+        let ainf = ProjOnePoint::new(Finite5::new(0),Finite5::new(1));
+
+        let r2 = projectivegeo::Rotation::new(Finite5::new(1),Finite5::new(2));
+
+        assert_eq!(am1.clone()*r2.clone(),a2);
+        assert_eq!(a0.clone()*r2.clone(),a2);
+        assert_eq!(a1.clone()*r2.clone(),a2);
+        assert_eq!(a2.clone()*r2.clone(),a2);
+        assert_eq!(ainf.clone()*r2.clone(),a2);
+    }
 }
 
