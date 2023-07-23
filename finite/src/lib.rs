@@ -77,6 +77,11 @@ macro_rules! create_finite_field {
                 type Output = [<Finite $N>];
 
                 fn div(self, other: [<Finite $N>]) -> [<Finite $N>] {
+
+                    if other.n.is_zero() {
+                        panic!("Division by zero not allowed.");
+                    }
+
                     let mut m : i64 = 1;
                     while Self::new(other.n * m) != Self::one() {
                         m += 1;
