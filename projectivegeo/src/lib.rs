@@ -386,5 +386,17 @@ mod tests {
         assert!(a1.is_perpendicular_red(&a1));
         assert!(a2.is_perpendicular_red(&a2));
     }
+    #[test]
+    fn one_dimensional_relativistic_projective_quadrance_2() {
+        let a1 = ProjOnePoint::new(Ratio::new(1,1),Ratio::new(2,1));
+        let a2 = ProjOnePoint::new(Ratio::new(2,1),Ratio::new(-3,1));
+        assert_eq!(a1.quadrance_red(&a2),Ratio::new(-49,15));
+    }
+    #[test]
+    fn one_dimensional_relativistic_projective_quadrance_3() {
+        let a1 = ProjOnePoint::new(Ratio::new(3,1),Ratio::new(1,1));
+        let a2 = ProjOnePoint::new(Ratio::new(2,1),Ratio::new(-3,1));
+        assert_eq!(a1.quadrance_red(&a2),Ratio::new(121,40));
+    }
 }
 
