@@ -122,7 +122,7 @@ where
         let y = self.x.b.clone();
         let a = r.vector.a.clone();
         let b = r.vector.b.clone();
-        let rx = a.clone()*x.clone() - b.clone()*y.clone();
+        let rx = a.clone()*x.clone() + b.clone()*y.clone();
         let ry = b*x + a*y;
         ProjOnePoint::new(rx,ry)
     }
@@ -143,7 +143,7 @@ where
         let b = self.vector.b.clone();
         let c = other.vector.a.clone();
         let d = other.vector.b.clone();
-        let ra = a.clone()*c.clone() - b.clone()*d.clone();
+        let ra = a.clone()*c.clone() + b.clone()*d.clone();
         let rb = a*d + b*c;
         Rotation::new(ra,rb)
     }
@@ -192,7 +192,7 @@ where
         let y = self.x.b.clone();
         let a = r.vector.a.clone();
         let b = r.vector.b.clone();
-        let rx = a.clone()*x.clone() + b.clone()*y.clone();
+        let rx = a.clone()*x.clone() - b.clone()*y.clone();
         let ry = b*x - a*y;
         ProjOnePoint::new(rx,ry)
     }
@@ -213,7 +213,7 @@ where
         let b = self.vector.b.clone();
         let c = other.vector.a.clone();
         let d = other.vector.b.clone();
-        let ra = a.clone()*c.clone() + b.clone()*d.clone();
+        let ra = a.clone()*c.clone() - b.clone()*d.clone();
         let rb = a*d - b*c;
         Rotation::new(ra,rb)
     }
@@ -234,7 +234,7 @@ where
         let b = self.vector.b.clone();
         let c = other.vector.a.clone();
         let d = other.vector.b.clone();
-        let sa = a.clone()*c.clone() + b.clone()*d.clone();
+        let sa = a.clone()*c.clone() - b.clone()*d.clone();
         let sb = a*d - b*c;
         Reflection::new(sa,sb)
     }
@@ -255,7 +255,7 @@ where
         let b = self.vector.b.clone();
         let c = other.vector.a.clone();
         let d = other.vector.b.clone();
-        let sa = a.clone()*c.clone() - b.clone()*d.clone();
+        let sa = a.clone()*c.clone() + b.clone()*d.clone();
         let sb = a*d + b*c;
         Reflection::new(sa,sb)
     }
