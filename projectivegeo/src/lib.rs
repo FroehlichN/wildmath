@@ -45,9 +45,14 @@ where
     T: Sub<T, Output = T>,
     T: Mul<T, Output = T>,
     T: Div<T, Output = T>,
+    T: Zero,
     T: Clone,
 {
     pub fn quadrance(&self, other: &Self) -> T {
+        self.quadrance_blue(&other)
+    }
+
+    pub fn quadrance_blue(&self, other: &Self) -> T {
         let x1 = self.x.a.clone();
         let y1 = self.x.b.clone();
         let x2 = other.x.a.clone();
@@ -57,6 +62,19 @@ where
         let numer = n.clone() * n;
         let d1 = x1.clone() * x1 + y1.clone() * y1;
         let d2 = x2.clone() * x2 + y2.clone() * y2;
+        return numer / (d1*d2);
+    }
+
+    pub fn quadrance_red(&self, other: &Self) -> T {
+        let x1 = self.x.a.clone();
+        let y1 = self.x.b.clone();
+        let x2 = other.x.a.clone();
+        let y2 = other.x.b.clone();
+
+        let n = x1.clone() * y2.clone() - x2.clone() * y1.clone();
+        let numer = T::zero() - n.clone() * n;
+        let d1 = x1.clone() * x1 - y1.clone() * y1;
+        let d2 = x2.clone() * x2 - y2.clone() * y2;
         return numer / (d1*d2);
     }
 }
@@ -341,6 +359,12 @@ mod tests {
         assert_eq!(a4.clone()*s.clone(),a3.clone());
         assert_eq!(a5.clone()*s.clone(),a6.clone());
         assert_eq!(a7.clone()*s.clone(),a8.clone());
+    }
+    #[test]
+    fn one_dimensional_relativistic_projective_quadrance() {
+        let a1 = ProjOnePoint::new(Ratio::new(3,1),Ratio::new(1,1));
+        let a2 = ProjOnePoint::new(Ratio::new(1,1),Ratio::new(2,1));
+        assert_eq!(a1.quadrance_red(&a2),Ratio::new(25,24));
     }
 }
 
