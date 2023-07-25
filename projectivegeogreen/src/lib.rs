@@ -79,6 +79,11 @@ where
         let r = x1*y2+x2*y1;
         r.is_zero()
     }
+    pub fn perpendicular(&self) -> ProjOnePoint<T> {
+        let x = self.x.a.clone();
+        let y = self.x.b.clone();
+        ProjOnePoint::new(x, T::zero() - y)
+    }
 }
 
 impl<T> PartialEq for ProjOnePoint<T>
@@ -289,6 +294,12 @@ mod tests {
         let a1 = ProjOnePoint::new(Ratio::new(3,1),Ratio::new(1,1));
         let a2 = ProjOnePoint::new(Ratio::new(2,1),Ratio::new(-3,1));
         assert_eq!(a1.quadrance(&a2),Ratio::new(121,72));
+    }
+    #[test]
+    fn perpendicular_of_one_dimensional_projective_point() {
+        let a1 = ProjOnePoint::new(Ratio::new(1,1),Ratio::new(2,1));
+        let a2 = ProjOnePoint::new(Ratio::new(1,1),Ratio::new(-2,1));
+        assert_eq!(a1.perpendicular(),a2);
     }
 }
 
