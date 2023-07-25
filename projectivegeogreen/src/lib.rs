@@ -272,5 +272,23 @@ mod tests {
         let a2 = ProjOnePoint::new(Ratio::new(3,1),Ratio::new(-1,1));
         assert!(a1.is_perpendicular(&a2));
     }
+    #[test]
+    fn one_dimensional_green_relativistic_projective_quadrance() {
+        let a1 = ProjOnePoint::new(Ratio::new(3,1),Ratio::new(1,1));
+        let a2 = ProjOnePoint::new(Ratio::new(1,1),Ratio::new(2,1));
+        assert_eq!(a1.quadrance(&a2),Ratio::new(-25,24));
+    }
+    #[test]
+    fn one_dimensional_green_relativistic_projective_quadrance_2() {
+        let a1 = ProjOnePoint::new(Ratio::new(1,1),Ratio::new(2,1));
+        let a2 = ProjOnePoint::new(Ratio::new(2,1),Ratio::new(-3,1));
+        assert_eq!(a1.quadrance(&a2),Ratio::new(49,48));
+    }
+    #[test]
+    fn one_dimensional_green_relativistic_projective_quadrance_3() {
+        let a1 = ProjOnePoint::new(Ratio::new(3,1),Ratio::new(1,1));
+        let a2 = ProjOnePoint::new(Ratio::new(2,1),Ratio::new(-3,1));
+        assert_eq!(a1.quadrance(&a2),Ratio::new(121,72));
+    }
 }
 
