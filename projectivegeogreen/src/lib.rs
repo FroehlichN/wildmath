@@ -1,0 +1,276 @@
+/*
+Copyright 2023 Norbert Fröhlich
+
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+
+
+use proportion::TwoProportion;
+use num::{Zero,One};
+use std::ops::{Mul, Add, Sub, Div};
+
+
+/// Represents a projective 1D point
+#[derive(Debug, Clone)]
+pub struct ProjOnePoint<T> {
+    pub x : TwoProportion<T>,
+}
+
+
+impl<T> ProjOnePoint<T>
+where
+    T: Zero,
+    T: Clone,
+{
+    pub fn new(x: T, y: T) -> ProjOnePoint<T> {
+        ProjOnePoint { x: TwoProportion::new(x,y) }
+    }
+}
+
+
+impl<T> ProjOnePoint<T>
+where
+    T: Add<T, Output = T>,
+    T: Sub<T, Output = T>,
+    T: Mul<T, Output = T>,
+    T: Div<T, Output = T>,
+    T: Zero,
+    T: One,
+    T: Clone,
+{
+    pub fn quadrance(&self, other: &Self) -> T {
+        let x1 = self.x.a.clone();
+        let y1 = self.x.b.clone();
+        let x2 = other.x.a.clone();
+        let y2 = other.x.b.clone();
+
+        let n = x1.clone() * y2.clone() - x2.clone() * y1.clone();
+        let numer = T::zero() - n.clone() * n;
+        let four = T::one() + T::one() + T::one() + T::one();
+        let denom = four * x1 * y1 * x2 * y2;
+        return numer / denom;
+    }
+}
+
+impl<T> ProjOnePoint<T>
+where
+    T: Add<T, Output = T>,
+    T: Sub<T, Output = T>,
+    T: Mul<T, Output = T>,
+    T: Zero,
+    T: Clone,
+{
+    pub fn is_perpendicular(&self, other: &Self) -> bool {
+        let x1 = self.x.a.clone();
+        let y1 = self.x.b.clone();
+        let x2 = other.x.a.clone();
+        let y2 = other.x.b.clone();
+        let r = x1*y2+x2*y1;
+        r.is_zero()
+    }
+}
+
+impl<T> PartialEq for ProjOnePoint<T>
+where
+    TwoProportion<T>: PartialEq,
+    T: Clone,
+{
+    fn eq(&self, other: &Self) -> bool {
+        self.x == other.x
+    }
+}
+
+
+/// Rotation
+#[derive(Debug,Clone)]
+pub struct Rotation<T> {
+    vector: TwoProportion<T>,
+}
+
+impl<T> Rotation<T>
+where
+    T: Zero,
+    T: Clone,
+{
+    pub fn new(a: T, b: T) -> Rotation<T> {
+        Rotation { vector: TwoProportion::new(a, b) }
+    }
+}
+
+impl<T> Mul<Rotation<T>> for ProjOnePoint<T>
+where
+    T: Add<T, Output = T>,
+    T: Sub<T, Output = T>,
+    T: Mul<T, Output = T>,
+    T: Zero,
+    T: Clone,
+{
+    type Output = ProjOnePoint<T>;
+
+    fn mul(self, r: Rotation<T>) -> ProjOnePoint<T> {
+        let x = self.x.a.clone();
+        let y = self.x.b.clone();
+        let a = r.vector.a.clone();
+        let b = r.vector.b.clone();
+        let rx = a.clone()*x.clone() + b.clone()*y.clone();
+        let ry = b*x + a*y;
+        ProjOnePoint::new(rx,ry)
+    }
+}
+
+impl<T> Mul<Rotation<T>> for Rotation<T>
+where
+    T: Add<T, Output = T>,
+    T: Sub<T, Output = T>,
+    T: Mul<T, Output = T>,
+    T: Zero,
+    T: Clone,
+{
+    type Output = Rotation<T>;
+
+    fn mul(self, other: Self) -> Rotation<T> {
+        let a = self.vector.a.clone();
+        let b = self.vector.b.clone();
+        let c = other.vector.a.clone();
+        let d = other.vector.b.clone();
+        let ra = a.clone()*c.clone() + b.clone()*d.clone();
+        let rb = a*d + b*c;
+        Rotation::new(ra,rb)
+    }
+}
+
+impl<T> One for Rotation<T>
+where
+    T: Sub<T, Output = T>,
+    T: Zero,
+    T: One,
+    T: Clone,
+{
+    fn one() -> Rotation<T> {
+        Rotation::new(T::one(),T::zero())
+    }
+}
+
+/// Reflection
+#[derive(Debug,Clone)]
+pub struct Reflection<T> {
+    vector: TwoProportion<T>,
+}
+
+impl<T> Reflection<T>
+where
+    T: Zero,
+    T: Clone,
+{
+    pub fn new(a: T, b: T) -> Reflection<T> {
+        Reflection { vector: TwoProportion::new(a, b) }
+    }
+}
+
+impl<T> Mul<Reflection<T>> for ProjOnePoint<T>
+where
+    T: Add<T, Output = T>,
+    T: Sub<T, Output = T>,
+    T: Mul<T, Output = T>,
+    T: Zero,
+    T: Clone,
+{
+    type Output = ProjOnePoint<T>;
+
+    fn mul(self, r: Reflection<T>) -> ProjOnePoint<T> {
+        let x = self.x.a.clone();
+        let y = self.x.b.clone();
+        let a = r.vector.a.clone();
+        let b = r.vector.b.clone();
+        let rx = a.clone()*x.clone() - b.clone()*y.clone();
+        let ry = b*x - a*y;
+        ProjOnePoint::new(rx,ry)
+    }
+}
+
+impl<T> Mul<Reflection<T>> for Reflection<T>
+where
+    T: Add<T, Output = T>,
+    T: Sub<T, Output = T>,
+    T: Mul<T, Output = T>,
+    T: Zero,
+    T: Clone,
+{
+    type Output = Rotation<T>;
+
+    fn mul(self, other: Self) -> Rotation<T> {
+        let a = self.vector.a.clone();
+        let b = self.vector.b.clone();
+        let c = other.vector.a.clone();
+        let d = other.vector.b.clone();
+        let ra = a.clone()*c.clone() - b.clone()*d.clone();
+        let rb = a*d - b*c;
+        Rotation::new(ra,rb)
+    }
+}
+
+impl<T> Mul<Reflection<T>> for Rotation<T>
+where
+    T: Add<T, Output = T>,
+    T: Sub<T, Output = T>,
+    T: Mul<T, Output = T>,
+    T: Zero,
+    T: Clone,
+{
+    type Output = Reflection<T>;
+
+    fn mul(self, other: Reflection<T>) -> Reflection<T> {
+        let a = self.vector.a.clone();
+        let b = self.vector.b.clone();
+        let c = other.vector.a.clone();
+        let d = other.vector.b.clone();
+        let sa = a.clone()*c.clone() - b.clone()*d.clone();
+        let sb = a*d - b*c;
+        Reflection::new(sa,sb)
+    }
+}
+
+impl<T> Mul<Rotation<T>> for Reflection<T>
+where
+    T: Add<T, Output = T>,
+    T: Sub<T, Output = T>,
+    T: Mul<T, Output = T>,
+    T: Zero,
+    T: Clone,
+{
+    type Output = Reflection<T>;
+
+    fn mul(self, other: Rotation<T>) -> Reflection<T> {
+        let a = self.vector.a.clone();
+        let b = self.vector.b.clone();
+        let c = other.vector.a.clone();
+        let d = other.vector.b.clone();
+        let sa = a.clone()*c.clone() + b.clone()*d.clone();
+        let sb = a*d + b*c;
+        Reflection::new(sa,sb)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use num::rational::Ratio;
+    #[test]
+    fn one_dimensional_green_relativistic_projective_perpendicularity() {
+        let a1 = ProjOnePoint::new(Ratio::new(3,1),Ratio::new(1,1));
+        let a2 = ProjOnePoint::new(Ratio::new(3,1),Ratio::new(-1,1));
+        assert!(a1.is_perpendicular(&a2));
+    }
+}
+
