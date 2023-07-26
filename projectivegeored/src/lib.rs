@@ -301,5 +301,13 @@ mod tests {
         let a2 = ProjOnePoint::new(Ratio::new(2,1),Ratio::new(1,1));
         assert_eq!(a1.perpendicular(),a2);
     }
+    #[test]
+    fn one_dimensional_relativistic_projective_rotation() {
+        let v1 = ProjOnePoint::new(Ratio::new(1,1),Ratio::new(3,4));
+        let v2 = ProjOnePoint::new(Ratio::new(1,1),Ratio::new(1,5));
+        let v3 = Rotation::new(Ratio::new(1,1),Ratio::new(1,2));
+        assert_eq!(v1.quadrance(&v2),Ratio::new(-121,168));
+        assert_eq!((v1*v3.clone()).quadrance(&(v2*v3)),Ratio::new(-121,168));
+    }
 }
 
