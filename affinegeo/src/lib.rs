@@ -1161,4 +1161,22 @@ mod tests {
         assert_eq!(a1.quadrance_red(&a3), Ratio::new(16,3));
         assert_eq!(a2.quadrance_red(&a4), Ratio::new(361,90));
     }
+    #[test]
+    fn spreads_in_a_triangle() {
+        let a1 = TwoPoint::new(Ratio::new(-1,1),Ratio::new(-2,1));
+        let a2 = TwoPoint::new(Ratio::new(4,1),Ratio::new(1,1));
+        let a3 = TwoPoint::new(Ratio::new(1,1),Ratio::new(3,1));
+
+        let l1 = a2.join(&a3);
+        let l2 = a1.join(&a3);
+        let l3 = a1.join(&a2);
+
+        let s1 = l2.spread(&l3);
+        let s2 = l1.spread(&l3);
+        let s3 = l1.spread(&l2);
+
+        assert_eq!(s1,Ratio::new(361,986));
+        assert_eq!(s2,Ratio::new(361,442));
+        assert_eq!(s3,Ratio::new(361,377));
+    }
 }
