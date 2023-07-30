@@ -521,6 +521,22 @@ where
                             end: self.points[2].clone()};
         (v1.dx() * v2.dy() - v2.dx() * v1.dy()) / (T::one() + T::one())
     }
+
+    pub fn quadrea(&self) -> T {
+        let two = T::one() + T::one();
+        let four = two.clone() * two;
+        let sixteen = four.clone() * four;
+        let a = self.area();
+        sixteen * a.clone() * a
+    }
+
+    pub fn circumquadrance(&self) -> T {
+        let q0 = self.points[1].quadrance(&self.points[2]);
+        let q1 = self.points[0].quadrance(&self.points[2]);
+        let q2 = self.points[0].quadrance(&self.points[1]);
+
+        q0*q1*q2/self.quadrea()
+    }
 }
 
 /// Represents a 3D tetrahedon
@@ -1178,5 +1194,15 @@ mod tests {
         assert_eq!(s1,Ratio::new(361,986));
         assert_eq!(s2,Ratio::new(361,442));
         assert_eq!(s3,Ratio::new(361,377));
+    }
+    #[test]
+    fn circumquadrance_of_a_triangle() {
+        let a1 = TwoPoint::new(Ratio::new(1,1),Ratio::new(3,1));
+        let a2 = TwoPoint::new(Ratio::new(2,1),Ratio::new(2,1));
+        let a3 = TwoPoint::new(Ratio::new(-1,1),Ratio::new(-2,1));
+
+        let t = TwoTriangle::new(a1,a2,a3);
+        assert_eq!(t.quadrea(),Ratio::new(196,1));
+        assert_eq!(t.circumquadrance(),Ratio::new(725,98));
     }
 }
