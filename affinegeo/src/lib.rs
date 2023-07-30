@@ -427,6 +427,7 @@ pub struct TwoCircle<T> {
 impl<T> TwoCircle<T>
 where
     T: Mul<Output = T>,
+    T: Div<Output = T>,
     T: Add<Output = T>,
     T: Sub<Output = T>,
     T: Zero,
@@ -441,6 +442,10 @@ where
         let k = self.a.clone()*self.a.clone()
               + self.b.clone()*self.b.clone() - self.c.clone();
         return k;
+    }
+
+    pub fn curvature(&self) -> T {
+        T::one() / self.quadrance()
     }
 
     pub fn quadrance_red(&self) -> T {
@@ -1204,5 +1209,12 @@ mod tests {
         let t = TwoTriangle::new(a1,a2,a3);
         assert_eq!(t.quadrea(),Ratio::new(196,1));
         assert_eq!(t.circumquadrance(),Ratio::new(725,98));
+    }
+    #[test]
+    fn curvature_of_a_circle() {
+        let a = TwoPoint::new(Ratio::new(1,1),Ratio::new(2,1));
+        let r = Ratio::new(5,1);
+        let c = TwoCircle::new(a,r);
+        assert_eq!(c.curvature(),Ratio::new(1,5));
     }
 }
