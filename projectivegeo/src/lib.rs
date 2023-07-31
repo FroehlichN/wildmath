@@ -354,5 +354,29 @@ mod tests {
         let a2 = ProjOnePoint::new(Ratio::new(-2,1),Ratio::new(1,1));
         assert_eq!(a1.perpendicular(),a2);
     }
+    #[test]
+    fn projective_quadruple_quad_formula() {
+        let a1 = ProjOnePoint::new(Ratio::new(3,1),Ratio::new(1,1));
+        let a2 = ProjOnePoint::new(Ratio::new(1,1),Ratio::new(2,1));
+        let a3 = ProjOnePoint::new(Ratio::new(-1,1),Ratio::new(1,1));
+        let a4 = ProjOnePoint::new(Ratio::new(3,1),Ratio::new(2,1));
+
+        let q1 = a1.quadrance(&a2);
+        let q2 = a2.quadrance(&a3);
+        let q3 = a3.quadrance(&a4);
+        let q4 = a4.quadrance(&a1);
+
+        assert_eq!(q1,Ratio::new(1,2));
+        assert_eq!(q2,Ratio::new(9,10));
+        assert_eq!(q3,Ratio::new(25,26));
+        assert_eq!(q4,Ratio::new(9,130));
+
+        let r1 = q1+q2+q3+q4;
+        let r2 = r1*r1 - (q1*q1+q2*q2+q3*q3+q4*q4)*2
+                 - (q1*q2*q3 + q1*q2*q4+q1*q3*q4+q2*q3*q4)*4
+                 + q1*q2*q3*q4*8;
+        let r = r2*r2 - q1*q2*q3*q4*64*(q1-1)*(q2-1)*(q3-1)*(q4-1);
+        assert!(r.is_zero());
+    }
 }
 
