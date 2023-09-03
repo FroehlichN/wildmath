@@ -16,7 +16,7 @@ limitations under the License.
 */
 
 
-use std::ops::{Add, Mul};
+use std::ops::{Add, Mul, Div, Sub};
 use core::cmp::max;
 
 
@@ -65,6 +65,17 @@ where
     }
 }
 
+impl<T> Div<MaxPlus<T>> for MaxPlus<T>
+where
+    T: Sub<T, Output=T>,
+{
+    type Output = MaxPlus<T>;
+
+    fn div(self, other: MaxPlus<T>) -> MaxPlus<T> {
+        MaxPlus {n: (self.n - other.n) }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -87,6 +98,13 @@ mod tests {
         let t2 = MaxPlus::new(4);
         let t3 = MaxPlus::new(12);
         assert_eq!(t1.pow(t2), t3);
+    }
+    #[test]
+    fn max_plus_division() {
+        let t1 = MaxPlus::new(12);
+        let t2 = MaxPlus::new(7);
+        let t3 = MaxPlus::new(5);
+        assert_eq!(t1/t2, t3);
     }
 }
 
