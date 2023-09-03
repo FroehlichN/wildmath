@@ -56,6 +56,14 @@ where
     }
 }
 
+impl<T> MaxPlus<T>
+where
+    T: Mul<T, Output=T>,
+{
+    pub fn pow(self, exp: Self) -> MaxPlus<T> {
+        MaxPlus {n: (self.n * exp.n) }
+    }
+}
 
 #[cfg(test)]
 mod tests {
@@ -72,6 +80,13 @@ mod tests {
         let t2 = MaxPlus::new(7);
         let t3 = MaxPlus::new(12);
         assert_eq!(t1*t2, t3);
+    }
+    #[test]
+    fn max_plus_exponentiation() {
+        let t1 = MaxPlus::new(3);
+        let t2 = MaxPlus::new(4);
+        let t3 = MaxPlus::new(12);
+        assert_eq!(t1.pow(t2), t3);
     }
 }
 
