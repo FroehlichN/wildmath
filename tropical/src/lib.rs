@@ -16,7 +16,7 @@ limitations under the License.
 */
 
 
-use std::ops::Add;
+use std::ops::{Add, Mul};
 use core::cmp::max;
 
 
@@ -45,15 +45,33 @@ where
     }
 }
 
+impl<T> Mul<MaxPlus<T>> for MaxPlus<T>
+where
+    T: Add<T, Output=T>,
+{
+    type Output = MaxPlus<T>;
+
+    fn mul(self, other: MaxPlus<T>) -> MaxPlus<T> {
+        MaxPlus {n: (self.n + other.n) }
+    }
+}
+
 
 #[cfg(test)]
 mod tests {
     use super::*;
     #[test]
-    fn addition() {
+    fn max_plus_addition() {
         let t1 = MaxPlus::new(5);
         let t2 = MaxPlus::new(7);
         assert_eq!(t1+t2.clone(), t2);
+    }
+    #[test]
+    fn max_plus_multiplication() {
+        let t1 = MaxPlus::new(5);
+        let t2 = MaxPlus::new(7);
+        let t3 = MaxPlus::new(12);
+        assert_eq!(t1*t2, t3);
     }
 }
 
