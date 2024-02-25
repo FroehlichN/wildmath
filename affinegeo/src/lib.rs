@@ -678,7 +678,21 @@ where
         (self.start.x.clone() * self.end.y.clone()
          - self.end.x.clone() * self.start.y.clone()) / (T::one() + T::one())
     }
+    pub fn spread(&self, other: &Self) -> T {
+        let a = self.dx();
+        let b = self.dy();
+        let c = other.dx();
+        let d = other.dy();
 
+        let cross = a.clone() * d.clone()
+                  - b.clone() * c.clone();
+        let q1 = a.clone() * a.clone()
+               + b.clone() * b.clone();
+        let q2 = c.clone() * c.clone()
+               + d.clone() * d.clone();
+
+        (cross.clone() * cross) / (q1 * q2)
+    }
 }
 
 /// Represents a polygon
@@ -1049,6 +1063,21 @@ mod tests {
         let v2 = TwoVector::new(Ratio::new(2,1), Ratio::new(-4,1));
         let v3 = TwoVector::new(Ratio::new(4,1), Ratio::new(-1,1));
         assert_eq!(v1+v2,v3);
+    }
+    #[test]
+    fn spread_between_vectors() {
+        let o = TwoPoint {x: Ratio::new(0,1), y: Ratio::new(0,1)};
+        let a = TwoPoint {x: Ratio::new(4,1), y: Ratio::new(2,1) };
+        let b = TwoPoint {x: Ratio::new(-1,1), y: Ratio::new(3,1)};
+        let oa = TwoVector {start: o.clone(), end: a.clone()};
+        let ob = TwoVector {start: o, end: b.clone()};
+        let ab = TwoVector {start: a, end: b};
+        let s = oa.spread(&ob);
+        let t = ob.spread(&ab);
+        let r = oa.spread(&ab);
+        assert_eq!(s,Ratio::new(49,50));
+        assert_eq!(t,Ratio::new(49,65));
+        assert_eq!(r,Ratio::new(49,130));
     }
     #[test]
     fn point_vector_line() {
