@@ -674,6 +674,38 @@ where
     T: One,
     T: Clone,
 {
+    pub fn blue_dot(&self, other: &Self) -> T {
+        let a = self.dx();
+        let b = self.dy();
+        let c = other.dx();
+        let d = other.dy();
+
+        a*c + b*d
+    }
+    pub fn red_dot(&self, other: &Self) -> T {
+        let a = self.dx();
+        let b = self.dy();
+        let c = other.dx();
+        let d = other.dy();
+
+        a*c - b*d
+    }
+    pub fn green_dot(&self, other: &Self) -> T {
+        let a = self.dx();
+        let b = self.dy();
+        let c = other.dx();
+        let d = other.dy();
+
+        a*d + b*c
+    }
+    pub fn cross(&self, other: &Self) -> T {
+        let a = self.dx();
+        let b = self.dy();
+        let c = other.dx();
+        let d = other.dy();
+
+        a*d - b*c
+    }
     pub fn area(&self) -> T {
         (self.start.x.clone() * self.end.y.clone()
          - self.end.x.clone() * self.start.y.clone()) / (T::one() + T::one())
@@ -684,8 +716,7 @@ where
         let c = other.dx();
         let d = other.dy();
 
-        let cross = a.clone() * d.clone()
-                  - b.clone() * c.clone();
+        let cross = self.cross(&other);
         let q1 = a.clone() * a.clone()
                + b.clone() * b.clone();
         let q2 = c.clone() * c.clone()
