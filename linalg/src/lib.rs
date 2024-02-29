@@ -29,6 +29,10 @@ where
     T: Zero,
     T: Clone,
 {
+    pub fn new(elem: Vec<T>) -> RowVector<T> {
+        RowVector { elem: elem }
+    }
+
     fn get(&self, ci: usize) -> T {
         let v = self.elem.get(ci);
 
@@ -119,6 +123,10 @@ where
     T: Zero,
     T: Clone,
 {
+    pub fn new(elem: Vec<T>) -> ColumnVector<T> {
+        ColumnVector { elem: elem }
+    }
+
     fn get(&self, ri: usize) -> T {
         let v = self.elem.get(ri);
 
@@ -163,6 +171,17 @@ where
     T: Zero,
     T: Clone,
 {
+    pub fn new(elem: Vec<Vec<T>>) -> Matrix<T> {
+        let rows = elem.len();
+        let mut cols : usize = 0;
+        for (_, rv) in elem.iter().enumerate() {
+            if rv.len() >  cols {
+                cols = rv.len();
+            }
+        }
+        Matrix { rows: rows, cols: cols, elem: elem }
+    }
+
     fn get(&self, ri: usize, ci: usize) -> T {
         let r = self.elem.get(ri);
 
@@ -258,23 +277,23 @@ mod tests {
     use super::*;
     #[test]
     fn matrix_addition() {
-        let m1 = Matrix { rows: 2, cols: 2, elem: vec![vec![-1, 0], vec![0, 1]] };
-        let m2 = Matrix { rows: 2, cols: 2, elem: vec![vec![1,  1], vec![0, 1]] };
-        let m3 = Matrix { rows: 2, cols: 2, elem: vec![vec![0,  1], vec![0, 2]] };
+        let m1 = Matrix::new(vec![vec![-1, 0], vec![0, 1]]);
+        let m2 = Matrix::new(vec![vec![1,  1], vec![0, 1]]);
+        let m3 = Matrix::new(vec![vec![0,  1], vec![0, 2]]);
         assert_eq!(m1+m2, m3);
     }
     #[test]
     fn column_vector_matrix_multiplication() {
-        let v1 = RowVector { elem: vec![1, 2] };
-        let m1 = Matrix { rows: 2, cols: 2, elem: vec![vec![0, 1], vec![2, 3]] };
-        let v2 = RowVector { elem: vec![4, 7] };
+        let v1 = RowVector::new(vec![1, 2]);
+        let m1 = Matrix::new(vec![vec![0, 1], vec![2, 3]]);
+        let v2 = RowVector::new(vec![4, 7]);
         assert_eq!(v1*m1,v2);
     }
     #[test]
     fn matrix_row_vector_multiplication() {
-        let m1 = Matrix { rows: 2, cols: 2, elem: vec![vec![0, 1], vec![2, 3]] };
-        let v1 = ColumnVector { elem: vec![1, 2] };
-        let v2 = ColumnVector { elem: vec![2, 8] };
+        let m1 = Matrix::new(vec![vec![0, 1], vec![2, 3]]);
+        let v1 = ColumnVector::new(vec![1, 2]);
+        let v2 = ColumnVector::new(vec![2, 8]);
         assert_eq!(m1*v1,v2);
     }
 }
