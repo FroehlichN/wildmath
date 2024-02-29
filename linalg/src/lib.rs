@@ -16,7 +16,75 @@ limitations under the License.
 */
 
 use num::{Zero};
-use std::ops::{Add};
+use std::ops::{Add,Mul};
+
+
+#[derive(Debug, Clone)]
+pub struct ColumnVector<T> {
+    elem: Vec<T>,
+}
+
+impl<T> ColumnVector<T>
+where
+    T: Zero,
+    T: Clone,
+{
+    fn get(&self, ci: usize) -> T {
+        let v = self.elem.get(ci);
+
+        let value = match v {
+            Some(vv) => vv.clone(),
+            None => T::zero(),
+        };
+        value
+    }
+}
+
+impl<T> PartialEq for ColumnVector<T>
+where
+    T: PartialEq,
+    T: Zero,
+    T: Clone,
+{
+    fn eq(&self, other: &Self) -> bool {
+        let scols = self.elem.len();
+        let ocols = other.elem.len();
+        let cols = if scols > ocols {scols} else {ocols};
+
+        for ci in 0..cols {
+            if !(self.get(ci) == other.get(ci)) {
+                return false;
+            }
+        }
+        return true;
+    }
+}
+
+
+impl<T> Mul<Matrix<T>> for ColumnVector<T>
+where
+    T: Zero,
+    T: Add<Output = T>,
+    T: Mul<Output = T>,
+    T: Clone,
+{
+    type Output = ColumnVector<T>;
+
+    fn mul(self, other: Matrix<T>) -> ColumnVector<T> {
+        let vcols = self.elem.len();
+        let cols = if vcols < other.rows {vcols} else {other.rows};
+
+        let mut elem : Vec<T> = Vec::new();
+        for mci in 0..other.cols {
+            let mut s = T::zero();
+            for vci in 0..cols {
+                s = s + self.get(vci) * other.get(vci,mci);
+            }
+            elem.push(s);
+        }
+        ColumnVector { elem: elem }
+    }
+}
 
 
 #[derive(Debug, Clone)]
@@ -106,6 +174,13 @@ mod tests {
         let m2 = Matrix { rows: 2, cols: 2, elem: vec![vec![1,  1], vec![0, 1]] };
         let m3 = Matrix { rows: 2, cols: 2, elem: vec![vec![0,  1], vec![0, 2]] };
         assert_eq!(m1+m2, m3);
+    }
+    #[test]
+    fn column_vector_matrix_multiplication() {
+        let v1 = ColumnVector { elem: vec![1, 2] };
+        let m1 = Matrix { rows: 2, cols: 2, elem: vec![vec![0, 1], vec![2, 3]] };
+        let v2 = ColumnVector { elem: vec![4, 7] };
+        assert_eq!(v1*m1,v2);
     }
 }
 
