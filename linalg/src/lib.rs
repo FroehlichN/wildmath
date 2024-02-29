@@ -20,11 +20,11 @@ use std::ops::{Add,Mul};
 
 
 #[derive(Debug, Clone)]
-pub struct ColumnVector<T> {
+pub struct RowVector<T> {
     elem: Vec<T>,
 }
 
-impl<T> ColumnVector<T>
+impl<T> RowVector<T>
 where
     T: Zero,
     T: Clone,
@@ -40,7 +40,7 @@ where
     }
 }
 
-impl<T> PartialEq for ColumnVector<T>
+impl<T> PartialEq for RowVector<T>
 where
     T: PartialEq,
     T: Zero,
@@ -61,16 +61,16 @@ where
 }
 
 
-impl<T> Mul<Matrix<T>> for ColumnVector<T>
+impl<T> Mul<Matrix<T>> for RowVector<T>
 where
     T: Zero,
     T: Add<Output = T>,
     T: Mul<Output = T>,
     T: Clone,
 {
-    type Output = ColumnVector<T>;
+    type Output = RowVector<T>;
 
-    fn mul(self, other: Matrix<T>) -> ColumnVector<T> {
+    fn mul(self, other: Matrix<T>) -> RowVector<T> {
         let vcols = self.elem.len();
         let cols = if vcols < other.rows {vcols} else {other.rows};
 
@@ -82,17 +82,39 @@ where
             }
             elem.push(s);
         }
-        ColumnVector { elem: elem }
+        RowVector { elem: elem }
+    }
+}
+
+impl<T> Mul<ColumnVector<T>> for RowVector<T>
+where
+    T: Zero,
+    T: Add<Output = T>,
+    T: Mul<Output = T>,
+    T: Clone,
+{
+    type Output = T;
+
+    fn mul(self, other: ColumnVector<T>) -> T {
+        let scols = self.elem.len();
+        let orows = other.elem.len();
+        let len = if scols < orows {scols} else {orows};
+
+        let mut s = T::zero();
+        for vi in 0..len {
+            s = s + self.get(vi) * other.get(vi);
+        }
+        s
     }
 }
 
 
 #[derive(Debug, Clone)]
-pub struct RowVector<T> {
+pub struct ColumnVector<T> {
     elem: Vec<T>,
 }
 
-impl<T> RowVector<T>
+impl<T> ColumnVector<T>
 where
     T: Zero,
     T: Clone,
@@ -108,7 +130,7 @@ where
     }
 }
 
-impl<T> PartialEq for RowVector<T>
+impl<T> PartialEq for ColumnVector<T>
 where
     T: PartialEq,
     T: Zero,
@@ -205,16 +227,16 @@ where
     }
 }
 
-impl<T> Mul<RowVector<T>> for Matrix<T>
+impl<T> Mul<ColumnVector<T>> for Matrix<T>
 where
     T: Zero,
     T: Add<Output = T>,
     T: Mul<Output = T>,
     T: Clone,
 {
-    type Output = RowVector<T>;
+    type Output = ColumnVector<T>;
 
-    fn mul(self, other: RowVector<T>) -> RowVector<T> {
+    fn mul(self, other: ColumnVector<T>) -> ColumnVector<T> {
         let vrows = self.elem.len();
         let rows = if vrows < self.cols {vrows} else {self.cols};
 
@@ -226,7 +248,7 @@ where
             }
             elem.push(s);
         }
-        RowVector { elem: elem }
+        ColumnVector { elem: elem }
     }
 }
 
@@ -243,16 +265,16 @@ mod tests {
     }
     #[test]
     fn column_vector_matrix_multiplication() {
-        let v1 = ColumnVector { elem: vec![1, 2] };
+        let v1 = RowVector { elem: vec![1, 2] };
         let m1 = Matrix { rows: 2, cols: 2, elem: vec![vec![0, 1], vec![2, 3]] };
-        let v2 = ColumnVector { elem: vec![4, 7] };
+        let v2 = RowVector { elem: vec![4, 7] };
         assert_eq!(v1*m1,v2);
     }
     #[test]
     fn matrix_row_vector_multiplication() {
         let m1 = Matrix { rows: 2, cols: 2, elem: vec![vec![0, 1], vec![2, 3]] };
-        let v1 = RowVector { elem: vec![1, 2] };
-        let v2 = RowVector { elem: vec![2, 8] };
+        let v1 = ColumnVector { elem: vec![1, 2] };
+        let v2 = ColumnVector { elem: vec![2, 8] };
         assert_eq!(m1*v1,v2);
     }
 }
