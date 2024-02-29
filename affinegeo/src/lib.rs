@@ -18,6 +18,7 @@ limitations under the License.
 
 use num::{Num, Zero, One, Signed};
 use std::ops::{Mul, Add, Sub, Div};
+use linalg::{Matrix, RowVector, ColumnVector};
 
 pub trait Point {
     fn is_collinear(&self, a2: &Self, a3: &Self) -> bool;
@@ -680,7 +681,12 @@ where
         let c = other.dx();
         let d = other.dy();
 
-        a*c + b*d
+        let v1 = RowVector::new(vec![a, b]);
+        let m1 = Matrix::new(vec![vec![T::one(), T::zero()],
+                                  vec![T::zero(), T::one()]]);
+        let v2 = ColumnVector::new(vec![c, d]);
+
+        v1*m1*v2
     }
     pub fn red_dot(&self, other: &Self) -> T {
         let a = self.dx();
@@ -688,7 +694,12 @@ where
         let c = other.dx();
         let d = other.dy();
 
-        a*c - b*d
+        let v1 = RowVector::new(vec![a, b]);
+        let m1 = Matrix::new(vec![vec![T::one(), T::zero()],
+                                  vec![T::zero(), T::zero() - T::one()]]);
+        let v2 = ColumnVector::new(vec![c, d]);
+
+        v1*m1*v2
     }
     pub fn green_dot(&self, other: &Self) -> T {
         let a = self.dx();
@@ -696,7 +707,12 @@ where
         let c = other.dx();
         let d = other.dy();
 
-        a*d + b*c
+        let v1 = RowVector::new(vec![a, b]);
+        let m1 = Matrix::new(vec![vec![T::zero(), T::one()],
+                                  vec![T::one(), T::zero()]]);
+        let v2 = ColumnVector::new(vec![c, d]);
+
+        v1*m1*v2
     }
     pub fn cross(&self, other: &Self) -> T {
         let a = self.dx();
@@ -704,7 +720,12 @@ where
         let c = other.dx();
         let d = other.dy();
 
-        a*d - b*c
+        let v1 = RowVector::new(vec![a, b]);
+        let m1 = Matrix::new(vec![vec![T::zero(), T::one()],
+                                  vec![T::zero() - T::one(), T::zero()]]);
+        let v2 = ColumnVector::new(vec![c, d]);
+
+        v1*m1*v2
     }
     pub fn area(&self) -> T {
         (self.start.x.clone() * self.end.y.clone()
