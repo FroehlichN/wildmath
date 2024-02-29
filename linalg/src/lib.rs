@@ -88,6 +88,48 @@ where
 
 
 #[derive(Debug, Clone)]
+pub struct RowVector<T> {
+    elem: Vec<T>,
+}
+
+impl<T> RowVector<T>
+where
+    T: Zero,
+    T: Clone,
+{
+    fn get(&self, ri: usize) -> T {
+        let v = self.elem.get(ri);
+
+        let value = match v {
+            Some(vv) => vv.clone(),
+            None => T::zero(),
+        };
+        value
+    }
+}
+
+impl<T> PartialEq for RowVector<T>
+where
+    T: PartialEq,
+    T: Zero,
+    T: Clone,
+{
+    fn eq(&self, other: &Self) -> bool {
+        let srows = self.elem.len();
+        let orows = other.elem.len();
+        let rows = if srows > orows {srows} else {orows};
+
+        for ri in 0..rows {
+            if !(self.get(ri) == other.get(ri)) {
+                return false;
+            }
+        }
+        return true;
+    }
+}
+
+
+#[derive(Debug, Clone)]
 pub struct Matrix<T> {
     rows: usize,
     cols: usize,
@@ -139,7 +181,6 @@ where
     }
 }
 
-
 impl<T> Add for Matrix<T>
 where
     T: Zero,
@@ -164,6 +205,31 @@ where
     }
 }
 
+impl<T> Mul<RowVector<T>> for Matrix<T>
+where
+    T: Zero,
+    T: Add<Output = T>,
+    T: Mul<Output = T>,
+    T: Clone,
+{
+    type Output = RowVector<T>;
+
+    fn mul(self, other: RowVector<T>) -> RowVector<T> {
+        let vrows = self.elem.len();
+        let rows = if vrows < self.cols {vrows} else {self.cols};
+
+        let mut elem : Vec<T> = Vec::new();
+        for mri in 0..self.rows {
+            let mut s = T::zero();
+            for vri in 0..rows {
+                s = s + self.get(mri,vri) * other.get(vri);
+            }
+            elem.push(s);
+        }
+        RowVector { elem: elem }
+    }
+}
+
 
 #[cfg(test)]
 mod tests {
@@ -181,6 +247,13 @@ mod tests {
         let m1 = Matrix { rows: 2, cols: 2, elem: vec![vec![0, 1], vec![2, 3]] };
         let v2 = ColumnVector { elem: vec![4, 7] };
         assert_eq!(v1*m1,v2);
+    }
+    #[test]
+    fn matrix_row_vector_multiplication() {
+        let m1 = Matrix { rows: 2, cols: 2, elem: vec![vec![0, 1], vec![2, 3]] };
+        let v1 = RowVector { elem: vec![1, 2] };
+        let v2 = RowVector { elem: vec![2, 8] };
+        assert_eq!(m1*v1,v2);
     }
 }
 
