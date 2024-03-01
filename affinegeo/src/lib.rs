@@ -160,6 +160,7 @@ where
     T: Add<Output = T>,
     T: Sub<Output = T>,
     T: Zero,
+    T: One,
     T: Clone,
 {
     type Output = TwoPoint<T>;
@@ -193,6 +194,7 @@ where
     T: Add<Output = T>,
     T: Sub<Output = T>,
     T: Zero,
+    T: One,
     T: Clone,
 {
     type Output = TwoPoint<T>;
@@ -648,6 +650,7 @@ impl<T> TwoVector<T>
 where
     T: Clone,
     T: Zero,
+    T: One,
     T: Sub<T, Output = T>,
 {
     pub fn new(a: T, b: T) -> TwoVector<T> {
@@ -663,6 +666,18 @@ where
         let dy = self.end.y.clone() - self.start.y.clone();
         return dy;
     }
+    fn metric_blue() -> Matrix<T> {
+        Matrix::new(vec![vec![T::one(), T::zero()],
+                    vec![T::zero(), T::one()]])
+    }
+    fn metric_red() -> Matrix<T> {
+        Matrix::new(vec![vec![T::one(), T::zero()],
+                         vec![T::zero(), T::zero() - T::one()]])
+    }
+    fn metric_greed() -> Matrix<T> {
+        Matrix::new(vec![vec![T::zero(), T::one()],
+                    vec![T::one(), T::zero()]])
+    }
 }
 
 impl<T> TwoVector<T>
@@ -675,44 +690,38 @@ where
     T: One,
     T: Clone,
 {
-    pub fn blue_dot(&self, other: &Self) -> T {
+    pub fn dot_blue(&self, other: &Self) -> T {
         let a = self.dx();
         let b = self.dy();
         let c = other.dx();
         let d = other.dy();
 
         let v1 = RowVector::new(vec![a, b]);
-        let m1 = Matrix::new(vec![vec![T::one(), T::zero()],
-                                  vec![T::zero(), T::one()]]);
         let v2 = ColumnVector::new(vec![c, d]);
 
-        v1*m1*v2
+        v1*TwoVector::metric_blue()*v2
     }
-    pub fn red_dot(&self, other: &Self) -> T {
+    pub fn dot_red(&self, other: &Self) -> T {
         let a = self.dx();
         let b = self.dy();
         let c = other.dx();
         let d = other.dy();
 
         let v1 = RowVector::new(vec![a, b]);
-        let m1 = Matrix::new(vec![vec![T::one(), T::zero()],
-                                  vec![T::zero(), T::zero() - T::one()]]);
         let v2 = ColumnVector::new(vec![c, d]);
 
-        v1*m1*v2
+        v1*TwoVector::metric_red()*v2
     }
-    pub fn green_dot(&self, other: &Self) -> T {
+    pub fn dot_green(&self, other: &Self) -> T {
         let a = self.dx();
         let b = self.dy();
         let c = other.dx();
         let d = other.dy();
 
         let v1 = RowVector::new(vec![a, b]);
-        let m1 = Matrix::new(vec![vec![T::zero(), T::one()],
-                                  vec![T::one(), T::zero()]]);
         let v2 = ColumnVector::new(vec![c, d]);
 
-        v1*m1*v2
+        v1*TwoVector::metric_greed()*v2
     }
     pub fn cross(&self, other: &Self) -> T {
         let a = self.dx();
@@ -744,6 +753,15 @@ where
                + d.clone() * d.clone();
 
         (cross.clone() * cross) / (q1 * q2)
+    }
+    pub fn quadrance_blue(&self) -> T {
+        self.dot_blue(&self)
+    }
+    pub fn quadrance_red(&self) -> T {
+        self.dot_red(&self)
+    }
+    pub fn quadrance_green(&self) -> T {
+        self.dot_green(&self)
     }
 }
 
@@ -1130,6 +1148,16 @@ mod tests {
         assert_eq!(s,Ratio::new(49,50));
         assert_eq!(t,Ratio::new(49,65));
         assert_eq!(r,Ratio::new(49,130));
+    }
+    #[test]
+    fn blue_red_green_quadrance_of_vectors() {
+        let o = TwoPoint {x: Ratio::new(0,1), y: Ratio::new(0,1)};
+        let a = TwoPoint {x: Ratio::new(4,1), y: Ratio::new(2,1) };
+        let oa = TwoVector {start: o.clone(), end: a.clone()};
+        let qb2 = oa.quadrance_blue() * oa.quadrance_blue();
+        let qr2 = oa.quadrance_red() * oa.quadrance_red();
+        let qg2 = oa.quadrance_green() * oa.quadrance_green();
+        assert_eq!(qb2,qr2+qg2);
     }
     #[test]
     fn point_vector_line() {
