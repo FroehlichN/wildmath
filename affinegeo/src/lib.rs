@@ -688,6 +688,7 @@ where
     T: Div<Output = T>,
     T: Zero,
     T: One,
+    T: PartialEq,
     T: Clone,
 {
     pub fn dot_blue(&self, other: &Self) -> T {
@@ -733,6 +734,9 @@ where
         let v2 = ColumnVector::new(vec![c, d]);
 
         v1*(*metric).clone()*v2
+    }
+    pub fn is_perpendicular_metric(&self, other: &Self, metric: &Matrix<T>) -> bool {
+        self.dot_metric(&other, &metric) == T::zero()
     }
     pub fn cross(&self, other: &Self) -> T {
         let a = self.dx();
@@ -807,6 +811,7 @@ where
     T: Div<Output = T>,
     T: Zero,
     T: One,
+    T: PartialEq,
     T: Clone,
 {
     pub fn new(p: Vec<TwoPoint<T>>) -> Polygon<T> {
@@ -1219,6 +1224,14 @@ mod tests {
         assert_eq!(qv,Ratio::new(1,1));
         assert_eq!(qu2,Ratio::new(4,1));
         assert_eq!(qv2,Ratio::new(1,4));
+    }
+    #[test]
+    fn perpendicular_vectors_with_general_metric() {
+        let m = Matrix::new(vec![vec![Ratio::new(3,8),Ratio::new(-1,4)],
+                                 vec![Ratio::new(-1,4),Ratio::new(1,2)]]);
+        let u = TwoVector::new(Ratio::new(2,1),Ratio::new(1,1));
+        let v = TwoVector::new(Ratio::new(0,1),Ratio::new(1,1));
+        assert!(u.is_perpendicular_metric(&v, &m));
     }
     #[test]
     fn point_vector_line() {
