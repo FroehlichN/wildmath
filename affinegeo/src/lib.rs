@@ -674,7 +674,7 @@ where
         Matrix::new(vec![vec![T::one(), T::zero()],
                          vec![T::zero(), T::zero() - T::one()]])
     }
-    fn metric_greed() -> Matrix<T> {
+    fn metric_green() -> Matrix<T> {
         Matrix::new(vec![vec![T::zero(), T::one()],
                     vec![T::one(), T::zero()]])
     }
@@ -721,7 +721,18 @@ where
         let v1 = RowVector::new(vec![a, b]);
         let v2 = ColumnVector::new(vec![c, d]);
 
-        v1*TwoVector::metric_greed()*v2
+        v1*TwoVector::metric_green()*v2
+    }
+    pub fn dot_metric(&self, other: &Self, metric: &Matrix<T>) -> T {
+        let a = self.dx();
+        let b = self.dy();
+        let c = other.dx();
+        let d = other.dy();
+
+        let v1 = RowVector::new(vec![a, b]);
+        let v2 = ColumnVector::new(vec![c, d]);
+
+        v1*(*metric).clone()*v2
     }
     pub fn cross(&self, other: &Self) -> T {
         let a = self.dx();
@@ -762,6 +773,9 @@ where
     }
     pub fn quadrance_green(&self) -> T {
         self.dot_green(&self)
+    }
+    pub fn quadrance_metric(&self, metric: &Matrix<T>) -> T {
+        self.dot_metric(&self, &metric)
     }
     pub fn spread_blue(&self, other: &Self) -> T {
         let dot = self.dot_blue(&other);
@@ -1188,6 +1202,23 @@ mod tests {
         assert_eq!(sr,Ratio::new(121,120));
         assert_eq!(sg,Ratio::new(-121,48));
         assert_eq!(si,two);
+    }
+    #[test]
+    fn quadrance_with_general_metric() {
+        let m = Matrix::new(vec![vec![Ratio::new(3,8),Ratio::new(-1,4)],
+                                 vec![Ratio::new(-1,4),Ratio::new(1,2)]]);
+        let u = TwoVector::new(Ratio::new(2,1),Ratio::new(1,1));
+        let v = TwoVector::new(Ratio::new(-2,1),Ratio::new(-1,1));
+        let u2 = TwoVector::new(Ratio::new(4,1),Ratio::new(2,1));
+        let v2 = TwoVector::new(Ratio::new(-1,1),Ratio::new(-1,2));
+        let qu = u.quadrance_metric(&m);
+        let qv = v.quadrance_metric(&m);
+        let qu2 = u2.quadrance_metric(&m);
+        let qv2 = v2.quadrance_metric(&m);
+        assert_eq!(qu,Ratio::new(1,1));
+        assert_eq!(qv,Ratio::new(1,1));
+        assert_eq!(qu2,Ratio::new(4,1));
+        assert_eq!(qv2,Ratio::new(1,4));
     }
     #[test]
     fn point_vector_line() {
