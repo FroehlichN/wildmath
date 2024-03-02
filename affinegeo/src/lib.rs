@@ -19,6 +19,7 @@ limitations under the License.
 use num::{Num, Zero, One, Signed};
 use std::ops::{Mul, Add, Sub, Div};
 use linalg::{Matrix, RowVector, ColumnVector};
+use algebra::{archimedes};
 
 pub trait Point {
     fn is_collinear(&self, a2: &Self, a3: &Self) -> bool;
@@ -646,6 +647,22 @@ where
     }
 }
 
+impl<T> Sub<TwoVector<T>> for TwoVector<T>
+where
+    T: Sub<T, Output = T>,
+    T: Clone,
+{
+    type Output = TwoVector<T>;
+
+    fn sub(self, rhs: TwoVector<T>) -> TwoVector<T> {
+        let s = TwoPoint {x: self.start.x.clone() - rhs.start.x.clone(),
+                          y: self.start.y.clone() - rhs.start.y.clone()};
+        let e = TwoPoint {x: self.end.x.clone() - rhs.end.x.clone(),
+                          y: self.end.y.clone() - rhs.end.y.clone()};
+        TwoVector {start: s, end: e}
+    }
+}
+
 impl<T> TwoVector<T>
 where
     T: Clone,
@@ -692,37 +709,13 @@ where
     T: Clone,
 {
     pub fn dot_blue(&self, other: &Self) -> T {
-        let a = self.dx();
-        let b = self.dy();
-        let c = other.dx();
-        let d = other.dy();
-
-        let v1 = RowVector::new(vec![a, b]);
-        let v2 = ColumnVector::new(vec![c, d]);
-
-        v1*TwoVector::metric_blue()*v2
+        self.dot_metric(&other, &TwoVector::metric_blue())
     }
     pub fn dot_red(&self, other: &Self) -> T {
-        let a = self.dx();
-        let b = self.dy();
-        let c = other.dx();
-        let d = other.dy();
-
-        let v1 = RowVector::new(vec![a, b]);
-        let v2 = ColumnVector::new(vec![c, d]);
-
-        v1*TwoVector::metric_red()*v2
+        self.dot_metric(&other, &TwoVector::metric_red())
     }
     pub fn dot_green(&self, other: &Self) -> T {
-        let a = self.dx();
-        let b = self.dy();
-        let c = other.dx();
-        let d = other.dy();
-
-        let v1 = RowVector::new(vec![a, b]);
-        let v2 = ColumnVector::new(vec![c, d]);
-
-        v1*TwoVector::metric_green()*v2
+        self.dot_metric(&other, &TwoVector::metric_green())
     }
     pub fn dot_metric(&self, other: &Self, metric: &Matrix<T>) -> T {
         let a = self.dx();
@@ -737,6 +730,13 @@ where
     }
     pub fn is_perpendicular_metric(&self, other: &Self, metric: &Matrix<T>) -> bool {
         self.dot_metric(&other, &metric) == T::zero()
+    }
+    pub fn is_parallel_metric(&self, other: &Self, metric: &Matrix<T>) -> bool {
+        let qu = self.quadrance_metric(&metric);
+        let qv = self.quadrance_metric(&metric);
+        let uv = (*self).clone() - (*other).clone();
+        let quv = uv.quadrance_metric(&metric);
+        archimedes(qu,qv,quv) == T::zero()
     }
     pub fn cross(&self, other: &Self) -> T {
         let a = self.dx();
@@ -756,18 +756,7 @@ where
          - self.end.x.clone() * self.start.y.clone()) / (T::one() + T::one())
     }
     pub fn spread(&self, other: &Self) -> T {
-        let a = self.dx();
-        let b = self.dy();
-        let c = other.dx();
-        let d = other.dy();
-
-        let cross = self.cross(&other);
-        let q1 = a.clone() * a.clone()
-               + b.clone() * b.clone();
-        let q2 = c.clone() * c.clone()
-               + d.clone() * d.clone();
-
-        (cross.clone() * cross) / (q1 * q2)
+        self.spread_blue(&other)
     }
     pub fn quadrance_blue(&self) -> T {
         self.dot_blue(&self)
@@ -782,19 +771,13 @@ where
         self.dot_metric(&self, &metric)
     }
     pub fn spread_blue(&self, other: &Self) -> T {
-        let dot = self.dot_blue(&other);
-        let dot2 = dot.clone() * dot;
-        T::one() - dot2 / (self.quadrance_blue() * other.quadrance_blue())
+        self.spread_metric(&other, &TwoVector::metric_blue())
     }
     pub fn spread_red(&self, other: &Self) -> T {
-        let dot = self.dot_red(&other);
-        let dot2 = dot.clone() * dot;
-        T::one() - dot2 / (self.quadrance_red() * other.quadrance_red())
+        self.spread_metric(&other, &TwoVector::metric_red())
     }
     pub fn spread_green(&self, other: &Self) -> T {
-        let dot = self.dot_green(&other);
-        let dot2 = dot.clone() * dot;
-        T::one() - dot2 / (self.quadrance_green() * other.quadrance_green())
+        self.spread_metric(&other, &TwoVector::metric_green())
     }
     pub fn spread_metric(&self, other: &Self, metric: &Matrix<T>) -> T {
         let dot = self.dot_metric(&other, &metric);
