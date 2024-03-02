@@ -763,6 +763,21 @@ where
     pub fn quadrance_green(&self) -> T {
         self.dot_green(&self)
     }
+    pub fn spread_blue(&self, other: &Self) -> T {
+        let dot = self.dot_blue(&other);
+        let dot2 = dot.clone() * dot;
+        T::one() - dot2 / (self.quadrance_blue() * other.quadrance_blue())
+    }
+    pub fn spread_red(&self, other: &Self) -> T {
+        let dot = self.dot_red(&other);
+        let dot2 = dot.clone() * dot;
+        T::one() - dot2 / (self.quadrance_red() * other.quadrance_red())
+    }
+    pub fn spread_green(&self, other: &Self) -> T {
+        let dot = self.dot_green(&other);
+        let dot2 = dot.clone() * dot;
+        T::one() - dot2 / (self.quadrance_green() * other.quadrance_green())
+    }
 }
 
 /// Represents a polygon
@@ -1158,6 +1173,21 @@ mod tests {
         let qr2 = oa.quadrance_red() * oa.quadrance_red();
         let qg2 = oa.quadrance_green() * oa.quadrance_green();
         assert_eq!(qb2,qr2+qg2);
+    }
+    #[test]
+    fn blue_red_green_spread_of_vectors() {
+        let v = TwoVector::new(Ratio::new(3,1),Ratio::new(1,1));
+        let u = TwoVector::new(Ratio::new(1,1),Ratio::new(4,1));
+        let sb = v.spread_blue(&u);
+        let sr = v.spread_red(&u);
+        let sg = v.spread_green(&u);
+        let one = Ratio::new(1,1);
+        let two = Ratio::new(2,1);
+        let si = one/sb + one/sr + one/sg;
+        assert_eq!(sb,Ratio::new(121,170));
+        assert_eq!(sr,Ratio::new(121,120));
+        assert_eq!(sg,Ratio::new(-121,48));
+        assert_eq!(si,two);
     }
     #[test]
     fn point_vector_line() {
