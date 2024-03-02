@@ -796,6 +796,11 @@ where
         let dot2 = dot.clone() * dot;
         T::one() - dot2 / (self.quadrance_green() * other.quadrance_green())
     }
+    pub fn spread_metric(&self, other: &Self, metric: &Matrix<T>) -> T {
+        let dot = self.dot_metric(&other, &metric);
+        let dot2 = dot.clone() * dot;
+        T::one() - dot2 / (self.quadrance_metric(&metric) * other.quadrance_metric(&metric))
+    }
 }
 
 /// Represents a polygon
@@ -1232,6 +1237,39 @@ mod tests {
         let u = TwoVector::new(Ratio::new(2,1),Ratio::new(1,1));
         let v = TwoVector::new(Ratio::new(0,1),Ratio::new(1,1));
         assert!(u.is_perpendicular_metric(&v, &m));
+    }
+    #[test]
+    fn spread_between_vectors_with_general_metric() {
+        let m = Matrix::new(vec![vec![Ratio::new(3,8),Ratio::new(-1,4)],
+                                 vec![Ratio::new(-1,4),Ratio::new(1,2)]]);
+
+        let a1 = TwoPoint::new(Ratio::new(0,1),Ratio::new(0,1));
+        let a2 = TwoPoint::new(Ratio::new(2,1),Ratio::new(2,1));
+        let a3 = TwoPoint::new(Ratio::new(-3,1),Ratio::new(1,1));
+
+        let v12 = TwoVector {start: a1.clone(), end: a2.clone()};
+        let v23 = TwoVector {start: a2, end: a3.clone()};
+        let v31 = TwoVector {start: a3, end: a1};
+
+        let q1 = v23.quadrance_metric(&m);
+        let q2 = v31.quadrance_metric(&m);
+        let q3 = v12.quadrance_metric(&m);
+
+        assert_eq!(q1,Ratio::new(59,8));
+        assert_eq!(q2,Ratio::new(43,8));
+        assert_eq!(q3,Ratio::new(3,2));
+
+        let s1 = v12.spread_metric(&v31,&m);
+        let s2 = v12.spread_metric(&v23,&m);
+        let s3 = v23.spread_metric(&v31,&m);
+
+        assert_eq!(s1,Ratio::new(128,129));
+        assert_eq!(s2,Ratio::new(128,177));
+        assert_eq!(s3,Ratio::new(512,2537));
+
+        assert_eq!(s1/q1,s2/q2);
+        assert_eq!(s2/q2,s3/q3);
+        assert_eq!(s3/q3,Ratio::new(1024,7611));
     }
     #[test]
     fn point_vector_line() {
