@@ -794,6 +794,19 @@ where
         let dot2 = dot.clone() * dot;
         T::one() - dot2 / (self.quadrance_metric(&metric) * other.quadrance_metric(&metric))
     }
+    pub fn proj(&self, other: &Self, metric: &Matrix<T>) -> TwoVector<T> {
+        let vu = self.dot_metric(&other, &metric);
+        let u = self.quadrance_metric(&metric);
+        let s = vu/(u.clone() * u);
+        self.clone() * s
+    }
+    pub fn refl(&self, other: &Self, metric: &Matrix<T>) -> TwoVector<T> {
+        let two = T::one() + T::one();
+        let vu = self.dot_metric(&other, &metric);
+        let u = self.quadrance_metric(&metric);
+        let s = vu/(u.clone() * u);
+        self.clone() * two * s - other.clone()
+    }
 }
 
 
