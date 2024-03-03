@@ -69,6 +69,7 @@ mod tests {
     use extrational::*;
     use finite::*;
     use projectivegeo::*;
+    use num::rational::Ratio;
 
     create_finite_field!(3);
     create_finite_field!(5);
@@ -282,6 +283,21 @@ mod tests {
         assert_eq!(a1.clone()*r2.clone(),a2);
         assert_eq!(a2.clone()*r2.clone(),a2);
         assert_eq!(ainf.clone()*r2.clone(),a2);
+    }
+    #[test]
+    fn proof_multiplication_theorem_for_half_slopes() {
+        let pone = PolyNumber::new(vec![PolyNumber::new(vec![Ratio::<i128>::new(1,1)])]);
+        let ph = PolyNumber::new(vec![PolyNumber::new(vec![Ratio::new(0,1),Ratio::new(1,1)])]);
+        let pk = PolyNumber::new(vec![PolyNumber::new(vec![Ratio::new(0,1)]),
+                                     PolyNumber::new(vec![Ratio::new(1,1)])]);
+        let one = PolyRatio::new(pone.clone(),pone.clone());
+        let h = PolyRatio::new(ph.clone(),pone.clone());
+        let k = PolyRatio::new(pk.clone(),pone.clone());
+        let hk = (h.clone()+k.clone())/(one - h.clone()*k.clone());
+        let eh = half_slope(h.clone());
+        let ek = half_slope(k.clone());
+        let ehk = half_slope(hk.clone());
+        assert_eq!(eh*ek,ehk);
     }
 }
 

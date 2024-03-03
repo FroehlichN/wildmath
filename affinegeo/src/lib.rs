@@ -38,6 +38,23 @@ where
 }
 
 
+pub fn half_slope<T>(h: T) -> TwoPoint<T>
+where
+    T: One + Zero,
+    T: Add<Output = T>,
+    T: Sub<Output = T>,
+    T: Mul<Output = T>,
+    T: Div<Output = T>,
+    T: Clone,
+{
+    let two = T::one() + T::one();
+    let h2 = h.clone() * h.clone();
+    let x = (T::one() - h2.clone()) / (T::one() + h2.clone());
+    let y = two*h.clone() / (T::one() + h2);
+    TwoPoint::new(x,y)
+}
+
+
 /// Represents a 1D point
 #[derive(Debug, Clone)]
 pub struct OnePoint<T> {
@@ -977,6 +994,27 @@ where
     }
 }
 
+impl<T> Mul<Reflection<T>> for Rotation<T>
+where
+    T: Num,
+    T: Clone,
+{
+    type Output = Reflection<T>;
+
+    fn mul(self, other: Reflection<T>) -> Reflection<T> {
+        let a = self.vector.dx();
+        let b = self.vector.dy();
+        let c = other.vector.dx();
+        let d = other.vector.dy();
+        let m1 = Matrix::new(vec![vec![a.clone(),b.clone()],
+                                  vec![T::zero()-b,a]]);
+        let m2 = Matrix::new(vec![vec![c.clone(),d.clone()],
+                                  vec![d,T::zero()-c]]);
+        let m3 = m1*m2;
+        Reflection { vector: TwoVector::new(m3.get(0,0), m3.get(0,1)) }
+    }
+}
+
 /// Red Rotation
 #[derive(Clone,Debug)]
 pub struct RotationRed<T> {
@@ -1073,6 +1111,27 @@ where
                                   vec![d,T::zero()-c]]);
         let m3 = m1*m2;
         Rotation { vector: TwoVector::new(m3.get(0,0), m3.get(0,1)) }
+    }
+}
+
+impl<T> Mul<Rotation<T>> for Reflection<T>
+where
+    T: Num,
+    T: Clone,
+{
+    type Output = Reflection<T>;
+
+    fn mul(self, other: Rotation<T>) -> Reflection<T> {
+        let a = self.vector.dx();
+        let b = self.vector.dy();
+        let c = other.vector.dx();
+        let d = other.vector.dy();
+        let m1 = Matrix::new(vec![vec![a.clone(),b.clone()],
+                                  vec![b,T::zero()-a]]);
+        let m2 = Matrix::new(vec![vec![c.clone(),d.clone()],
+                                  vec![T::zero()-d,c]]);
+        let m3 = m1*m2;
+        Reflection { vector: TwoVector::new(m3.get(0,0), m3.get(0,1)) }
     }
 }
 

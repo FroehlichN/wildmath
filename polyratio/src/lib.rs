@@ -32,12 +32,20 @@ pub struct PolyRatio<T> {
 }
 
 impl<T> PolyRatio<T>
+{
+    pub fn new(numer: PolyNumber<T>, denom: PolyNumber<T>) -> PolyRatio<T> {
+        PolyRatio{numer: numer, denom: denom}
+    }
+}
+
+
+impl<T> PolyRatio<T>
 where
     T: PartialEq + Zero + One + Mul + Add + Sub + Div + Clone,
     T: Div<Output = T>,
     PolyNumber<T>: Sub<Output = PolyNumber<T>>,
 {
-    pub fn new(numer: PolyNumber<T>, denom: PolyNumber<T>) -> PolyRatio<T> {
+    pub fn reduce(numer: PolyNumber<T>, denom: PolyNumber<T>) -> PolyRatio<T> {
         let dlo = denom.lowest_order();
         let dlow = match dlo {
             Some(i) => i,
@@ -100,7 +108,7 @@ where
 
 impl<T> PartialEq for PolyRatio<T>
 where
-    T: PartialEq + Zero + One + Mul + Add + Sub + Div + Clone,
+    T: PartialEq + Zero + One + Mul + Add + Sub + Clone,
 {
     fn eq(&self, other: &Self) -> bool {
         let p = self.numer.clone();
@@ -113,8 +121,7 @@ where
 
 impl<T> Add for PolyRatio<T>
 where
-    T: PartialEq + Zero + One + Mul + Add + Sub + Div + Clone,
-    T: Div<Output = T>,
+    T: PartialEq + Zero + One + Mul + Add + Sub + Clone,
     T: Sub<Output = T>,
 {
     type Output = PolyRatio<T>;
@@ -130,8 +137,7 @@ where
 
 impl<T> Mul for PolyRatio<T>
 where
-    T: PartialEq + Zero + One + Mul + Add + Sub + Div + Clone,
-    T: Div<Output = T>,
+    T: PartialEq + Zero + One + Mul + Add + Sub + Clone,
     T: Sub<Output = T>,
 {
     type Output = PolyRatio<T>;
@@ -147,8 +153,7 @@ where
 
 impl<T> Mul<T> for PolyRatio<T>
 where
-    T: PartialEq + Zero + One + Mul + Add + Sub + Div + Clone,
-    T: Div<Output = T>,
+    T: PartialEq + Zero + One + Mul + Add + Sub + Clone,
     T: Sub<Output = T>,
 {
     type Output = PolyRatio<T>;
@@ -162,8 +167,7 @@ where
 
 impl<T> Sub for PolyRatio<T>
 where
-    T: PartialEq + Zero + One + Mul + Add + Sub + Div + Clone,
-    T: Div<Output = T>,
+    T: PartialEq + Zero + One + Mul + Add + Sub + Clone,
     T: Sub<Output = T>,
 {
     type Output = PolyRatio<T>;
@@ -179,8 +183,7 @@ where
 
 impl<T> Div for PolyRatio<T>
 where
-    T: PartialEq + Zero + One + Mul + Add + Sub + Div + Clone,
-    T: Div<Output = T>,
+    T: PartialEq + Zero + One + Mul + Add + Sub + Clone,
     T: Sub<Output = T>,
 {
     type Output = PolyRatio<T>;
@@ -196,8 +199,7 @@ where
 
 impl<T> Zero for PolyRatio<T>
 where
-    T: PartialEq + Zero + One + Mul + Add + Sub + Div + Clone,
-    T: Div<Output = T>,
+    T: PartialEq + Zero + One + Mul + Add + Sub + Clone,
     T: Sub<Output = T>,
 {
     fn zero() -> PolyRatio<T> {
@@ -212,8 +214,7 @@ where
 
 impl<T> One for PolyRatio<T>
 where
-    T: PartialEq + Zero + One + Mul + Add + Sub + Div + Clone,
-    T: Div<Output = T>,
+    T: PartialEq + Zero + One + Mul + Add + Sub + Clone,
     T: Sub<Output = T>,
 {
     fn one() -> PolyRatio<T> {
@@ -240,9 +241,9 @@ where
                     return num/den;
                 }
 
-                let numer_reduced = PolyRatio::new(numer.clone(),
+                let numer_reduced = PolyRatio::reduce(numer.clone(),
                                     PolyNumber::new(vec![-c.clone(), RatInf::<T>::one()]));
-                let denom_reduced = PolyRatio::new(denom.clone(),
+                let denom_reduced = PolyRatio::reduce(denom.clone(),
                                     PolyNumber::new(vec![-c.clone(), RatInf::<T>::one()]));
 
                 numer = numer_reduced.numer;
@@ -259,12 +260,12 @@ where
 mod tests {
     use super::*;
     #[test]
-    fn new_rational_poly_numbers() {
+    fn reduce_rational_poly_numbers() {
         let p1 = PolyNumber::new( vec![2, 7, 2, -3] );
         let p2 = PolyNumber::new( vec![2, 1, -1] );
         let p3 = PolyNumber::new( vec![1, 3] );
         let p4 = PolyNumber::one();
-        let rp1 = PolyRatio::new(p1,p2);
+        let rp1 = PolyRatio::reduce(p1,p2);
         match rp1 {
             PolyRatio { numer: n, denom: d} => {
                 assert_eq!(n,p3);
@@ -275,7 +276,7 @@ mod tests {
         let p22 = PolyNumber::new( vec![4, 0, -1] );
         let p23 = PolyNumber::new( vec![3, 2, -1] );
         let p24 = PolyNumber::one();
-        let rp21 = PolyRatio::new(p21,p22);
+        let rp21 = PolyRatio::reduce(p21,p22);
         match rp21 {
             PolyRatio { numer: n, denom: d} => {
                 assert_eq!(n,p23);
