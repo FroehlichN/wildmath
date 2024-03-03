@@ -1011,6 +1011,27 @@ where
     }
 }
 
+impl<T> Mul<Reflection<T>> for Reflection<T>
+where
+    T: Num,
+    T: Clone,
+{
+    type Output = Rotation<T>;
+
+    fn mul(self, other: Reflection<T>) -> Rotation<T> {
+        let a = self.vector.dx();
+        let b = self.vector.dy();
+        let c = other.vector.dx();
+        let d = other.vector.dy();
+        let m1 = Matrix::new(vec![vec![a.clone(),b.clone()],
+                                  vec![b,T::zero()-a]]);
+        let m2 = Matrix::new(vec![vec![c.clone(),d.clone()],
+                                  vec![d,T::zero()-c]]);
+        let m3 = m1*m2;
+        Rotation { vector: TwoVector::new(m3.get(0,0), m3.get(0,1)) }
+    }
+}
+
 /// Red Reflection
 #[derive(Clone)]
 pub struct ReflectionRed<T> {

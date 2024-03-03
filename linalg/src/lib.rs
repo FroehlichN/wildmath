@@ -182,7 +182,7 @@ where
         Matrix { rows: rows, cols: cols, elem: elem }
     }
 
-    fn get(&self, ri: usize, ci: usize) -> T {
+    pub fn get(&self, ri: usize, ci: usize) -> T {
         let r = self.elem.get(ri);
 
         let empty_row = Vec::new();
@@ -246,6 +246,36 @@ where
     }
 }
 
+impl<T> Mul<Matrix<T>> for Matrix<T>
+where
+    T: Zero,
+    T: Add<Output = T>,
+    T: Mul<Output = T>,
+    T: Clone,
+{
+    type Output = Matrix<T>;
+
+    fn mul(self, other: Matrix<T>) -> Matrix<T> {
+        let rows = self.rows;
+        let cols = other.cols;
+        let scount = if self.cols < other.rows {self.cols} else {other.rows};
+
+        let mut elem : Vec<Vec<T>> = Vec::new();
+        for mri in 0..rows {
+            let mut row : Vec<T> = Vec::new();
+            for mci in 0..cols {
+                let mut s = T::zero();
+                for si in 0..scount {
+                    s = s + self.get(mri,si) * other.get(si,mci);
+                }
+                row.push(s)
+            }
+            elem.push(row);
+        }
+        Matrix { rows: rows, cols: cols, elem: elem }
+    }
+}
+
 impl<T> Mul<ColumnVector<T>> for Matrix<T>
 where
     T: Zero,
@@ -281,6 +311,13 @@ mod tests {
         let m2 = Matrix::new(vec![vec![1,  1], vec![0, 1]]);
         let m3 = Matrix::new(vec![vec![0,  1], vec![0, 2]]);
         assert_eq!(m1+m2, m3);
+    }
+    #[test]
+    fn matrix_multiplication() {
+        let m1 = Matrix::new(vec![vec![1, 2], vec![3, 4]]);
+        let m2 = Matrix::new(vec![vec![5,  6], vec![7, 8]]);
+        let m3 = Matrix::new(vec![vec![19, 22], vec![43, 50]]);
+        assert_eq!(m1*m2, m3);
     }
     #[test]
     fn column_vector_matrix_multiplication() {
