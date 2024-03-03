@@ -908,9 +908,22 @@ where
 }
 
 /// Rotation
-#[derive(Clone)]
+#[derive(Clone,Debug)]
 pub struct Rotation<T> {
     vector: TwoVector<T>,
+}
+
+impl<T> PartialEq for Rotation<T>
+where
+    T: Mul<Output = T>,
+    T: Add<Output = T>,
+    T: Sub<Output = T>,
+    T: Zero,
+    T: Clone,
+{
+    fn eq(&self, other: &Self) -> bool {
+        self.vector == other.vector
+    }
 }
 
 impl<T> Mul<Rotation<T>> for TwoVector<T>
@@ -933,8 +946,29 @@ where
     }
 }
 
+impl<T> Mul<Rotation<T>> for Rotation<T>
+where
+    T: Num,
+    T: Clone,
+{
+    type Output = Rotation<T>;
+
+    fn mul(self, other: Rotation<T>) -> Rotation<T> {
+        let a = self.vector.dx();
+        let b = self.vector.dy();
+        let c = other.vector.dx();
+        let d = other.vector.dy();
+        let m1 = Matrix::new(vec![vec![a.clone(),b.clone()],
+                                  vec![T::zero()-b,a]]);
+        let m2 = Matrix::new(vec![vec![c.clone(),d.clone()],
+                                  vec![T::zero()-d,c]]);
+        let m3 = m1*m2;
+        Rotation { vector: TwoVector::new(m3.get(0,0), m3.get(0,1)) }
+    }
+}
+
 /// Red Rotation
-#[derive(Clone)]
+#[derive(Clone,Debug)]
 pub struct RotationRed<T> {
     vector: TwoVector<T>,
 }
@@ -960,7 +994,7 @@ where
 }
 
 /// Green Rotation
-#[derive(Clone)]
+#[derive(Clone,Debug)]
 pub struct RotationGreen<T> {
     vector: TwoVector<T>,
 }
@@ -986,7 +1020,7 @@ where
 }
 
 /// Reflection
-#[derive(Clone)]
+#[derive(Clone,Debug)]
 pub struct Reflection<T> {
     vector: TwoVector<T>,
 }
@@ -1033,7 +1067,7 @@ where
 }
 
 /// Red Reflection
-#[derive(Clone)]
+#[derive(Clone,Debug)]
 pub struct ReflectionRed<T> {
     vector: TwoVector<T>,
 }
@@ -1059,7 +1093,7 @@ where
 }
 
 /// Green Reflection
-#[derive(Clone)]
+#[derive(Clone,Debug)]
 pub struct ReflectionGreen<T> {
     vector: TwoVector<T>,
 }
@@ -1512,6 +1546,13 @@ mod tests {
         assert_eq!(v1*r1.clone(),v3);
         let v4 = TwoVector::new(Ratio::new(-6,1), Ratio::new(2,1));
         assert_eq!(v2*r1,v4);
+    }
+    #[test]
+    fn composition_of_rotations() {
+        let ra = Rotation { vector: TwoVector::new(Ratio::new(15,17),Ratio::new(8,17)) };
+        let rb = Rotation { vector: TwoVector::new(Ratio::new(-7,25),Ratio::new(24,25)) };
+        let rc = Rotation { vector: TwoVector::new(Ratio::new(-297,425),Ratio::new(304,425)) };
+        assert_eq!(ra*rb,rc);
     }
     #[test]
     fn reflection() {
