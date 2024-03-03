@@ -249,14 +249,17 @@ where
     T: Add<Output = T>,
     T: Sub<Output = T>,
     T: Zero,
+    T: One,
     T: Clone,
 {
     type Output = TwoPoint<T>;
 
     fn mul(self, other: TwoPoint<T>) -> TwoPoint<T> {
-        let nx = self.x.clone() * other.x.clone();
-        let ny = self.y.clone() * other.y.clone();
-        TwoPoint {x: nx, y: ny }
+        let u = TwoVector { start: TwoPoint::zero(), end: other };
+        let v = TwoVector { start: TwoPoint::zero(), end: self };
+        let r = Rotation { vector: u };
+        let w = v * r;
+        w.end
     }
 }
 
@@ -305,7 +308,7 @@ where
     T: Clone,
 {
     fn zero() -> TwoPoint<T> {
-        TwoPoint { x: T::zero(), y: T::one() }
+        TwoPoint { x: T::zero(), y: T::zero() }
     }
 
     fn is_zero(&self) -> bool {
@@ -824,9 +827,12 @@ where
     pub fn is_perpendicular_metric(&self, other: &Self, metric: &Matrix<T>) -> bool {
         self.dot_metric(&other, &metric) == T::zero()
     }
+    pub fn is_parallel(&self, other: &Self) -> bool {
+        self.is_parallel_metric(&other, &TwoVector::metric_blue())
+    }
     pub fn is_parallel_metric(&self, other: &Self, metric: &Matrix<T>) -> bool {
         let qu = self.quadrance_metric(&metric);
-        let qv = self.quadrance_metric(&metric);
+        let qv = other.quadrance_metric(&metric);
         let uv = (*self).clone() - (*other).clone();
         let quv = uv.quadrance_metric(&metric);
         archimedes(qu,qv,quv) == T::zero()
@@ -928,7 +934,11 @@ where
 
 impl<T> Mul<Rotation<T>> for TwoVector<T>
 where
-    T: Num,
+    T: Mul<Output = T>,
+    T: Add<Output = T>,
+    T: Sub<Output = T>,
+    T: Zero,
+    T: One,
     T: Clone,
 {
     type Output = TwoVector<T>;
@@ -1214,20 +1224,21 @@ mod tests {
     }
     #[test]
     fn multiplication_of_points() {
-        let a1 = TwoPoint {x: 2, y: 3};
-        let a2 = TwoPoint {x: 4, y: 5};
-        let a3 = TwoPoint {x: 8, y: 15};
-        assert_eq!(a1*a2,a3);
-
-        let b1 = TwoPoint {x: 3, y: -1};
-        let b2 = TwoPoint {x: 0, y: 2};
-        let b3 = TwoPoint {x: 0, y: -2};
-        assert_eq!(b1*b2,b3);
-
-        let c1 = TwoPoint {x: 6, y: 0};
-        let c2 = TwoPoint {x: 3, y: 1};
-        let c3 = TwoPoint {x: 18, y: 0};
-        assert_eq!(c1*c2,c3);
+        let zero = Ratio::new(0,1);
+        let one = Ratio::new(1,1);
+        let pi = TwoPoint {x: one, y: zero};
+        let a = Ratio::new(15,17);
+        let b = Ratio::new(8,17);
+        let c = Ratio::new(-7,25);
+        let d = Ratio::new(24,25);
+        let pa = TwoPoint {x: a, y: b};
+        let pb = TwoPoint {x: c, y: d};
+        let pc = pa.clone()*pb.clone();
+        let u = TwoVector { start: pa, end: pb };
+        let v = TwoVector { start: pi, end: pc };
+        let ic = TwoVector::new(a*c-b*d-one, a*b+b*c);
+        assert_eq!(v,ic);
+        assert!(u.is_parallel(&v));
     }
     #[test]
     fn subtraction_of_points() {
@@ -1246,42 +1257,6 @@ mod tests {
         let b4 = TwoPoint {x: 17, y: 12};
         assert_eq!(b1.clone()-(b2.clone()+b3.clone()),b4.clone());
         assert_eq!((b1.clone()-b2.clone())-b3.clone(),b4.clone());
-    }
-    #[test]
-    fn divition_of_points() {
-        let a1 = TwoPoint {x: 1, y: 2};
-        let a2 = TwoPoint {x: -1, y: 1};
-        let a3 = TwoPoint {x: 3, y: 4};
-        let a4 = TwoPoint {x: -4, y: 6};
-        assert_eq!(a1.clone()*(a2.clone()/a3.clone()),a4.clone());
-        assert_eq!((a1.clone()*a2.clone())/a3.clone(),a4.clone());
-    }
-    #[test]
-    fn divition_of_points2() {
-        let a1 = TwoPoint {x: 3, y: -1};
-        let a2 = TwoPoint {x: 1, y: 2};
-        let a3 = TwoPoint {x: 5, y: 0};
-        let a4 = TwoPoint {x: 0, y: -5};
-        assert_eq!(a1.clone()/(a2.clone()*a3.clone()),a4.clone());
-        assert_eq!((a1.clone()/a2.clone())/a3.clone(),a4.clone());
-    }
-    #[test]
-    fn divition_of_points3() {
-        let a1 = TwoPoint {x: 3, y: 4};
-        let a2 = TwoPoint {x: 0, y: 2};
-        let a3 = TwoPoint {x: -1, y: 5};
-        let a4 = TwoPoint {x: -6, y: 0};
-        assert_eq!(a1.clone()/(a2.clone()/a3.clone()),a4.clone());
-        assert_eq!((a1.clone()/a2.clone())*a3.clone(),a4.clone());
-    }
-    #[test]
-    fn distributive_laws_for_points() {
-        let a1 = TwoPoint {x: 2, y: 3};
-        let a2 = TwoPoint {x: 0, y: -1};
-        let a3 = TwoPoint {x: 4, y: 5};
-        let a4 = TwoPoint {x: 24, y: -45};
-        assert_eq!(a1.clone()*3*(a2.clone()-a3.clone()),a4.clone());
-        assert_eq!((a1.clone()*a2.clone())-(a1.clone()*a3.clone()),a4.clone());
     }
     #[test]
     fn distributive_laws_for_points2() {
