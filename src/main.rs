@@ -299,5 +299,38 @@ mod tests {
         let ehk = half_slope(hk.clone());
         assert_eq!(eh*ek,ehk);
     }
+    #[test]
+    fn proof_multiplications_of_rotations_and_reflections_with_half_slopes() {
+        let pone = PolyNumber::new(vec![PolyNumber::new(vec![Ratio::<i128>::new(1,1)])]);
+        let ph = PolyNumber::new(vec![PolyNumber::new(vec![Ratio::new(0,1),Ratio::new(1,1)])]);
+        let pk = PolyNumber::new(vec![PolyNumber::new(vec![Ratio::new(0,1)]),
+                                     PolyNumber::new(vec![Ratio::new(1,1)])]);
+        let one = PolyRatio::new(pone.clone(),pone.clone());
+
+        let h = PolyRatio::new(ph.clone(),pone.clone());
+        let k = PolyRatio::new(pk.clone(),pone.clone());
+        let hk1 = (k.clone()-h.clone())/(one.clone() + h.clone()*k.clone());
+        let hk2 = (k.clone()+h.clone())/(one.clone() - h.clone()*k.clone());
+
+        let eh = half_slope(h.clone());
+        let ek = half_slope(k.clone());
+        let ehk1 = half_slope(hk1.clone());
+        let ehk2 = half_slope(hk2.clone());
+
+        let vh = TwoVector::new0e(eh);
+        let vk = TwoVector::new0e(ek);
+        let vhk1 = TwoVector::new0e(ehk1);
+        let vhk2 = TwoVector::new0e(ehk2);
+
+        let sh = affinegeo::Reflection::new(vh.clone());
+        let sk = affinegeo::Reflection::new(vk.clone());
+        let rh = affinegeo::Rotation::new(vh.clone());
+        let rk = affinegeo::Rotation::new(vk.clone());
+
+        assert_eq!(sh.clone()*sk.clone(),affinegeo::Rotation::new(vhk1.clone()));
+        assert_eq!(rh.clone()*rk.clone(),affinegeo::Rotation::new(vhk2.clone()));
+        assert_eq!(sh.clone()*rk.clone(),affinegeo::Reflection::new(vhk2.clone()));
+        assert_eq!(rh.clone()*sk.clone(),affinegeo::Reflection::new(vhk1.clone()));
+    }
 }
 

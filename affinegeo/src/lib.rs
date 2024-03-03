@@ -716,6 +716,10 @@ where
                    end: TwoPoint {x: a, y: b}}
     }
 
+    pub fn new0e(end: TwoPoint<T>) -> TwoVector<T> {
+        TwoVector {start: TwoPoint {x: T::zero(), y: T::zero()}, end: end }
+    }
+
     pub fn dx(&self) -> T {
         let dx = self.end.x.clone() - self.start.x.clone();
         return dx;
@@ -936,6 +940,13 @@ pub struct Rotation<T> {
     vector: TwoVector<T>,
 }
 
+impl<T> Rotation<T>
+{
+    pub fn new(vector: TwoVector<T>) -> Rotation<T> {
+        Rotation { vector: vector }
+    }
+}
+
 impl<T> PartialEq for Rotation<T>
 where
     T: Mul<Output = T>,
@@ -975,7 +986,11 @@ where
 
 impl<T> Mul<Rotation<T>> for Rotation<T>
 where
-    T: Num,
+    T: Mul<Output = T>,
+    T: Add<Output = T>,
+    T: Sub<Output = T>,
+    T: Zero,
+    T: One,
     T: Clone,
 {
     type Output = Rotation<T>;
@@ -996,7 +1011,11 @@ where
 
 impl<T> Mul<Reflection<T>> for Rotation<T>
 where
-    T: Num,
+    T: Mul<Output = T>,
+    T: Add<Output = T>,
+    T: Sub<Output = T>,
+    T: Zero,
+    T: One,
     T: Clone,
 {
     type Output = Reflection<T>;
@@ -1023,7 +1042,11 @@ pub struct RotationRed<T> {
 
 impl<T> Mul<RotationRed<T>> for TwoVector<T>
 where
-    T: Num,
+    T: Mul<Output = T>,
+    T: Add<Output = T>,
+    T: Sub<Output = T>,
+    T: Zero,
+    T: One,
     T: Clone,
 {
     type Output = TwoVector<T>;
@@ -1049,7 +1072,11 @@ pub struct RotationGreen<T> {
 
 impl<T> Mul<RotationGreen<T>> for TwoVector<T>
 where
-    T: Num,
+    T: Mul<Output = T>,
+    T: Add<Output = T>,
+    T: Sub<Output = T>,
+    T: Zero,
+    T: One,
     T: Clone,
 {
     type Output = TwoVector<T>;
@@ -1073,9 +1100,33 @@ pub struct Reflection<T> {
     vector: TwoVector<T>,
 }
 
+impl<T> Reflection<T>
+{
+    pub fn new(vector: TwoVector<T>) -> Reflection<T> {
+        Reflection { vector: vector }
+    }
+}
+
+impl<T> PartialEq for Reflection<T>
+where
+    T: Mul<Output = T>,
+    T: Add<Output = T>,
+    T: Sub<Output = T>,
+    T: Zero,
+    T: Clone,
+{
+    fn eq(&self, other: &Self) -> bool {
+        self.vector == other.vector
+    }
+}
+
 impl<T> Mul<Reflection<T>> for TwoVector<T>
 where
-    T: Num,
+    T: Mul<Output = T>,
+    T: Add<Output = T>,
+    T: Sub<Output = T>,
+    T: Zero,
+    T: One,
     T: Clone,
 {
     type Output = TwoVector<T>;
@@ -1095,7 +1146,11 @@ where
 
 impl<T> Mul<Reflection<T>> for Reflection<T>
 where
-    T: Num,
+    T: Mul<Output = T>,
+    T: Add<Output = T>,
+    T: Sub<Output = T>,
+    T: Zero,
+    T: One,
     T: Clone,
 {
     type Output = Rotation<T>;
@@ -1116,7 +1171,11 @@ where
 
 impl<T> Mul<Rotation<T>> for Reflection<T>
 where
-    T: Num,
+    T: Mul<Output = T>,
+    T: Add<Output = T>,
+    T: Sub<Output = T>,
+    T: Zero,
+    T: One,
     T: Clone,
 {
     type Output = Reflection<T>;
@@ -1143,7 +1202,11 @@ pub struct ReflectionRed<T> {
 
 impl<T> Mul<ReflectionRed<T>> for TwoVector<T>
 where
-    T: Num,
+    T: Mul<Output = T>,
+    T: Add<Output = T>,
+    T: Sub<Output = T>,
+    T: Zero,
+    T: One,
     T: Clone,
 {
     type Output = TwoVector<T>;
@@ -1169,7 +1232,11 @@ pub struct ReflectionGreen<T> {
 
 impl<T> Mul<ReflectionGreen<T>> for TwoVector<T>
 where
-    T: Num,
+    T: Mul<Output = T>,
+    T: Add<Output = T>,
+    T: Sub<Output = T>,
+    T: Zero,
+    T: One,
     T: Clone,
 {
     type Output = TwoVector<T>;
