@@ -908,9 +908,67 @@ where
     type Output = TwoVector<T>;
 
     fn mul(self, r: Rotation<T>) -> TwoVector<T> {
-        let a = r.vector.dx()*self.dx() - r.vector.dy()*self.dy();
-        let b = r.vector.dy()*self.dx() + r.vector.dx()*self.dy();
-        TwoVector::new(a, b)
+        let a = r.vector.dx();
+        let b = r.vector.dy();
+        let x = self.dx();
+        let y = self.dy();
+        let v = RowVector::new(vec![x,y]);
+        let m = Matrix::new(vec![vec![a.clone(),b.clone()],
+                                 vec![T::zero()-b,a]]);
+        let u = v*m;
+        TwoVector::new(u.get(0), u.get(1))
+    }
+}
+
+/// Red Rotation
+#[derive(Clone)]
+pub struct RotationRed<T> {
+    vector: TwoVector<T>,
+}
+
+impl<T> Mul<RotationRed<T>> for TwoVector<T>
+where
+    T: Num,
+    T: Clone,
+{
+    type Output = TwoVector<T>;
+
+    fn mul(self, r: RotationRed<T>) -> TwoVector<T> {
+        let a = r.vector.dx();
+        let b = r.vector.dy();
+        let x = self.dx();
+        let y = self.dy();
+        let v = RowVector::new(vec![x,y]);
+        let m = Matrix::new(vec![vec![a.clone(),b.clone()],
+                                 vec![b,a]]);
+        let u = v*m;
+        TwoVector::new(u.get(0), u.get(1))
+    }
+}
+
+/// Green Rotation
+#[derive(Clone)]
+pub struct RotationGreen<T> {
+    vector: TwoVector<T>,
+}
+
+impl<T> Mul<RotationGreen<T>> for TwoVector<T>
+where
+    T: Num,
+    T: Clone,
+{
+    type Output = TwoVector<T>;
+
+    fn mul(self, r: RotationGreen<T>) -> TwoVector<T> {
+        let a = r.vector.dx();
+        let b = r.vector.dy();
+        let x = self.dx();
+        let y = self.dy();
+        let v = RowVector::new(vec![x,y]);
+        let m = Matrix::new(vec![vec![a,T::zero()],
+                                 vec![T::zero(),b]]);
+        let u = v*m;
+        TwoVector::new(u.get(0), u.get(1))
     }
 }
 
@@ -928,9 +986,67 @@ where
     type Output = TwoVector<T>;
 
     fn mul(self, r: Reflection<T>) -> TwoVector<T> {
-        let a = r.vector.dx()*self.dx() + r.vector.dy()*self.dy();
-        let b = r.vector.dy()*self.dx() - r.vector.dx()*self.dy();
-        TwoVector::new(a, b)
+        let a = r.vector.dx();
+        let b = r.vector.dy();
+        let x = self.dx();
+        let y = self.dy();
+        let v = RowVector::new(vec![x,y]);
+        let m = Matrix::new(vec![vec![a.clone(),b.clone()],
+                                 vec![b,T::zero()-a]]);
+        let u = v*m;
+        TwoVector::new(u.get(0), u.get(1))
+    }
+}
+
+/// Red Reflection
+#[derive(Clone)]
+pub struct ReflectionRed<T> {
+    vector: TwoVector<T>,
+}
+
+impl<T> Mul<ReflectionRed<T>> for TwoVector<T>
+where
+    T: Num,
+    T: Clone,
+{
+    type Output = TwoVector<T>;
+
+    fn mul(self, r: ReflectionRed<T>) -> TwoVector<T> {
+        let a = r.vector.dx();
+        let b = r.vector.dy();
+        let x = self.dx();
+        let y = self.dy();
+        let v = RowVector::new(vec![x,y]);
+        let m = Matrix::new(vec![vec![a.clone(),b.clone()],
+                                 vec![T::zero()-b,T::zero()-a]]);
+        let u = v*m;
+        TwoVector::new(u.get(0), u.get(1))
+    }
+}
+
+/// Green Reflection
+#[derive(Clone)]
+pub struct ReflectionGreen<T> {
+    vector: TwoVector<T>,
+}
+
+impl<T> Mul<ReflectionGreen<T>> for TwoVector<T>
+where
+    T: Num,
+    T: Clone,
+{
+    type Output = TwoVector<T>;
+
+    fn mul(self, r: ReflectionGreen<T>) -> TwoVector<T> {
+        let a = r.vector.dx();
+        let b = r.vector.dy();
+        let x = self.dx();
+        let y = self.dy();
+        let v = RowVector::new(vec![x,y]);
+        let m = Matrix::new(vec![vec![T::zero(),b],
+                                 vec![a,T::zero()]]);
+        let u = v*m;
+        TwoVector::new(u.get(0), u.get(1))
     }
 }
 

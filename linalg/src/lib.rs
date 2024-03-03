@@ -33,7 +33,7 @@ where
         RowVector { elem: elem }
     }
 
-    fn get(&self, ci: usize) -> T {
+    pub fn get(&self, ci: usize) -> T {
         let v = self.elem.get(ci);
 
         let value = match v {
@@ -127,7 +127,7 @@ where
         ColumnVector { elem: elem }
     }
 
-    fn get(&self, ri: usize) -> T {
+    pub fn get(&self, ri: usize) -> T {
         let v = self.elem.get(ri);
 
         let value = match v {
