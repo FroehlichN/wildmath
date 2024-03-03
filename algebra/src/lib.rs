@@ -309,17 +309,6 @@ where
     factorial(n)/(factorial(k)*factorial(n-k))
 }
 
-pub fn archimedes<T>(x: T, y: T, z: T) -> T
-where
-    T: Add<Output = T> + Sub<Output = T> + Mul<Output = T> + One,
-    T: Clone,
-{
-    let two = T::one() + T::one();
-    let xyz = x.clone() + y.clone() + z.clone();
-    let xyz2 = xyz.clone() * xyz;
-    xyz2 - two * (x.clone()*x + y.clone()*y + z.clone()*z)
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;

@@ -19,11 +19,24 @@ limitations under the License.
 use num::{Num, Zero, One, Signed};
 use std::ops::{Mul, Add, Sub, Div};
 use linalg::{Matrix, RowVector, ColumnVector};
-use algebra::{archimedes};
+
 
 pub trait Point {
     fn is_collinear(&self, a2: &Self, a3: &Self) -> bool;
 }
+
+
+pub fn archimedes<T>(x: T, y: T, z: T) -> T
+where
+    T: Add<Output = T> + Sub<Output = T> + Mul<Output = T> + One,
+    T: Clone,
+{
+    let two = T::one() + T::one();
+    let xyz = x.clone() + y.clone() + z.clone();
+    let xyz2 = xyz.clone() * xyz;
+    xyz2 - two * (x.clone()*x + y.clone()*y + z.clone()*z)
+}
+
 
 /// Represents a 1D point
 #[derive(Debug, Clone)]
@@ -112,15 +125,23 @@ where
     }
 
     pub fn quadrance(&self, other: &Self) -> T {
-        let dx = other.x.clone() - self.x.clone();
-        let dy = other.y.clone() - self.y.clone();
-        dx.clone()*dx + dy.clone()*dy
+        let v = TwoVector { start: self.clone(), end: other.clone() };
+        v.quadrance_blue()
     }
 
     pub fn quadrance_red(&self, other: &Self) -> T {
-        let dx = other.x.clone() - self.x.clone();
-        let dy = other.y.clone() - self.y.clone();
-        dx.clone()*dx - dy.clone()*dy
+        let v = TwoVector { start: self.clone(), end: other.clone() };
+        v.quadrance_red()
+    }
+
+    pub fn quadrance_green(&self, other: &Self) -> T {
+        let v = TwoVector { start: self.clone(), end: other.clone() };
+        v.quadrance_green()
+    }
+
+    pub fn quadrance_metric(&self, other: &Self, metric: &Matrix<T>) -> T {
+        let v = TwoVector { start: self.clone(), end: other.clone() };
+        v.quadrance_metric(&metric)
     }
 }
 
@@ -705,7 +726,6 @@ where
     T: Div<Output = T>,
     T: Zero,
     T: One,
-    T: PartialEq,
     T: Clone,
 {
     pub fn dot_blue(&self, other: &Self) -> T {
@@ -727,16 +747,6 @@ where
         let v2 = ColumnVector::new(vec![c, d]);
 
         v1*(*metric).clone()*v2
-    }
-    pub fn is_perpendicular_metric(&self, other: &Self, metric: &Matrix<T>) -> bool {
-        self.dot_metric(&other, &metric) == T::zero()
-    }
-    pub fn is_parallel_metric(&self, other: &Self, metric: &Matrix<T>) -> bool {
-        let qu = self.quadrance_metric(&metric);
-        let qv = self.quadrance_metric(&metric);
-        let uv = (*self).clone() - (*other).clone();
-        let quv = uv.quadrance_metric(&metric);
-        archimedes(qu,qv,quv) == T::zero()
     }
     pub fn cross(&self, other: &Self) -> T {
         let a = self.dx();
@@ -783,6 +793,30 @@ where
         let dot = self.dot_metric(&other, &metric);
         let dot2 = dot.clone() * dot;
         T::one() - dot2 / (self.quadrance_metric(&metric) * other.quadrance_metric(&metric))
+    }
+}
+
+
+impl<T> TwoVector<T>
+where
+    T: Mul<Output = T>,
+    T: Add<Output = T>,
+    T: Sub<Output = T>,
+    T: Div<Output = T>,
+    T: Zero,
+    T: One,
+    T: PartialEq,
+    T: Clone,
+{
+    pub fn is_perpendicular_metric(&self, other: &Self, metric: &Matrix<T>) -> bool {
+        self.dot_metric(&other, &metric) == T::zero()
+    }
+    pub fn is_parallel_metric(&self, other: &Self, metric: &Matrix<T>) -> bool {
+        let qu = self.quadrance_metric(&metric);
+        let qv = self.quadrance_metric(&metric);
+        let uv = (*self).clone() - (*other).clone();
+        let quv = uv.quadrance_metric(&metric);
+        archimedes(qu,qv,quv) == T::zero()
     }
 }
 
