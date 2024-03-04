@@ -54,6 +54,17 @@ where
     TwoPoint::new(x,y)
 }
 
+pub fn circle_sum<T>(h1: T, h2: T) -> T
+where
+    T: One,
+    T: Add<Output = T>,
+    T: Sub<Output = T>,
+    T: Mul<Output = T>,
+    T: Div<Output = T>,
+    T: Clone,
+{
+    (h1.clone() + h2.clone()) / (T::one() - h1*h2)
+}
 
 /// Represents a 1D point
 #[derive(Debug, Clone)]

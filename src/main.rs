@@ -332,5 +332,23 @@ mod tests {
         assert_eq!(sh.clone()*rk.clone(),affinegeo::Reflection::new(vhk2.clone()));
         assert_eq!(rh.clone()*sk.clone(),affinegeo::Reflection::new(vhk1.clone()));
     }
+    #[test]
+    fn proof_addition_theorem_for_circle_sum() {
+        let pone = PolyNumber::new(vec![PolyNumber::new(vec![PolyNumber::new(vec![Ratio::new(1,1)])])]);
+        let ph1 = PolyNumber::new(vec![PolyNumber::new(vec![PolyNumber::new(vec![Ratio::new(0,1),Ratio::new(1,1)])])]);
+        let ph2 = PolyNumber::new(vec![PolyNumber::new(vec![PolyNumber::new(vec![Ratio::new(0,1)]),
+                                                            PolyNumber::new(vec![Ratio::new(1,1)])])]);
+        let ph3 = PolyNumber::new(vec![PolyNumber::new(vec![PolyNumber::new(vec![Ratio::new(0,1)])]),
+                                       PolyNumber::new(vec![PolyNumber::new(vec![Ratio::new(1,1)])])]);
+
+        let one = PolyRatio::new(pone.clone(),pone.clone());
+        let h1 = PolyRatio::new(ph1,pone.clone());
+        let h2 = PolyRatio::new(ph2,pone.clone());
+        let h3 = PolyRatio::new(ph3,pone.clone());
+
+        let h123 = (h1.clone() + h2.clone() + h3.clone() - h1.clone()*h2.clone()*h3.clone())
+                    /(one - (h1.clone()*h2.clone() + h2.clone()*h3.clone() + h1.clone()*h3.clone()));
+        assert_eq!(circle_sum(circle_sum(h1.clone(),h2.clone()),h3.clone()),h123);
+    }
 }
 
