@@ -334,12 +334,10 @@ mod tests {
     }
     #[test]
     fn proof_addition_theorem_for_circle_sum() {
-        let pone = PolyNumber::new(vec![PolyNumber::new(vec![PolyNumber::new(vec![Ratio::new(1,1)])])]);
-        let ph1 = PolyNumber::new(vec![PolyNumber::new(vec![PolyNumber::new(vec![Ratio::new(0,1),Ratio::new(1,1)])])]);
-        let ph2 = PolyNumber::new(vec![PolyNumber::new(vec![PolyNumber::new(vec![Ratio::new(0,1)]),
-                                                            PolyNumber::new(vec![Ratio::new(1,1)])])]);
-        let ph3 = PolyNumber::new(vec![PolyNumber::new(vec![PolyNumber::new(vec![Ratio::new(0,1)])]),
-                                       PolyNumber::new(vec![PolyNumber::new(vec![Ratio::new(1,1)])])]);
+        let pone = create_polynumber_one!(h1,h2,h3; Ratio::<i32>);
+        let ph1 = create_polynumber_var!(h1; h1,h2,h3; Ratio::<i32>);
+        let ph2 = create_polynumber_var!(h2; h1,h2,h3; Ratio::<i32>);
+        let ph3 = create_polynumber_var!(h3; h1,h2,h3; Ratio::<i32>);
 
         let one = PolyRatio::new(pone.clone(),pone.clone());
         let h1 = PolyRatio::new(ph1,pone.clone());

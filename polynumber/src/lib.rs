@@ -19,6 +19,63 @@ use num::{Zero,One};
 use std::ops::{Mul, Add, Sub, Div};
 use std::fmt::Debug;
 
+/// Construct variables of a polynumber, commonly known as polynomial.
+/// first argument is the wanted variable.
+/// second argument is the list of all variables sepearated by commas ,.
+/// ctype is the type of the coefficients. The type has to implement Zero and One.
+/// E.g. for a polynomial in two variables like 1 + 3x - 5.7xy^2, you can
+/// create the x with
+///   let x = create_polynumber_var(x; x,y ; Ratio::<i64>)
+/// and the y with
+///   let y = create_polynumber_var(y; x,y ; Ratio::<i64>)
+#[macro_export]
+macro_rules! create_polynumber_var {
+    ( $var: ident ; $first: ident ; $ctype: ty) => {
+        $crate::PolyNumber::new(vec![ <$ctype>::zero(), <$ctype>::one() ])
+    };
+    ( $var: ident ; $first: ident, $( $tail: ident ),+ ; $ctype: ty) => {
+        {
+            let mut n = Vec::new();
+            if stringify!($var) == stringify!($first) {
+                n.push( $crate::create_polynumber_zero!( $($tail),* ; $ctype ) );
+                n.push( $crate::create_polynumber_one!( $($tail),* ; $ctype ) );
+            } else {
+                n.push( $crate::create_polynumber_var!( $var; $($tail),* ; $ctype ) );
+            }
+            $crate::PolyNumber::new(n)
+        }
+    };
+}
+
+/// Construct a polynumber, commonly known as polynomial, equal one.
+/// first argument is the list of all variables.
+/// ctype is the type of the coefficients. The type has to implement Zero and One.
+#[macro_export]
+macro_rules! create_polynumber_one {
+    ( $first: ident ; $ctype: ty) => {
+        $crate::PolyNumber::new(vec![ <$ctype>::one() ])
+    };
+
+    ( $first: ident, $( $tail: ident ),+ ; $ctype: ty) => {
+        $crate::PolyNumber::new(vec![ $crate::create_polynumber_one!( $($tail),* ; $ctype ) ])
+    };
+
+}
+
+/// Construct a polynumber, commonly known as polynomial, equal zero.
+/// first argument is the list of all variables.
+/// ctype is the type of the coefficients. The type has to implement Zero and One.
+#[macro_export]
+macro_rules! create_polynumber_zero {
+    ( $first: ident ; $ctype: ty) => {
+        $crate::PolyNumber::new(vec![ <$ctype>::zero() ])
+    };
+
+    ( $first: ident , $( $tail: ident ),+ ; $ctype: ty) => {
+        $crate::PolyNumber::new(vec![ $crate::create_polynumber_zero!( $($tail),* ; $ctype) ])
+    };
+
+}
 
 #[derive(Debug, Clone)]
 pub struct PolyNumber<T> {
@@ -567,9 +624,10 @@ mod tests {
     }
     #[test]
     fn evaluate_poly_number_at_bi_poly_number() {
+        let alpha = create_polynumber_var!(alpha; alpha,beta ; i32);
+        let beta  = create_polynumber_var!(beta;  alpha,beta ; i32);
+        let p = alpha + beta;
         let q = PolyNumber { n: vec![-4,7,10,-6,2] };
-        let p = PolyNumber { n: vec![ PolyNumber { n: vec![0,1] },
-                                      PolyNumber { n: vec![1,0] } ] };
         let t = PolyNumber { n: vec![ PolyNumber { n: vec![-4,  7, 10,-6,2] },
                                       PolyNumber { n: vec![ 7, 20,-18, 8] },
                                       PolyNumber { n: vec![10,-18,12] },
@@ -643,6 +701,30 @@ mod tests {
                     PolyNumber{ n: vec![ // d^2
                         PolyNumber{ n: vec![ // b^0
                             PolyNumber{ n: vec![1] } ] } ] } ] }; // d^2
+        assert_eq!(p.taylor2(),t);
+    }
+    #[test]
+    fn taylor_expansion_for_bi_polynumbers_with_macros() {
+        // create bi-polynumbers
+        let ba = create_polynumber_var!(a; a,b ; i32);
+        let bb  = create_polynumber_var!(b;  a,b ; i32);
+        let bone = create_polynumber_one!(a,b ; i32);
+
+        let p = ba.clone()*ba.clone() - bone.clone() + bb.clone()*bb.clone();
+
+        // create quad-polynumbers
+        let qa = create_polynumber_var!(a; a,g,b,d ; i32);
+        let qb  = create_polynumber_var!(b;  a,g,b,d ; i32);
+        let qd = create_polynumber_var!(d; a,g,b,d ; i32);
+        let qg  = create_polynumber_var!(g;  a,g,b,d ; i32);
+        let qone = create_polynumber_one!(a,g,b,d ; i32);
+        let qtwo = qone.clone() + qone.clone();
+
+        let t = qa.clone()*qa.clone() - qone.clone()
+                + qtwo.clone()*qa.clone()*qg.clone() + qg.clone()*qg.clone()
+                + qb.clone()*qb.clone() + qtwo.clone()*qb.clone()*qd.clone()
+                + qd.clone()*qd.clone();
+
         assert_eq!(p.taylor2(),t);
     }
     #[test]
