@@ -70,6 +70,7 @@ mod tests {
     use finite::*;
     use projectivegeo::*;
     use num::rational::Ratio;
+    use num::BigInt;
 
     create_finite_field!(3);
     create_finite_field!(5);
@@ -461,6 +462,51 @@ mod tests {
         let vde = TwoVector::newse(pd.clone(),pe.clone());
 
         assert_eq!(vw*half,vde);
+    }
+    #[test]
+    fn proof_varignons_theorem() {
+        let polone = create_polynumber_one!(ax,ay,bx,by,cx,cy,dx,dy; Ratio::<BigInt>);
+        let polax = create_polynumber_var!(ax; ax,ay,bx,by,cx,cy,dx,dy; Ratio::<BigInt>);
+        let polay = create_polynumber_var!(ay; ax,ay,bx,by,cx,cy,dx,dy; Ratio::<BigInt>);
+        let polbx = create_polynumber_var!(bx; ax,ay,bx,by,cx,cy,dx,dy; Ratio::<BigInt>);
+        let polby = create_polynumber_var!(by; ax,ay,bx,by,cx,cy,dx,dy; Ratio::<BigInt>);
+        let polcx = create_polynumber_var!(cx; ax,ay,bx,by,cx,cy,dx,dy; Ratio::<BigInt>);
+        let polcy = create_polynumber_var!(cy; ax,ay,bx,by,cx,cy,dx,dy; Ratio::<BigInt>);
+        let poldx = create_polynumber_var!(dx; ax,ay,bx,by,cx,cy,dx,dy; Ratio::<BigInt>);
+        let poldy = create_polynumber_var!(dy; ax,ay,bx,by,cx,cy,dx,dy; Ratio::<BigInt>);
+
+        let half = PolyRatio::new(polone.clone(),polone.clone()+polone.clone());
+        let ax = PolyRatio::new(polax,polone.clone());
+        let ay = PolyRatio::new(polay,polone.clone());
+        let bx = PolyRatio::new(polbx,polone.clone());
+        let by = PolyRatio::new(polby,polone.clone());
+        let cx = PolyRatio::new(polcx,polone.clone());
+        let cy = PolyRatio::new(polcy,polone.clone());
+        let dx = PolyRatio::new(poldx,polone.clone());
+        let dy = PolyRatio::new(poldy,polone.clone());
+
+        let pa = TwoPoint::new(ax.clone(),ay);
+        let pb = TwoPoint::new(bx,by);
+        let pc = TwoPoint::new(cx,cy);
+        let pd = TwoPoint::new(dx,dy);
+
+        let vab = TwoVector::newse(pa.clone(),pb.clone());
+        let vbc = TwoVector::newse(pb.clone(),pc.clone());
+        let vcd = TwoVector::newse(pc.clone(),pd.clone());
+        let vda = TwoVector::newse(pd.clone(),pa.clone());
+
+        let pmab = pa.clone() + vab.clone()*half.clone();
+        let pmbc = pb.clone() + vbc.clone()*half.clone();
+        let pmcd = pc.clone() + vcd.clone()*half.clone();
+        let pmda = pd.clone() + vda.clone()*half.clone();
+
+        let vmabmbc = TwoVector::newse(pmab.clone(),pmbc.clone());
+        let vmbcmcd = TwoVector::newse(pmbc.clone(),pmcd.clone());
+        let vmcdmda = TwoVector::newse(pmcd.clone(),pmda.clone());
+        let vmdamab = TwoVector::newse(pmda.clone(),pmab.clone());
+
+        assert!(vmabmbc.is_parallel(&vmcdmda));
+        assert!(vmbcmcd.is_parallel(&vmdamab));
     }
 }
 
