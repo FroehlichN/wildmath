@@ -348,5 +348,44 @@ mod tests {
                     /(one - (h1.clone()*h2.clone() + h2.clone()*h3.clone() + h1.clone()*h3.clone()));
         assert_eq!(circle_sum(circle_sum(h1.clone(),h2.clone()),h3.clone()),h123);
     }
+    #[test]
+    fn proof_diagnoals_of_parallelogram_bisect_each_other() {
+        let polone = create_polynumber_one!(ax,ay,bx,by,dx,dy; Ratio::<i32>);
+        let polax = create_polynumber_var!(ax; ax,ay,bx,by,dx,dy; Ratio::<i32>);
+        let polay = create_polynumber_var!(ay; ax,ay,bx,by,dx,dy; Ratio::<i32>);
+        let polbx = create_polynumber_var!(bx; ax,ay,bx,by,dx,dy; Ratio::<i32>);
+        let polby = create_polynumber_var!(by; ax,ay,bx,by,dx,dy; Ratio::<i32>);
+        let poldx = create_polynumber_var!(dx; ax,ay,bx,by,dx,dy; Ratio::<i32>);
+        let poldy = create_polynumber_var!(dy; ax,ay,bx,by,dx,dy; Ratio::<i32>);
+
+        let ax = PolyRatio::new(polax,polone.clone());
+        let ay = PolyRatio::new(polay,polone.clone());
+        let bx = PolyRatio::new(polbx,polone.clone());
+        let by = PolyRatio::new(polby,polone.clone());
+        let dx = PolyRatio::new(poldx,polone.clone());
+        let dy = PolyRatio::new(poldy,polone.clone());
+
+        let pa = TwoPoint::new(ax,ay);
+        let pb = TwoPoint::new(bx,by);
+        let pd = TwoPoint::new(dx,dy);
+
+        let vv = TwoVector::newse(pa.clone(),pb.clone());
+        let vu = TwoVector::newse(pa.clone(),pd.clone());
+
+        let pc = pa.clone() + vu.clone() + vv.clone();
+
+        let lac = TwoLine::newpv(&pa,&(vu.clone()+vv.clone()));
+        let lbd = TwoLine::newpv(&pb,&(vu.clone()-vv.clone()));
+
+        let pe = lac.meet(&lbd);
+
+        let vae = TwoVector::newse(pa.clone(),pe.clone());
+        let vec = TwoVector::newse(pe.clone(),pc.clone());
+        let vbe = TwoVector::newse(pb.clone(),pe.clone());
+        let ved = TwoVector::newse(pe.clone(),pd.clone());
+
+        assert_eq!(vae,vec);
+        assert_eq!(vbe,ved);
+    }
 }
 

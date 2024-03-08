@@ -122,6 +122,13 @@ pub struct TwoPoint<T> {
 }
 
 impl<T> TwoPoint<T>
+{
+    pub fn new(x: T, y: T) -> TwoPoint<T> {
+        TwoPoint {x: x, y: y}
+    }
+}
+
+impl<T> TwoPoint<T>
 where
     T: Mul<Output = T>,
     T: Add<Output = T>,
@@ -131,10 +138,6 @@ where
     T: One,
     T: Clone,
 {
-    pub fn new(x: T, y: T) -> TwoPoint<T> {
-        TwoPoint {x: x, y: y}
-    }
-
     pub fn lies_on(&self, l: &TwoLine<T>) -> bool {
         let r = l.a.clone() * self.x.clone()
               + l.b.clone() * self.y.clone() + l.c.clone();
@@ -384,6 +387,34 @@ impl<T> TwoLine<T> {
 
 impl<T> TwoLine<T>
 where
+    T: Zero,
+{
+    pub fn new(a: T, b: T, c: T) -> TwoLine<T> {
+        if a.is_zero() && b.is_zero() {
+            panic!("Line has proportion of <0:0:c>");
+        }
+        TwoLine::new_raw(a, b, c)
+    }
+}
+
+impl<T> TwoLine<T>
+where
+    T: Mul<Output = T>,
+    T: Sub<Output = T>,
+    T: Zero,
+    T: Clone,
+{
+    pub fn newpv(p: &TwoPoint<T>, v: &TwoVector<T>) -> TwoLine<T> {
+        let vx = v.dx();
+        let vy = v.dy();
+        let c1 = p.x.clone() * vy.clone() - p.y.clone() * vx.clone();
+        let c2 = p.y.clone() * vx.clone() - p.x.clone() * vy.clone();
+        TwoLine::new(c1.clone() * vy, c2.clone() * vx, c1*c2)
+    }
+}
+
+impl<T> TwoLine<T>
+where
     T: Mul<Output = T>,
     T: Add<Output = T>,
     T: Sub<Output = T>,
@@ -392,21 +423,6 @@ where
     T: One,
     T: Clone,
 {
-    pub fn new(a: T, b: T, c: T) -> TwoLine<T> {
-        if a.is_zero() && b.is_zero() {
-            panic!("Line has proportion of <0:0:c>");
-        }
-        TwoLine::new_raw(a, b, c)
-    }
-
-    pub fn newpv(p: &TwoPoint<T>, v: &TwoVector<T>) -> TwoLine<T> {
-        let vx = v.dx();
-        let vy = v.dy();
-        let c1 = p.x.clone() * vy.clone() - p.y.clone() * vx.clone();
-        let c2 = p.y.clone() * vx.clone() - p.x.clone() * vy.clone();
-        TwoLine::new(c1.clone() * vy, c2.clone() * vx, c1*c2)
-    }
-
     pub fn is_parallel(self, other: &Self) -> bool {
         let r = self.a * other.b.clone() - other.a.clone() * self.b;
         r.is_zero()
@@ -719,7 +735,6 @@ impl<T> TwoVector<T>
 where
     T: Clone,
     T: Zero,
-    T: One,
     T: Sub<T, Output = T>,
 {
     pub fn new(a: T, b: T) -> TwoVector<T> {
@@ -731,6 +746,10 @@ where
         TwoVector {start: TwoPoint {x: T::zero(), y: T::zero()}, end: end }
     }
 
+    pub fn newse(start: TwoPoint<T>, end: TwoPoint<T>) -> TwoVector<T> {
+        TwoVector {start: start, end: end }
+    }
+
     pub fn dx(&self) -> T {
         let dx = self.end.x.clone() - self.start.x.clone();
         return dx;
@@ -739,6 +758,15 @@ where
         let dy = self.end.y.clone() - self.start.y.clone();
         return dy;
     }
+}
+
+impl<T> TwoVector<T>
+where
+    T: Clone,
+    T: Zero,
+    T: One,
+    T: Sub<T, Output = T>,
+{
     fn metric_blue() -> Matrix<T> {
         Matrix::new(vec![vec![T::one(), T::zero()],
                     vec![T::zero(), T::one()]])
