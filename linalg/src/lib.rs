@@ -15,8 +15,8 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-use num::{Zero};
-use std::ops::{Add,Mul};
+use num::{Zero,One};
+use std::ops::{Add,Sub,Mul,Div,Neg};
 
 
 #[derive(Debug, Clone)]
@@ -201,6 +201,46 @@ where
     }
 }
 
+impl<T> Matrix<T>
+where
+    T: Zero + One,
+    T: Div<Output = T>,
+    T: Mul<Output = T>,
+    T: Sub<Output = T>,
+    T: Neg<Output = T>,
+    T: Clone,
+{
+    pub fn inverse(&self) -> Option<Matrix<T>> {
+        if self.rows == 1 && self.cols == 1 {
+            let a = self.get(0,0);
+            if a.is_zero() {
+                return None;
+            } else {
+                let b = T::one()/a;
+                return Some(Matrix::new(vec![vec![b]]));
+            }
+        } else if self.rows == 2 && self.cols == 2 {
+            let a = self.get(0,0);
+            let b = self.get(0,1);
+            let c = self.get(0,1);
+            let d = self.get(1,1);
+
+            let det = a.clone()*d.clone() - b.clone()*c.clone();
+            if det.is_zero() {
+                return None;
+            } else {
+                let ai = d/det.clone();
+                let bi = -b/det.clone();
+                let ci = -c/det.clone();
+                let di = a/det.clone();
+                let mi = Matrix::new(vec![vec![ai,bi],vec![ci,di]]);
+                return Some(mi);
+            }
+        }
+        return None;
+    }
+}
+
 impl<T> PartialEq for Matrix<T>
 where
     T: PartialEq,
@@ -305,6 +345,7 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
+    use num::rational::{Ratio};
     #[test]
     fn matrix_addition() {
         let m1 = Matrix::new(vec![vec![-1, 0], vec![0, 1]]);
@@ -332,6 +373,22 @@ mod tests {
         let v1 = ColumnVector::new(vec![1, 2]);
         let v2 = ColumnVector::new(vec![2, 8]);
         assert_eq!(m1*v1,v2);
+    }
+    #[test]
+    fn inverse_of_1d_matrix() {
+        let m1 = Matrix::new(vec![vec![0]]);
+        assert_eq!(m1.inverse(),None);
+        let m2 = Matrix::new(vec![vec![Ratio::new(2,3)]]);
+        let m3 = Matrix::new(vec![vec![Ratio::new(3,2)]]);
+        assert_eq!(m2.inverse(),Some(m3));
+    }
+    #[test]
+    fn inverse_of_2d_matrix() {
+        let m1 = Matrix::new(vec![vec![Ratio::new(3,1),Ratio::new(1,1)],
+                                  vec![Ratio::new(1,1),Ratio::new(2,1)]]);
+        let m2 = Matrix::new(vec![vec![Ratio::new(2,5),Ratio::new(-1,5)],
+                                  vec![Ratio::new(-1,5),Ratio::new(3,5)]]);
+        assert_eq!(m1.inverse(),Some(m2));
     }
 }
 
