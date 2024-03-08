@@ -429,5 +429,38 @@ mod tests {
         assert_eq!(vbg*half.clone(),vge);
         assert_eq!(vcg*half.clone(),vgd);
     }
+    #[test]
+    fn proof_vector_through_midpoints_parallel_third_side() {
+        let polone = create_polynumber_one!(ax,ay,bx,by,dx,dy; Ratio::<i64>);
+        let polax = create_polynumber_var!(ax; ax,ay,bx,by,dx,dy; Ratio::<i64>);
+        let polay = create_polynumber_var!(ay; ax,ay,bx,by,dx,dy; Ratio::<i64>);
+        let polbx = create_polynumber_var!(bx; ax,ay,bx,by,dx,dy; Ratio::<i64>);
+        let polby = create_polynumber_var!(by; ax,ay,bx,by,dx,dy; Ratio::<i64>);
+        let polcx = create_polynumber_var!(dx; ax,ay,bx,by,dx,dy; Ratio::<i64>);
+        let polcy = create_polynumber_var!(dy; ax,ay,bx,by,dx,dy; Ratio::<i64>);
+
+        let half = PolyRatio::new(polone.clone(),polone.clone()+polone.clone());
+        let ax = PolyRatio::new(polax,polone.clone());
+        let ay = PolyRatio::new(polay,polone.clone());
+        let bx = PolyRatio::new(polbx,polone.clone());
+        let by = PolyRatio::new(polby,polone.clone());
+        let cx = PolyRatio::new(polcx,polone.clone());
+        let cy = PolyRatio::new(polcy,polone.clone());
+
+        let pa = TwoPoint::new(ax,ay);
+        let pb = TwoPoint::new(bx,by);
+        let pc = TwoPoint::new(cx,cy);
+
+        let vu = TwoVector::newse(pa.clone(),pb.clone());
+        let vv = TwoVector::newse(pa.clone(),pc.clone());
+        let vw = TwoVector::newse(pb.clone(),pc.clone());
+
+        let pd = pa.clone() + vu.clone()*half.clone();
+        let pe = pa.clone() + vv.clone()*half.clone();
+
+        let vde = TwoVector::newse(pd.clone(),pe.clone());
+
+        assert_eq!(vw*half,vde);
+    }
 }
 
