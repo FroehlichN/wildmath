@@ -199,6 +199,24 @@ where
         };
         value
     }
+
+    pub fn submatrix(&self, row: usize, col: usize) -> Matrix<T> {
+        let mut m = Vec::new();
+        for ri in 0..self.rows {
+            if ri == row {
+                continue;
+            }
+            let mut row = Vec::new();
+            for ci in 0..self.cols {
+                if ci == col {
+                    continue;
+                }
+                row.push(self.get(ri,ci));
+            }
+            m.push(row);
+        }
+        Matrix { rows: self.rows-1, cols: self.cols-1, elem: m }
+    }
 }
 
 impl<T> Matrix<T>
@@ -210,13 +228,31 @@ where
     T: Neg<Output = T>,
     T: Clone,
 {
+    pub fn determinant(&self) -> T {
+        if self.rows != self.cols {
+            return T::zero();
+        } else if self.rows == 1 && self.cols == 1 {
+            return self.get(0,0);
+        } else {
+            let mone = T::zero() - T::one();
+            let mut sign = mone.clone();
+            let mut det = T::zero();
+            for ri in 0..self.rows {
+                sign = sign.clone() * mone.clone();
+                let sm = self.submatrix(ri, 0);
+                det = det + self.get(ri,0) * sign.clone() * sm.determinant();
+            }
+            return det;
+        }
+    }
+
     pub fn inverse(&self) -> Option<Matrix<T>> {
         if self.rows == 1 && self.cols == 1 {
-            let a = self.get(0,0);
-            if a.is_zero() {
+            let det = self.determinant();
+            if det.is_zero() {
                 return None;
             } else {
-                let b = T::one()/a;
+                let b = T::one()/det;
                 return Some(Matrix::new(vec![vec![b]]));
             }
         } else if self.rows == 2 && self.cols == 2 {
@@ -225,7 +261,7 @@ where
             let c = self.get(0,1);
             let d = self.get(1,1);
 
-            let det = a.clone()*d.clone() - b.clone()*c.clone();
+            let det = self.determinant();
             if det.is_zero() {
                 return None;
             } else {
@@ -389,6 +425,23 @@ mod tests {
         let m2 = Matrix::new(vec![vec![Ratio::new(2,5),Ratio::new(-1,5)],
                                   vec![Ratio::new(-1,5),Ratio::new(3,5)]]);
         assert_eq!(m1.inverse(),Some(m2));
+    }
+    #[test]
+    fn determinant_of_a_3d_matrix() {
+        let m1 = Matrix::new(vec![vec![2,1,-5],
+                                  vec![7,1,1],
+                                  vec![-4,8,-3]]);
+        let det = -305;
+        assert_eq!(m1.determinant(),det);
+    }
+    #[test]
+    fn determinant_of_a_4d_matrix() {
+        let m1 = Matrix::new(vec![vec![3,1,-1,0],
+                                  vec![-1,2,1,2],
+                                  vec![0,7,1,0],
+                                  vec![2,-4,8,0]]);
+        let det = 392;
+        assert_eq!(m1.determinant(),det);
     }
 }
 
