@@ -70,7 +70,6 @@ mod tests {
     use finite::*;
     use projectivegeo::*;
     use num::rational::Ratio;
-    use num::BigInt;
 
     create_finite_field!(3);
     create_finite_field!(5);
@@ -465,15 +464,15 @@ mod tests {
     }
     #[test]
     fn proof_varignons_theorem() {
-        let polone = create_polynumber_one!(ax,ay,bx,by,cx,cy,dx,dy; Ratio::<BigInt>);
-        let polax = create_polynumber_var!(ax; ax,ay,bx,by,cx,cy,dx,dy; Ratio::<BigInt>);
-        let polay = create_polynumber_var!(ay; ax,ay,bx,by,cx,cy,dx,dy; Ratio::<BigInt>);
-        let polbx = create_polynumber_var!(bx; ax,ay,bx,by,cx,cy,dx,dy; Ratio::<BigInt>);
-        let polby = create_polynumber_var!(by; ax,ay,bx,by,cx,cy,dx,dy; Ratio::<BigInt>);
-        let polcx = create_polynumber_var!(cx; ax,ay,bx,by,cx,cy,dx,dy; Ratio::<BigInt>);
-        let polcy = create_polynumber_var!(cy; ax,ay,bx,by,cx,cy,dx,dy; Ratio::<BigInt>);
-        let poldx = create_polynumber_var!(dx; ax,ay,bx,by,cx,cy,dx,dy; Ratio::<BigInt>);
-        let poldy = create_polynumber_var!(dy; ax,ay,bx,by,cx,cy,dx,dy; Ratio::<BigInt>);
+        let polone = create_polynumber_one!(ax,ay,bx,by,cx,cy,dx,dy; Ratio::<i32>);
+        let polax = create_polynumber_var!(ax; ax,ay,bx,by,cx,cy,dx,dy; Ratio::<i32>);
+        let polay = create_polynumber_var!(ay; ax,ay,bx,by,cx,cy,dx,dy; Ratio::<i32>);
+        let polbx = create_polynumber_var!(bx; ax,ay,bx,by,cx,cy,dx,dy; Ratio::<i32>);
+        let polby = create_polynumber_var!(by; ax,ay,bx,by,cx,cy,dx,dy; Ratio::<i32>);
+        let polcx = create_polynumber_var!(cx; ax,ay,bx,by,cx,cy,dx,dy; Ratio::<i32>);
+        let polcy = create_polynumber_var!(cy; ax,ay,bx,by,cx,cy,dx,dy; Ratio::<i32>);
+        let poldx = create_polynumber_var!(dx; ax,ay,bx,by,cx,cy,dx,dy; Ratio::<i32>);
+        let poldy = create_polynumber_var!(dy; ax,ay,bx,by,cx,cy,dx,dy; Ratio::<i32>);
 
         let half = PolyRatio::new(polone.clone(),polone.clone()+polone.clone());
         let ax = PolyRatio::new(polax,polone.clone());
