@@ -153,7 +153,7 @@ where
         let mut sdf = self.denom_factors.clone(); // reduced self denominator factors
         let mut odf = other.denom_factors.clone(); // reduced other denominator factors
         let mut cdf = PolyNumber::<T>::one(); // common denominator factor
-        let mut has_common_factor = false;
+        let mut denoms_have_common_factor = false;
 
         for (sfi, sfv) in self.denom_factors.iter().enumerate() {
             for (ofi, ofv) in other.denom_factors.iter().enumerate() {
@@ -161,20 +161,47 @@ where
                     cdf = sfv.clone();
                     sdf.remove(sfi);
                     odf.remove(ofi);
-                    has_common_factor = true;
+                    denoms_have_common_factor = true;
                     break;
                 }
             }
-            if has_common_factor {
+            if denoms_have_common_factor {
                 break;
             }
         }
 
-        if has_common_factor {
+        if denoms_have_common_factor {
             let s1 = PolyRatio::newf(self.numer_factors.clone(), sdf);
             let s2 = PolyRatio::newf(other.numer_factors.clone(), odf);
             let s3 = PolyRatio::new(cdf, PolyNumber::<T>::one());
             return (s1+s2)/s3;
+        }
+
+        let mut snf = self.numer_factors.clone(); // reduced self numerator factors
+        let mut onf = other.numer_factors.clone(); // reduced other numerator factors
+        let mut cnf = PolyNumber::<T>::one(); // common numerator factor
+        let mut numerators_have_common_factor = false;
+
+        for (sfi, sfv) in self.numer_factors.iter().enumerate() {
+            for (ofi, ofv) in other.numer_factors.iter().enumerate() {
+                if sfv == ofv {
+                    cnf = sfv.clone();
+                    snf.remove(sfi);
+                    onf.remove(ofi);
+                    numerators_have_common_factor = true;
+                    break;
+                }
+            }
+            if numerators_have_common_factor {
+                break;
+            }
+        }
+
+        if numerators_have_common_factor {
+            let s1 = PolyRatio::newf(snf, self.denom_factors.clone());
+            let s2 = PolyRatio::newf(onf, other.denom_factors.clone());
+            let s3 = PolyRatio::new(cnf, PolyNumber::<T>::one());
+            return (s1+s2)*s3;
         }
 
         let p = self.numer();
