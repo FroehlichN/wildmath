@@ -231,7 +231,9 @@ where
     pub fn determinant(&self) -> T {
         if self.rows != self.cols {
             return T::zero();
-        } else if self.rows == 1 && self.cols == 1 {
+        } else if self.rows == 0 {
+            return T::one();
+        } else if self.rows == 1 {
             return self.get(0,0);
         } else {
             let mone = T::zero() - T::one();
@@ -247,33 +249,32 @@ where
     }
 
     pub fn inverse(&self) -> Option<Matrix<T>> {
-        if self.rows == 1 && self.cols == 1 {
-            let det = self.determinant();
-            if det.is_zero() {
-                return None;
-            } else {
-                let b = T::one()/det;
-                return Some(Matrix::new(vec![vec![b]]));
-            }
-        } else if self.rows == 2 && self.cols == 2 {
-            let a = self.get(0,0);
-            let b = self.get(0,1);
-            let c = self.get(0,1);
-            let d = self.get(1,1);
-
-            let det = self.determinant();
-            if det.is_zero() {
-                return None;
-            } else {
-                let ai = d/det.clone();
-                let bi = -b/det.clone();
-                let ci = -c/det.clone();
-                let di = a/det.clone();
-                let mi = Matrix::new(vec![vec![ai,bi],vec![ci,di]]);
-                return Some(mi);
-            }
+        if self.rows != self.cols {
+            return None;
         }
-        return None;
+
+        let det = self.determinant();
+        if det.is_zero() {
+            return None;
+        }
+
+        let mut m = Vec::new();
+        let mone = T::zero() - T::one();
+        let mut rsign = T::one();
+        for ri in 0..self.rows {
+            let mut row = Vec::new();
+            let mut sign = rsign.clone();
+            for ci in 0..self.cols {
+                let a = self.submatrix(ci,ri);
+                let d = sign.clone() * a.determinant();
+                row.push(d);
+                sign = sign.clone() * mone.clone();
+            }
+            m.push(row);
+            rsign = rsign.clone() * mone.clone();
+        }
+        let inv = Matrix::new(m)*(T::one()/det);
+        Some(inv)
     }
 }
 
@@ -319,6 +320,27 @@ where
             elem.push(row);
         }
         Matrix { rows: rows, cols: cols, elem: elem }
+    }
+}
+
+impl<T> Mul<T> for Matrix<T>
+where
+    T: Zero,
+    T: Mul<Output = T>,
+    T: Clone,
+{
+    type Output = Matrix<T>;
+
+    fn mul(self, scalar: T) -> Matrix<T> {
+        let mut elem : Vec<Vec<T>> = Vec::new();
+        for mri in 0..self.rows {
+            let mut row : Vec<T> = Vec::new();
+            for mci in 0..self.cols {
+                row.push(self.get(mri,mci)*scalar.clone());
+            }
+            elem.push(row);
+        }
+        Matrix { rows: self.rows, cols: self.cols, elem: elem }
     }
 }
 
@@ -442,6 +464,16 @@ mod tests {
                                   vec![2,-4,8,0]]);
         let det = 392;
         assert_eq!(m1.determinant(),det);
+    }
+    #[test]
+    fn inverse_of_3d_matrix() {
+        let m1 = Matrix::new(vec![vec![Ratio::new(2,1),Ratio::new(1,1),Ratio::new(-5,1)],
+                                  vec![Ratio::new(7,1),Ratio::new(1,1),Ratio::new(1,1)],
+                                  vec![Ratio::new(-4,1),Ratio::new(8,1),Ratio::new(-3,1)]]);
+        let m2 = Matrix::new(vec![vec![Ratio::new(11,305),Ratio::new(37,305),Ratio::new(-6,305)],
+                                  vec![Ratio::new(-17,305),Ratio::new(26,305),Ratio::new(37,305)],
+                                  vec![Ratio::new(-60,305),Ratio::new(20,305),Ratio::new(5,305)]]);
+        assert_eq!(m1.inverse(),Some(m2));
     }
 }
 
