@@ -221,6 +221,29 @@ where
 
 impl<T> Matrix<T>
 where
+    T: Zero,
+    T: One,
+    T: Clone,
+{
+    pub fn identitiy(rows: usize, cols: usize) -> Matrix<T> {
+        let mut m = Vec::new();
+        for ri in 0..rows {
+            let mut row = Vec::new();
+            for ci in 0..cols {
+                if ri == ci {
+                    row.push(T::one());
+                } else {
+                    row.push(T::zero());
+                }
+            }
+            m.push(row);
+        }
+        Matrix { rows: rows, cols: cols, elem: m}
+    }
+}
+
+impl<T> Matrix<T>
+where
     T: Zero + One,
     T: Div<Output = T>,
     T: Mul<Output = T>,
@@ -474,6 +497,7 @@ mod tests {
                                   vec![Ratio::new(-17,305),Ratio::new(26,305),Ratio::new(37,305)],
                                   vec![Ratio::new(-60,305),Ratio::new(20,305),Ratio::new(5,305)]]);
         assert_eq!(m1.inverse(),Some(m2));
+        assert_eq!(m1.clone() * m1.inverse().unwrap(),Matrix::identitiy(3,3));
     }
 }
 
