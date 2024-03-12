@@ -18,14 +18,14 @@ limitations under the License.
 
 use num::{Zero,One,Integer};
 use std::ops::{Mul, Add, Sub, Div};
-use std::fmt::Debug;
+use std::fmt;
 use polynumber::PolyNumber;
 use extrational::RatInf;
 
 
 
 /// Represents the ratio between two poly numbers
-#[derive(Debug,Clone)]
+#[derive(Clone)]
 pub struct PolyRatio<T> {
     numer_factors: Vec<PolyNumber<T>>,
     denom_factors: Vec<PolyNumber<T>>,
@@ -336,6 +336,23 @@ where
                 return num/den;
             }
         }
+    }
+}
+
+impl<T> fmt::Debug for PolyRatio<T>
+where
+    T: std::fmt::Debug,
+    T: std::fmt::Display,
+    T: Clone,
+    PolyNumber<T>: Mul,
+    PolyNumber<T>: One,
+
+{
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("PolyRatio")
+         .field("numerator", &self.numer())
+         .field("denominator", &self.denom())
+         .finish()
     }
 }
 

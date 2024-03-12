@@ -18,13 +18,14 @@ limitations under the License.
 
 use num::{Num, Integer, Zero, One};
 use std::ops::{Mul, Add, Sub, Div, Neg};
+use std::fmt;
 
 
 
 /// RatInf
 /// extended rational numbers
 /// rational numbers with infinity
-#[derive(Debug, Clone,Copy)]
+#[derive(Clone,Copy)]
 pub struct RatInf<T>
 where
     T: Num,
@@ -197,6 +198,32 @@ where
     }
 }
 
+impl<T> fmt::Display for RatInf<T>
+where
+    T: Num,
+    T: Integer,
+    T: Clone,
+    T: std::fmt::Display,
+{
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "({})/({})", self.a, self.b)
+    }
+}
+
+impl<T> fmt::Debug for RatInf<T>
+where
+    T: Num,
+    T: Integer,
+    T: Clone,
+    T: std::fmt::Debug,
+{
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("RatInf")
+         .field("numerator", &self.a)
+         .field("denominator", &self.b)
+         .finish()
+    }
+}
 
 #[cfg(test)]
 mod tests {

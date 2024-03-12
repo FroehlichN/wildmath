@@ -17,7 +17,7 @@ limitations under the License.
 
 use num::{Zero,One};
 use std::ops::{Mul, Add, Sub, Div};
-use std::fmt::Debug;
+use std::fmt;
 
 /// Construct variables of a polynumber, commonly known as polynomial.
 /// first argument is the wanted variable.
@@ -31,7 +31,7 @@ use std::fmt::Debug;
 #[macro_export]
 macro_rules! create_polynumber_var {
     ( $var: ident ; $first: ident ; $ctype: ty) => {
-        $crate::PolyNumber::new(vec![ <$ctype>::zero(), <$ctype>::one() ])
+        $crate::PolyNumber::new_var(vec![ <$ctype>::zero(), <$ctype>::one() ], stringify!($first))
     };
     ( $var: ident ; $first: ident, $( $tail: ident ),+ ; $ctype: ty) => {
         {
@@ -42,7 +42,7 @@ macro_rules! create_polynumber_var {
             } else {
                 n.push( $crate::create_polynumber_var!( $var; $($tail),* ; $ctype ) );
             }
-            $crate::PolyNumber::new(n)
+            $crate::PolyNumber::new_var(n, stringify!($first))
         }
     };
 }
@@ -53,11 +53,11 @@ macro_rules! create_polynumber_var {
 #[macro_export]
 macro_rules! create_polynumber_one {
     ( $first: ident ; $ctype: ty) => {
-        $crate::PolyNumber::new(vec![ <$ctype>::one() ])
+        $crate::PolyNumber::new_var(vec![ <$ctype>::one() ], stringify!($first))
     };
 
     ( $first: ident, $( $tail: ident ),+ ; $ctype: ty) => {
-        $crate::PolyNumber::new(vec![ $crate::create_polynumber_one!( $($tail),* ; $ctype ) ])
+        $crate::PolyNumber::new_var(vec![ $crate::create_polynumber_one!( $($tail),* ; $ctype ) ], stringify!($first))
     };
 
 }
@@ -77,9 +77,10 @@ macro_rules! create_polynumber_zero {
 
 }
 
-#[derive(Debug, Clone)]
+#[derive(Clone)]
 pub struct PolyNumber<T> {
     n: Vec<T>,
+    var: String,
 }
 
 impl<T> PolyNumber<T>
@@ -139,6 +140,7 @@ where
     fn add(self, other: Self) -> PolyNumber<T> {
         let mut index: usize = 0;
         let mut s: Vec<T> = Vec::new();
+        let var = if self.var == "" {other.var} else {self.var};
 
         loop {
             let a = self.n.get(index);
@@ -148,7 +150,7 @@ where
                 (Some(aa), Some(bb)) => s.push((*aa).clone() + (*bb).clone()),
                 (Some(aa), None)     => s.push((*aa).clone()),
                 (None, Some(bb))     => s.push((*bb).clone()),
-                (None, None)         => return PolyNumber { n: s },
+                (None, None)         => return PolyNumber::new_var(s, &var),
             }
 
             index += 1;
@@ -166,6 +168,7 @@ where
     fn sub(self, other: Self) -> PolyNumber<T> {
         let mut index: usize = 0;
         let mut s: Vec<T> = Vec::new();
+        let var = if self.var == "" {other.var} else {self.var};
 
         loop {
             let a = self.n.get(index);
@@ -175,7 +178,7 @@ where
                 (Some(aa), Some(bb)) => s.push((*aa).clone() - (*bb).clone()),
                 (Some(aa), None)     => s.push((*aa).clone()),
                 (None, Some(bb))     => s.push(T::zero() - (*bb).clone()),
-                (None, None)         => return PolyNumber { n: s },
+                (None, None)         => return PolyNumber::new_var(s , &var),
             }
 
             index += 1;
@@ -193,6 +196,7 @@ where
 
     fn mul(self, other: Self) -> PolyNumber<T> {
         let mut p: Vec<T> = Vec::new();
+        let var = if self.var == "" {other.var} else {self.var};
 
         for (ai, av) in self.n.iter().enumerate() {
             for (bi, bv) in other.n.iter().enumerate() {
@@ -206,7 +210,7 @@ where
             }
         }
 
-        return PolyNumber { n: p };
+        return PolyNumber::new_var(p, &var);
     }
 }
 
@@ -224,7 +228,7 @@ where
             p.push(a * other.clone());
         }
 
-        return PolyNumber { n: p };
+        return PolyNumber::new_var(p, &self.var);
     }
 }
 
@@ -240,10 +244,10 @@ where
         let mut p: Vec<PolyNumber<T>> = Vec::new();
 
         for a in self.n {
-            p.push(a * PolyNumber{ n: vec![other.clone()] });
+            p.push(a.clone() * PolyNumber::new_var(vec![other.clone()], &a.var));
         }
 
-        return PolyNumber { n: p };
+        return PolyNumber::new_var(p, &self.var);
     }
 }
 
@@ -291,7 +295,7 @@ where
             v.push((*a).eval(c.clone()));
         }
 
-        return PolyNumber{ n: v };
+        return PolyNumber::new_var(v, &self.var);
     }
 }
 
@@ -300,7 +304,7 @@ where
     T: PartialEq + Zero + One + Mul + Add + Sub + Clone,
 {
     fn ltrans(&self, c: T) -> PolyNumber<T> {
-        let q = PolyNumber { n: vec![c,T::one()] };
+        let q = PolyNumber::new_var(vec![c,T::one()], &self.var);
         return self.eval(q);
     }
 }
@@ -310,9 +314,10 @@ where
     T: PartialEq + Zero + One + Mul + Add + Sub + Clone,
 {
     fn ltrans2(&self, r: T, s: T) -> PolyNumber<PolyNumber<T>> {
-        let a = PolyNumber { n: vec![r,T::one()] }; // r + a
-        let b = PolyNumber { n: vec![PolyNumber{ n: vec![s] }, // s
-                                     PolyNumber{ n: vec![T::one()] } ] }; // b
+        let a = PolyNumber::new_var(vec![r,T::one()], &self.var); // r + a
+        let dvar = "d".to_string() + &self.var.to_string();
+        let b = PolyNumber::new_var(vec![PolyNumber::new_var(vec![s], &dvar), // s
+                                     PolyNumber::new_var(vec![T::one()], &dvar) ], &self.var); // b
         let s2 = self.eval2(a); // set a = a + r
         return s2.eval(b); // set b = b + s
     }
@@ -325,7 +330,7 @@ where
     T: Clone,
 {
     fn zero() -> PolyNumber<T> {
-        return PolyNumber { n: vec![T::zero()] };
+        return PolyNumber::new_var(vec![T::zero()], "");
     }
 
     fn is_zero(&self) -> bool {
@@ -340,7 +345,7 @@ where
     T: Clone,
 {
     fn one() -> PolyNumber<T> {
-        return PolyNumber { n: vec![T::one()] };
+        return PolyNumber::new_var(vec![T::one()], "");
     }
 }
 
@@ -357,7 +362,7 @@ where
                 None     => (),
             }
         }
-        return PolyNumber{ n: v };
+        return PolyNumber::new_var(v, &self.var);
     }
 }
 
@@ -374,7 +379,7 @@ where
                 None     => (),
             }
         }
-        return PolyNumber{ n: v };
+        return PolyNumber::new_var(v, &self.var);
     }
 }
 
@@ -410,8 +415,9 @@ where
     T: Clone,
 {
     fn taylor(self) -> PolyNumber<PolyNumber<T>> {
-        let p = PolyNumber { n: vec! [ PolyNumber { n: vec![T::zero(),T::one()] },
-                                       PolyNumber { n: vec![T::one(),T::zero()] } ] };
+        let dvar = "d".to_string() + &self.var.to_string();
+        let p = PolyNumber::new_var(vec! [ PolyNumber::new_var(vec![T::zero(),T::one()], &dvar),
+                                       PolyNumber::new_var(vec![T::one(),T::zero()], &dvar) ], &self.var );
         return self.eval(p);
     }
 }
@@ -424,17 +430,17 @@ where
     T: Clone,
 {
     fn taylor2(self) -> PolyNumber<PolyNumber<PolyNumber<PolyNumber<T>>>> {
-        let apg = PolyNumber{ n: vec![PolyNumber{ n: vec![T::zero(),T::one()] }, // a
-                                      PolyNumber{ n: vec![T::one(),T::zero()] } ] }; // g
-        let bpd = PolyNumber{ n: vec![
-                      PolyNumber{ n: vec![ // d^0
-                          PolyNumber{ n: vec![ // b^0
-                              PolyNumber{ n: vec![T::zero()] } ] },
-                          PolyNumber{ n: vec![ // b^1
-                              PolyNumber{ n: vec![T::one()] } ] } ] }, // b
-                      PolyNumber{ n: vec![ // d^1
-                          PolyNumber{ n: vec![ // b^0
-                              PolyNumber{ n: vec![T::one()] } ] } ] } ] }; // d
+        let apg = PolyNumber::new(vec![PolyNumber::new(vec![T::zero(),T::one()]), // a
+                                      PolyNumber::new(vec![T::one(),T::zero()]) ]); // g
+        let bpd = PolyNumber::new(vec![
+                      PolyNumber::new(vec![ // d^0
+                          PolyNumber::new(vec![ // b^0
+                              PolyNumber::new(vec![T::zero()] ) ] ),
+                          PolyNumber::new(vec![ // b^1
+                              PolyNumber::new(vec![T::one()] ) ] ) ] ), // b
+                      PolyNumber::new(vec![ // d^1
+                          PolyNumber::new(vec![ // b^0
+                              PolyNumber::new(vec![T::one()] ) ] ) ] ) ] ); // d
 
         let papg = self.eval2(apg);
         return papg.eval(bpd);
@@ -466,7 +472,7 @@ where
     T: Clone,
 {
     fn derivative2(self, i : usize, j : usize) -> PolyNumber<PolyNumber<T>> {
-        let tp = self.taylor2();
+        let tp = self.clone().taylor2();
 
         let bpol : PolyNumber<PolyNumber<PolyNumber<T>>>;
         let s = tp.n.get(j);
@@ -483,7 +489,7 @@ where
                 None    => v.push(PolyNumber::<T>::zero()),
             }
         }
-        return PolyNumber{ n: v };
+        return PolyNumber::new_var(v, &self.var);
     }
 }
 
@@ -518,7 +524,43 @@ where
 impl<T> PolyNumber<T>
 {
     pub fn new(v : Vec<T>) -> PolyNumber<T> {
-        return PolyNumber{ n: v };
+        return PolyNumber::new_var(v, "x");
+    }
+    pub fn new_var(v : Vec<T>, var: &str) -> PolyNumber<T> {
+        return PolyNumber { n: v, var: var.to_string() };
+    }
+}
+
+impl<T> fmt::Display for PolyNumber<T>
+where
+    T: std::fmt::Display,
+{
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "(")?;
+
+        for (i, v) in self.n.iter().enumerate() {
+            if i > 0 {
+                write!(f, " + ")?;
+            }
+            write!(f, "{}", v)?;
+            if i > 0 {
+                write!(f, "*{}", self.var)?;
+            }
+            if i > 1 {
+                write!(f, "^{}", i)?;
+            }
+        }
+        write!(f, ")")
+    }
+}
+
+impl<T> fmt::Debug for PolyNumber<T>
+where
+    T: std::fmt::Debug,
+    T: std::fmt::Display,
+{
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", self)
     }
 }
 
@@ -530,96 +572,96 @@ mod tests {
     use assert_approx_eq::assert_approx_eq;
     #[test]
     fn eq_poly_numbers() {
-        assert_eq!(PolyNumber { n: vec![1, 2, 0] }, PolyNumber { n: vec![1, 2, 0, 0] });
-        assert_ne!(PolyNumber { n: vec![5, 2, 0, 3] }, PolyNumber { n: vec![5, 2, 3] });
+        assert_eq!(PolyNumber::new_var(vec![1, 2, 0], "a" ), PolyNumber::new_var(vec![1, 2, 0, 0], "a" ));
+        assert_ne!(PolyNumber::new(vec![5, 2, 0, 3] ), PolyNumber::new(vec![5, 2, 3] ));
     }
     #[test]
     fn addition_of_poly_numbers() {
-        let p1 = PolyNumber { n: vec![1, 0, 2] };
-        let p2 = PolyNumber { n: vec![3, 4, 7, 1] };
-        let p3 = PolyNumber { n: vec![4, 4, 9, 1] };
+        let p1 = PolyNumber::new_var(vec![1, 0, 2], "a" );
+        let p2 = PolyNumber::new_var(vec![3, 4, 7, 1], "a" );
+        let p3 = PolyNumber::new_var(vec![4, 4, 9, 1], "a" );
         assert_eq!(p1+p2,p3);
     }
     #[test]
     fn multiplication_of_poly_number() {
-        let p1 = PolyNumber { n: vec![1, 0, 2] };
-        let p2 = PolyNumber { n: vec![3, 4, 7, 1] };
-        let p3 = PolyNumber { n: vec![3, 4, 13, 9, 14, 2] };
+        let p1 = PolyNumber::new_var(vec![1, 0, 2], "a" );
+        let p2 = PolyNumber::new_var(vec![3, 4, 7, 1], "a" );
+        let p3 = PolyNumber::new_var(vec![3, 4, 13, 9, 14, 2], "a" );
         assert_eq!(p1*p2,p3);
-        let p4 = PolyNumber { n: vec![0, 1, 5, 2] };
-        let p5 = PolyNumber { n: vec![4, 3] };
-        let p6 = PolyNumber { n: vec![0, 4, 23, 23, 6] };
+        let p4 = PolyNumber::new_var(vec![0, 1, 5, 2], "a" );
+        let p5 = PolyNumber::new_var(vec![4, 3], "a" );
+        let p6 = PolyNumber::new_var(vec![0, 4, 23, 23, 6], "a" );
         assert_eq!(p4*p5,p6);
-        let p7 = PolyNumber { n: vec![2, 1, 3] };
-        let p8 = PolyNumber { n: vec![5, 7] };
-        let p9 = PolyNumber { n: vec![10, 19, 22, 21] };
+        let p7 = PolyNumber::new_var(vec![2, 1, 3], "a" );
+        let p8 = PolyNumber::new_var(vec![5, 7], "a" );
+        let p9 = PolyNumber::new_var(vec![10, 19, 22, 21], "a" );
         assert_eq!(p7*p8,p9);
     }
     #[test]
     fn scalars_for_poly_number() {
-        let p1 = PolyNumber { n: vec![2, 3] };
+        let p1 = PolyNumber::new_var(vec![2, 3], "a" );
         let s1 = 5;
-        let p2 = PolyNumber { n: vec![10, 15] };
+        let p2 = PolyNumber::new_var(vec![10, 15], "a" );
         assert_eq!(p1*s1,p2);
     }
     #[test]
     fn evaluate_poly_number() {
-        let p1 = PolyNumber { n: vec![2, -3, 1] };
+        let p1 = PolyNumber::new_var(vec![2, -3, 1], "a" );
         let c1 = 4;
         assert_eq!(p1.eval(c1),6);
-        let p2 = PolyNumber { n: vec![1, -5] };
+        let p2 = PolyNumber::new_var(vec![1, -5], "a" );
         let c2 = 4;
         assert_eq!(p2.eval(c2),-19);
     }
     #[test]
     fn composing_poly_numbers() {
-        let p = PolyNumber { n: vec![1,3,4] };
-        let q = PolyNumber { n: vec![2,1] };
-        let pq = PolyNumber { n: vec![23,19,4] };
+        let p = PolyNumber::new_var(vec![1,3,4], "a" );
+        let q = PolyNumber::new_var(vec![2,1], "a" );
+        let pq = PolyNumber::new_var(vec![23,19,4], "a" );
         assert_eq!(p.eval(q),pq);
     }
     #[test]
     fn composing_poly_numbers2() {
-        let p = PolyNumber { n: vec![1,3,4] };
-        let q = PolyNumber { n: vec![37,1] };
-        let pq = PolyNumber { n: vec![5588,299,4] };
+        let p = PolyNumber::new_var(vec![1,3,4], "a" );
+        let q = PolyNumber::new_var(vec![37,1], "a" );
+        let pq = PolyNumber::new_var(vec![5588,299,4], "a" );
         assert_eq!(p.eval(q),pq);
     }
     #[test]
     fn left_translate_poly_numbers() {
-        let p = PolyNumber { n: vec![1,3,4] };
-        let L3p = PolyNumber { n: vec![46,27,4] };
+        let p = PolyNumber::new_var(vec![1,3,4], "a" );
+        let L3p = PolyNumber::new_var(vec![46,27,4], "a" );
         assert_eq!(p.ltrans(3),L3p);
     }
     #[test]
     fn adding_bi_poly_numbers() {
-        let bp1 = PolyNumber { n: vec![ PolyNumber { n: vec![1,  0, 5, 4] },
-                                        PolyNumber { n: vec![3, -1, 7] },
-                                        PolyNumber { n: vec![4,  2] } ] };
-        let bp2 = PolyNumber { n: vec![ PolyNumber { n: vec![2, -1, 3] },
-                                        PolyNumber { n: vec![1,  0, 2, -3] } ] };
-        let bp3 = PolyNumber { n: vec![ PolyNumber { n: vec![3, -1, 8,  4] },
-                                        PolyNumber { n: vec![4, -1, 9, -3] } ,
-                                        PolyNumber { n: vec![4,  2] } ] };
+        let bp1 = PolyNumber::new_var(vec![ PolyNumber::new_var(vec![1,  0, 5, 4], "a" ),
+                                        PolyNumber::new_var(vec![3, -1, 7], "a" ),
+                                        PolyNumber::new_var(vec![4,  2], "a" ) ], "b");
+        let bp2 = PolyNumber::new_var(vec![ PolyNumber::new_var(vec![2, -1, 3], "a" ),
+                                        PolyNumber::new_var(vec![1,  0, 2, -3], "a" ) ], "b");
+        let bp3 = PolyNumber::new_var(vec![ PolyNumber::new_var(vec![3, -1, 8,  4], "a" ),
+                                        PolyNumber::new_var(vec![4, -1, 9, -3], "a" ) ,
+                                        PolyNumber::new_var(vec![4,  2], "a" ) ], "b");
         assert_eq!(bp1+bp2,bp3);
     }
     #[test]
     fn multiplication_of_bi_poly_numbers() {
-        let bp1 = PolyNumber { n: vec![ PolyNumber { n: vec![1, 2] },
-                                        PolyNumber { n: vec![5, 3] } ] };
-        let bp2 = PolyNumber { n: vec![ PolyNumber { n: vec![4, 5, 1] },
-                                        PolyNumber { n: vec![2, 1, 3] } ] };
-        let bp3 = PolyNumber { n: vec![ PolyNumber { n: vec![ 4, 13, 11, 2] },
-                                        PolyNumber { n: vec![22, 42, 25, 9] },
-                                        PolyNumber { n: vec![10, 11, 18, 9] } ] };
+        let bp1 = PolyNumber::new_var(vec![ PolyNumber::new_var(vec![1, 2], "a" ),
+                                        PolyNumber::new_var(vec![5, 3], "a" ) ], "b");
+        let bp2 = PolyNumber::new_var(vec![ PolyNumber::new_var(vec![4, 5, 1], "a" ),
+                                        PolyNumber::new_var(vec![2, 1, 3], "a" ) ], "b");
+        let bp3 = PolyNumber::new_var(vec![ PolyNumber::new_var(vec![ 4, 13, 11, 2], "a" ),
+                                        PolyNumber::new_var(vec![22, 42, 25, 9], "a" ),
+                                        PolyNumber::new_var(vec![10, 11, 18, 9], "a" ) ], "b");
         assert_eq!(bp1*bp2,bp3);
     }
     #[test]
     fn scalar_multiplication_of_bi_poly_numbers() {
-        let bp1 = PolyNumber { n: vec![ PolyNumber { n: vec![1,  2] },
-                                        PolyNumber { n: vec![5,  3] } ] };
-        let bp2 = PolyNumber { n: vec![ PolyNumber { n: vec![3,  6] },
-                                        PolyNumber { n: vec![15, 9] } ] };
+        let bp1 = PolyNumber::new_var(vec![ PolyNumber::new_var(vec![1,  2], "a" ),
+                                        PolyNumber::new_var(vec![5,  3], "a" ) ], "b");
+        let bp2 = PolyNumber::new_var(vec![ PolyNumber::new_var(vec![3,  6], "a" ),
+                                        PolyNumber::new_var(vec![15, 9], "a" ) ], "b");
         assert_eq!(bp1*3,bp2);
     }
     #[test]
@@ -627,31 +669,31 @@ mod tests {
         let alpha = create_polynumber_var!(alpha; alpha,beta ; i32);
         let beta  = create_polynumber_var!(beta;  alpha,beta ; i32);
         let p = alpha + beta;
-        let q = PolyNumber { n: vec![-4,7,10,-6,2] };
-        let t = PolyNumber { n: vec![ PolyNumber { n: vec![-4,  7, 10,-6,2] },
-                                      PolyNumber { n: vec![ 7, 20,-18, 8] },
-                                      PolyNumber { n: vec![10,-18,12] },
-                                      PolyNumber { n: vec![-6,  8] },
-                                      PolyNumber { n: vec![2] } ] };
+        let q = PolyNumber::new_var(vec![-4,7,10,-6,2], "a" );
+        let t = PolyNumber::new_var(vec![ PolyNumber::new_var(vec![-4,  7, 10,-6,2], "a" ),
+                                      PolyNumber::new_var(vec![ 7, 20,-18, 8], "a" ),
+                                      PolyNumber::new_var(vec![10,-18,12], "a" ),
+                                      PolyNumber::new_var(vec![-6,  8], "a" ),
+                                      PolyNumber::new_var(vec![2], "a" ) ], "b");
         assert_eq!(q.eval(p),t);
     }
     #[test]
     fn taylor_bi_poly_number() {
-        let q = PolyNumber { n: vec![-4,7,10,-6,2] };
-        let t = PolyNumber { n: vec![ PolyNumber { n: vec![-4,  7, 10,-6,2] },
-                                      PolyNumber { n: vec![ 7, 20,-18, 8] },
-                                      PolyNumber { n: vec![10,-18,12] },
-                                      PolyNumber { n: vec![-6,  8] },
-                                      PolyNumber { n: vec![2] } ] };
+        let q = PolyNumber::new(vec![-4,7,10,-6,2]);
+        let t = PolyNumber::new_var(vec![ PolyNumber::new_var(vec![-4,  7, 10,-6,2], "a" ),
+                                      PolyNumber::new_var(vec![ 7, 20,-18, 8], "a" ),
+                                      PolyNumber::new_var(vec![10,-18,12], "a" ),
+                                      PolyNumber::new_var(vec![-6,  8], "a" ),
+                                      PolyNumber::new_var(vec![2], "a" ) ], "b");
         assert_eq!(q.taylor(),t);
     }
     #[test]
     fn subderivatives_of_poly_numbers() {
-        let q  = PolyNumber { n: vec![-4,7,10,-6,2] };
-        let d1 = PolyNumber { n: vec![7,20,-18,8] };
-        let d2 = PolyNumber { n: vec![10,-18,12] };
-        let d3 = PolyNumber { n: vec![-6,8] };
-        let d4 = PolyNumber { n: vec![2] };
+        let q  = PolyNumber::new_var(vec![-4,7,10,-6,2], "a" );
+        let d1 = PolyNumber::new_var(vec![7,20,-18,8], "a" );
+        let d2 = PolyNumber::new_var(vec![10,-18,12], "a" );
+        let d3 = PolyNumber::new_var(vec![-6,8], "a" );
+        let d4 = PolyNumber::new_var(vec![2], "a" );
         assert_eq!(q.clone().derivative(1),d1);
         assert_eq!(q.clone().derivative(2),d2);
         assert_eq!(q.clone().derivative(3),d3);
@@ -659,20 +701,20 @@ mod tests {
     }
     #[test]
     fn truncation_of_polynumbers() {
-        let p = PolyNumber { n: vec![8,-5,0,4,-1] };
-        let t1p = PolyNumber { n: vec![8,-5] };
-        let t2p = PolyNumber { n: vec![8,-5] };
-        let t3p = PolyNumber { n: vec![8,-5,0,4] };
+        let p = PolyNumber::new_var(vec![8,-5,0,4,-1], "a" );
+        let t1p = PolyNumber::new_var(vec![8,-5], "a" );
+        let t2p = PolyNumber::new_var(vec![8,-5], "a" );
+        let t3p = PolyNumber::new_var(vec![8,-5,0,4], "a" );
         assert_eq!(p.clone().truncate(1),t1p);
         assert_eq!(p.clone().truncate(2),t2p);
         assert_eq!(p.clone().truncate(3),t3p);
     }
     #[test]
     fn tangents_of_polynumbers() {
-        let p = PolyNumber{ n: vec![8,-5,0,4,-1] };
-        let t0p1 = PolyNumber{ n: vec![6] };
-        let t1p1 = PolyNumber{ n: vec![3,3] };
-        let t2p1 = PolyNumber{ n: vec![9,-9,6] };
+        let p = PolyNumber::new_var(vec![8,-5,0,4,-1], "a" );
+        let t0p1 = PolyNumber::new_var(vec![6], "a" );
+        let t1p1 = PolyNumber::new_var(vec![3,3], "a" );
+        let t2p1 = PolyNumber::new_var(vec![9,-9,6], "a" );
         assert_eq!(p.clone().tangent(0,1),t0p1);
         assert_eq!(p.clone().tangent(1,1),t1p1);
         assert_eq!(p.clone().tangent(2,1),t2p1.clone());
@@ -680,27 +722,27 @@ mod tests {
     }
     #[test]
     fn taylor_expansion_for_bi_polynumbers() {
-        let p = PolyNumber{ n: vec![PolyNumber{ n: vec![-1,0,1] }, // -1 + a^2
-                                    PolyNumber{ n: vec![0] },
-                                    PolyNumber{ n: vec![1] } ] }; // b^2
-        let t = PolyNumber{ n: vec![
-                    PolyNumber{ n: vec![ // d^0
-                        PolyNumber{ n: vec![ // b^0
-                            PolyNumber{ n: vec![-1,0,1] }, // -1 + a^2
-                            PolyNumber{ n: vec![0,2] }, // 2ag
-                            PolyNumber{ n: vec![1] } ] },  // g^2
-                        PolyNumber{ n: vec![ // b^1
-                            PolyNumber{ n: vec![0] } ] },
-                        PolyNumber{ n: vec![ // b^2
-                            PolyNumber{ n: vec![1] } ] } ] }, // b^2
-                    PolyNumber{ n: vec![ // d^1
-                        PolyNumber{ n: vec![ // b^0
-                            PolyNumber{ n: vec![0] } ] },
-                        PolyNumber{ n: vec![ // b^1
-                            PolyNumber{ n: vec![2] } ] } ] }, // 2bd
-                    PolyNumber{ n: vec![ // d^2
-                        PolyNumber{ n: vec![ // b^0
-                            PolyNumber{ n: vec![1] } ] } ] } ] }; // d^2
+        let p = PolyNumber::new_var(vec![PolyNumber::new_var(vec![-1,0,1], "a" ), // -1 + a^2
+                                    PolyNumber::new_var(vec![0], "a" ),
+                                    PolyNumber::new_var(vec![1], "a" ) ], "b"); // b^2
+        let t = PolyNumber::new_var(vec![
+                    PolyNumber::new_var(vec![ // d^0
+                        PolyNumber::new_var(vec![ // b^0
+                            PolyNumber::new_var(vec![-1,0,1], "a" ), // -1 + a^2
+                            PolyNumber::new_var(vec![0,2], "a" ), // 2ag
+                            PolyNumber::new_var(vec![1], "a" ) ], "g"),  // g^2
+                        PolyNumber::new_var(vec![ // b^1
+                            PolyNumber::new_var(vec![0], "a" ) ], "g"),
+                        PolyNumber::new_var(vec![ // b^2
+                            PolyNumber::new_var(vec![1], "a" ) ], "g") ], "b"), // b^2
+                    PolyNumber::new_var(vec![ // d^1
+                        PolyNumber::new_var(vec![ // b^0
+                            PolyNumber::new_var(vec![0], "a" ) ], "g"),
+                        PolyNumber::new_var(vec![ // b^1
+                            PolyNumber::new_var(vec![2], "a" ) ], "g") ], "b" ), // 2bd
+                    PolyNumber::new_var(vec![ // d^2
+                        PolyNumber::new_var(vec![ // b^0
+                            PolyNumber::new_var(vec![1], "a" ) ], "g") ], "b") ], "d"); // d^2
         assert_eq!(p.taylor2(),t);
     }
     #[test]
@@ -729,15 +771,15 @@ mod tests {
     }
     #[test]
     fn derivatives_of_by_polynumbers() {
-        let p = PolyNumber{ n: vec![PolyNumber{ n: vec![-1,0,1] }, // -1 + a^2
-                                    PolyNumber{ n: vec![0] },
-                                    PolyNumber{ n: vec![1] } ] }; // b^2
-        let d01 = PolyNumber{ n: vec![PolyNumber{ n: vec![0] },
-                                      PolyNumber{ n: vec![2] } ] }; // 2b
-        let d02 = PolyNumber{ n: vec![PolyNumber{ n: vec![1] } ] }; // 1
-        let d10 = PolyNumber{ n: vec![PolyNumber{ n: vec![0,2] } ] }; // 2a
-        let d11 = PolyNumber{ n: vec![PolyNumber{ n: vec![0] } ] }; // 0
-        let d20 = PolyNumber{ n: vec![PolyNumber{ n: vec![1] } ] }; // 1
+        let p = PolyNumber::new_var(vec![PolyNumber::new_var(vec![-1,0,1], "a" ), // -1 + a^2
+                                    PolyNumber::new_var(vec![0], "a" ),
+                                    PolyNumber::new_var(vec![1], "a" ) ], "b"); // b^2
+        let d01 = PolyNumber::new_var(vec![PolyNumber::new_var(vec![0], "a" ),
+                                      PolyNumber::new_var(vec![2], "a" ) ], "b"); // 2b
+        let d02 = PolyNumber::new_var(vec![PolyNumber::new_var(vec![1], "a" ) ], "b"); // 1
+        let d10 = PolyNumber::new_var(vec![PolyNumber::new_var(vec![0,2], "a" ) ], "b"); // 2a
+        let d11 = PolyNumber::new_var(vec![PolyNumber::new_var(vec![0], "a" ) ], "b"); // 0
+        let d20 = PolyNumber::new_var(vec![PolyNumber::new_var(vec![1], "a" ) ], "b"); // 1
         assert_eq!(p.clone().derivative2(0,0),p.clone());
         assert_eq!(p.clone().derivative2(0,1),d01);
         assert_eq!(p.clone().derivative2(0,2),d02);
@@ -747,22 +789,22 @@ mod tests {
     }
     #[test]
     fn tangent_plane() {
-        let p = PolyNumber{ n: vec![PolyNumber{ n: vec![-1,0,1] }, // -1 + a^2
-                                    PolyNumber{ n: vec![0] },
-                                    PolyNumber{ n: vec![1] } ] }; // b^2
-        let p35 = PolyNumber{ n: vec![PolyNumber{ n: vec![33, 6, 1] }, // 23 + 6a + a^2
-                                      PolyNumber{ n: vec![10] }, // 10b
-                                      PolyNumber{ n: vec![1] } ] }; // b^2
+        let p = PolyNumber::new_var(vec![PolyNumber::new_var(vec![-1,0,1], "a" ), // -1 + a^2
+                                    PolyNumber::new_var(vec![0], "a" ),
+                                    PolyNumber::new_var(vec![1], "a" ) ], "b"); // b^2
+        let p35 = PolyNumber::new_var(vec![PolyNumber::new_var(vec![33, 6, 1], "a" ), // 23 + 6a + a^2
+                                      PolyNumber::new_var(vec![10], "a" ), // 10b
+                                      PolyNumber::new_var(vec![1], "a" ) ], "b"); // b^2
         // first tangent,i.e. tangent plane, of p at [3,5]
-        let t35 = PolyNumber{ n: vec![PolyNumber{ n: vec![-35, 6] }, // -35 + 6a
-                                      PolyNumber{ n: vec![10] } ] }; // 10b
+        let t35 = PolyNumber::new_var(vec![PolyNumber::new_var(vec![-35, 6], "a" ), // -35 + 6a
+                                      PolyNumber::new_var(vec![10], "a" ) ], "b"); // 10b
         assert_eq!(p.clone().ltrans2(3,5),p35);
         assert_eq!(p.tangent2(1,3,5),t35);
     }
     #[test]
     fn newton_approximation() {
         let one = Ratio::new(1,1);
-        let p = PolyNumber{ n: vec![one*0, one*0, one] };
+        let p = PolyNumber::new(vec![one*0, one*0, one]);
         let a1 = p.clone().newton_approx(one*2,one*2);
         assert_eq!(a1,one*3/2);
         let a2 = p.clone().newton_approx(one*2,a1);
@@ -779,7 +821,7 @@ mod tests {
         let one : Ratio<BigInt> = Ratio::new(bone.clone(),bone.clone());
         let zero : Ratio<BigInt> = Ratio::new(bzero.clone(),bone.clone());
         let five : Ratio<BigInt> = one.clone()*(bone.clone()*5);
-        let p = PolyNumber{ n: vec![zero.clone(), zero.clone(), zero.clone(), one.clone()] };
+        let p = PolyNumber::new(vec![zero.clone(), zero.clone(), zero.clone(), one.clone()]);
         let a1 = p.clone().newton_approx(five.clone(),one.clone());
         assert_eq!(a1,one.clone()*(bone.clone()*7)/(bone.clone()*3));
         let a2 = p.clone().newton_approx(five.clone(),a1);
@@ -790,7 +832,7 @@ mod tests {
     }
     #[test]
     fn float_cube_root_of_five() {
-        let p = PolyNumber{ n: vec![0.0f64, 0.0f64, 0.0f64, 1.0f64] };
+        let p = PolyNumber::new_var(vec![0.0f64, 0.0f64, 0.0f64, 1.0f64], "a" );
         let a1 = p.clone().newton_approx(5.0f64,1.0f64);
         assert_approx_eq!(a1, 7.0f64/3.0f64, 0.0000001f64);
         let a2 = p.clone().newton_approx(5.0f64,a1);
