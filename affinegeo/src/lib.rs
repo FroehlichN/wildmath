@@ -361,15 +361,6 @@ where
     }
 }
 
-/// Represents a 3D point
-#[derive(Debug, Clone)]
-pub struct ThreePoint<T> {
-    pub x : T,
-    pub y : T,
-    pub z : T,
-}
-
-
 /// Represents a 2D line a*x+b*y+c=0
 #[derive(Debug)]
 pub struct TwoLine<T> {
@@ -613,50 +604,6 @@ where
         let q2 = self.points[0].quadrance(&self.points[1]);
 
         q0*q1*q2/self.quadrea()
-    }
-}
-
-/// Represents a 3D tetrahedon
-/// T is type of the coordinates of the points
-pub struct Tetrahedron<T> {
-    points: [ThreePoint<T>; 3],
-}
-
-impl<T> Tetrahedron<T>
-where
-    T: Num,
-    T: Clone,
-    ThreePoint<T>: Point,
-    ThreePoint<T>: Clone,
-{
-    pub fn new(a1: ThreePoint<T>, a2: ThreePoint<T>, a3: ThreePoint<T>)
-        -> Tetrahedron<T> {
-        if a1.is_collinear(&a2, &a3) {
-            panic!("Tetrahedron cannot have collinear points");
-        }
-        Tetrahedron { points: [a1, a2, a3] }
-    }
-
-    pub fn volume(&self) -> T {
-        let six = T::one() + T::one() + T::one()
-                + T::one() + T::one() + T::one();
-        let x1 = self.points[0].x.clone();
-        let x2 = self.points[1].x.clone();
-        let x3 = self.points[2].x.clone();
-        let y1 = self.points[0].y.clone();
-        let y2 = self.points[1].y.clone();
-        let y3 = self.points[2].y.clone();
-        let z1 = self.points[0].z.clone();
-        let z2 = self.points[1].z.clone();
-        let z3 = self.points[2].z.clone();
-
-        let n = x1.clone()*y2.clone()*z3.clone()
-              - x1*y3.clone()*z2.clone()
-              + x2.clone()*y3*z1.clone()
-              - x3.clone()*y2*z1
-              + x3*y1.clone()*z2
-              - x2*y1*z3;
-        return n / six;
     }
 }
 
