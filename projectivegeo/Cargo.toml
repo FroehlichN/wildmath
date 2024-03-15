@@ -8,5 +8,6 @@ edition = "2021"
 
 [dependencies]
 proportion = { path = "../proportion" }
+linalg = { path = "../linalg" }
 num = "0.3"
 
