@@ -16,7 +16,17 @@ limitations under the License.
 */
 
 use num::{Zero, One};
-use std::ops::{Mul, Div, Add, Sub};
+use std::ops::{Mul, Div, Add, Sub, Neg};
+use linalg::{Matrix, ColumnVector};
+
+
+/// Represents some geometric object or nothing
+#[derive(Debug, Clone, PartialEq)]
+pub enum GeoObj<T> {
+    Nothing,
+    Point(Point<T>),
+    Line(Line<T>),
+}
 
 
 /// Represents a 3D point
@@ -43,12 +53,37 @@ where
     T: Mul<Output = T>,
     T: Clone,
 {
-    pub fn lies_on(self, pi: &Plane<T>) -> bool {
+    pub fn lies_on(&self, pi: &Plane<T>) -> bool {
         let r = pi.a.clone() * self.x.clone()
               + pi.b.clone() * self.y.clone()
               + pi.c.clone() * self.z.clone()
               + pi.d.clone();
         r.is_zero()
+    }
+}
+
+impl<T> PartialEq for Point<T>
+where
+    T: PartialEq,
+{
+    fn eq(&self, other: &Self) -> bool {
+        self.x == other.x && self.y == other.y && self.z == other.z
+    }
+}
+
+
+/// Represents a line in 3D
+#[derive(Debug, Clone)]
+pub struct Line<T> {
+    a: T,
+}
+
+impl<T> PartialEq for Line<T>
+where
+    T: PartialEq,
+{
+    fn eq(&self, other: &Self) -> bool {
+        self.a == other.a
     }
 }
 
@@ -68,6 +103,44 @@ impl<T> Plane<T>
 {
     pub fn new(a: T, b: T, c: T, d: T) -> Plane<T> {
         Plane { a: a, b: b, c: c, d: d }
+    }
+}
+
+impl<T> Plane<T>
+where
+    T: Zero + One,
+    T: Sub<Output = T>,
+    T: Div<Output = T>,
+    T: Mul<Output = T>,
+    T: Neg<Output = T>,
+    T: Clone,
+{
+    pub fn meet(self, others: &[Self]) -> GeoObj<T> {
+        if others.len() == 0 {
+            return GeoObj::<T>::Nothing;
+        }
+
+        if others.len() == 2 {
+            let mut mv = Vec::new();
+            let mut dv = Vec::new();
+            mv.push(vec![self.a.clone(), self.b.clone(), self.c.clone()]);
+            dv.push( - self.d.clone());
+            for (_, pi) in others.iter().enumerate() {
+                mv.push(vec![pi.a.clone(), pi.b.clone(), pi.c.clone()]);
+                dv.push(T::zero() - pi.d.clone());
+            }
+            let m = Matrix::new(mv);
+            let oinv = m.inverse();
+            let inv = match oinv {
+                None => return GeoObj::<T>::Nothing,
+                Some(inv) => inv,
+            };
+            let cv = ColumnVector::new(dv);
+            let rv = inv*cv;
+            return GeoObj::<T>::Point(Point::new(rv.get(0),rv.get(1),rv.get(2)));
+        }
+
+        GeoObj::<T>::Nothing
     }
 }
 
@@ -123,6 +196,7 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
+    use num::rational::Ratio;
 
     #[test]
     fn points_lie_on_a_plane() {
@@ -133,6 +207,23 @@ mod tests {
         assert!(p1.lies_on(&pi));
         assert!(p2.lies_on(&pi));
         assert!(p3.lies_on(&pi));
+    }
+
+    #[test]
+    fn three_plains_meet_in_one_point() {
+        let pi1 = Plane::new(Ratio::from(1),Ratio::from(2),Ratio::from(-1),Ratio::from(3));
+        let pi2 = Plane::new(Ratio::from(3),Ratio::from(7),Ratio::from(2),Ratio::from(-1));
+        let pi3 = Plane::new(Ratio::from(4),Ratio::from(-2),Ratio::from(1),Ratio::from(2));
+
+        let p1 = pi1.clone().meet(&[pi2.clone(),pi3.clone()]);
+        let p2 = GeoObj::Point(Point::new(Ratio::from(-1),Ratio::from(0),Ratio::from(2)));
+        assert_eq!(p1,p2);
+        _ = match p1 {
+            GeoObj::Point(p) => {assert!(p.lies_on(&pi1));
+                                 assert!(p.lies_on(&pi2));
+                                 assert!(p.lies_on(&pi3));},
+            _ => assert!(false),
+        }
     }
 }
 
