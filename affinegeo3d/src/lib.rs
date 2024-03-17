@@ -78,6 +78,67 @@ where
     }
 }
 
+impl<T> Add<Vector<T>> for Point<T>
+where
+    T: Add<Output = T>,
+{
+    type Output = Point<T>;
+
+    fn add(self, v: Vector<T>) -> Point<T> {
+        let x = self.x + v.x;
+        let y = self.y + v.y;
+        let z = self.z + v.z;
+        Point { x: x, y: y, z: z }
+    }
+}
+
+
+/// Represents a 3D vector
+#[derive(Debug, Clone)]
+pub struct Vector<T> {
+    pub x : T,
+    pub y : T,
+    pub z : T,
+}
+
+
+impl<T> Vector<T>
+{
+    pub fn new(x: T, y: T, z: T) -> Vector<T> {
+        Vector { x: x, y: y, z: z }
+    }
+}
+
+
+impl<T> Vector<T>
+where
+    T: Sub<Output = T>,
+{
+    pub fn newp(start: Point<T>, end: Point<T>) -> Vector<T> {
+        let x = end.x-start.x;
+        let y = end.y-start.y;
+        let z = end.z-start.z;
+
+        Vector { x: x, y: y, z: z }
+    }
+}
+
+impl<T> Mul<T> for Vector<T>
+where
+    T: Mul<Output = T>,
+    T: Clone,
+{
+    type Output = Vector<T>;
+
+    fn mul(self, scalar: T) -> Vector<T> {
+        let x = scalar.clone() * self.x;
+        let y = scalar.clone() * self.y;
+        let z = scalar*self.z;
+
+        Vector::new(x,y,z)
+    }
+}
+
 
 /// Represents a line in 3D
 #[derive(Debug, Clone)]
@@ -90,6 +151,16 @@ impl<T> Line<T>
 {
     pub fn new(a: Point<T>, b: Point<T>) -> Line<T> {
         Line { a:a, b:b }
+    }
+}
+
+impl<T> Line<T>
+where
+    T: Add<Output = T>,
+    T: Clone,
+{
+    pub fn newv(p: Point<T>, v: Vector<T>) -> Line<T> {
+        Line { a:p.clone(), b:p+v }
     }
 }
 
@@ -121,6 +192,38 @@ where
         mv.push(vec![point.x.clone(), point.y.clone(), point.z.clone()]);
         let m = Matrix::new(mv);
         m.determinant().is_zero()
+    }
+}
+
+impl<T> Line<T>
+where
+    T: Zero,
+    T: Add<Output = T>,
+    T: Sub<Output = T>,
+    T: Mul<Output = T>,
+    T: Div<Output = T>,
+    T: Clone,
+{
+    pub fn meet(&self, plane: &Plane<T>) -> Option<Point<T>> {
+        let a = plane.a.clone();
+        let b = plane.b.clone();
+        let c = plane.c.clone();
+        let d = plane.d.clone();
+        let x1 = self.a.x.clone();
+        let x2 = self.b.x.clone();
+        let y1 = self.a.y.clone();
+        let y2 = self.b.y.clone();
+        let z1 = self.a.z.clone();
+        let z2 = self.b.z.clone();
+        let denom = a.clone()*(x1.clone()-x2.clone())
+                   +b.clone()*(y1.clone()-y2.clone())
+                   +c.clone()*(z1.clone()-z2.clone());
+        if denom.is_zero() {
+            return None;
+        }
+        let numer = a*x1 + b*y1 + c*z1 + d;
+        let lambda = numer / denom;
+        Some(self.a.clone() + Vector::newp(self.a.clone(),self.b.clone())*lambda)
     }
 }
 
@@ -272,6 +375,19 @@ mod tests {
         let l = Line::new(p1,p2);
         assert!(l.passes_through(&p3));
         assert!(!l.passes_through(&p4));
+    }
+
+    #[test]
+    fn meet_of_line_and_plane() {
+        let p = Point::new(Ratio::from(1),Ratio::from(2),Ratio::from(-3));
+        let v = Vector::new(Ratio::from(-1),Ratio::from(4),Ratio::from(1));
+        let l = Line::newv(p,v);
+        let pi = Plane::new(Ratio::from(1),Ratio::from(3),Ratio::from(-1),Ratio::from(-5));
+        let pm = l.meet(&pi);
+        assert!(l.passes_through(&pm.as_ref().unwrap()));
+        assert!(pm.as_ref().unwrap().lies_on(&pi));
+        let pr = Point::new(Ratio::new(3,2),Ratio::from(0),Ratio::new(-7,2));
+        assert_eq!(*pm.as_ref().unwrap(),pr);
     }
 }
 
