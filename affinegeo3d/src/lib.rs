@@ -138,6 +138,61 @@ where
     }
 }
 
+impl<T> Vector<T>
+where
+    T: Zero,
+    T: PartialEq,
+    T: Mul<Output = T>,
+    T: Sub<Output = T>,
+    T: Clone,
+{
+    pub fn is_collinear(&self, other: &Self) -> bool {
+        self.clone().cross(other.clone()).is_zero()
+    }
+}
+
+impl<T> Vector<T>
+where
+    T: Mul<Output = T>,
+    T: Sub<Output = T>,
+    T: Clone,
+{
+    pub fn cross(self, other: Self) -> Vector<T> {
+        let x = self.y.clone() * other.z.clone() - self.z.clone() * other.y.clone();
+        let y = self.z.clone() * other.x.clone() - self.x.clone() * other.z.clone();
+        let z = self.x.clone() * other.y.clone() - self.y.clone() * other.x.clone();
+        Vector { x:x, y:y, z:z }
+    }
+}
+
+impl<T> Zero for Vector<T>
+where
+    T: Zero,
+    T: PartialEq,
+{
+    fn zero() -> Vector<T> {
+        Vector { x: T::zero(), y: T::zero(), z: T::zero() }
+    }
+
+    fn is_zero(&self) -> bool {
+        self.x == T::zero() && self.y == T::zero() && self.z == T::zero()
+    }
+}
+
+impl<T> Add for Vector<T>
+where
+    T: Add<Output = T>,
+{
+    type Output = Vector<T>;
+
+    fn add(self, other: Self) -> Vector<T> {
+        let x = self.x + other.x;
+        let y = self.y + other.y;
+        let z = self.z + other.z;
+        Vector { x:x, y:y, z:z }
+    }
+}
+
 impl<T> Mul<T> for Vector<T>
 where
     T: Mul<Output = T>,
@@ -308,6 +363,13 @@ where
         let c = det.get(0).get(0).get(1);
         let d = det.get(0).get(0).get(0);
         Plane { a: a, b: b, c: c, d: d }
+    }
+
+    pub fn newpv(a: Point<T>, u: Vector<T>, v: Vector<T>) -> Plane<T> {
+        if u.is_collinear(&v) {
+            panic!("Plane cannot be defined by collinear vectors");
+        }
+        Plane::newp(a.clone(), a.clone()+u, a+v)
     }
 }
 
@@ -531,6 +593,17 @@ mod tests {
         assert!(p1.lies_on(&pi));
         assert!(p2.lies_on(&pi));
         assert!(p3.lies_on(&pi));
+    }
+
+    #[test]
+    fn one_point_and_two_vectors_define_a_plane() {
+        let a = Point::new(1,0,-1);
+        let u = Vector::new(1,1,4);
+        let v = Vector::new(-5,2,6);
+        let pi = Plane::newpv(a.clone(),u.clone(),v.clone());
+        assert!(a.lies_on(&pi));
+        assert!((a.clone()+u).lies_on(&pi));
+        assert!((a+v).lies_on(&pi));
     }
 }
 
