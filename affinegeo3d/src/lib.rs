@@ -22,7 +22,14 @@ use linalg::{Matrix, ColumnVector};
 
 /// Represents some geometric object or nothing
 #[derive(Debug, Clone, PartialEq)]
-pub enum GeoObj<T> {
+pub enum GeoObj<T>
+where
+    T: Zero + One,
+    T: Sub<Output = T>,
+    T: Mul<Output = T>,
+    T: Neg<Output = T>,
+    T: Clone,
+{
     Nothing,
     Point(Point<T>),
     Line(Line<T>),
@@ -88,10 +95,14 @@ impl<T> Line<T>
 
 impl<T> PartialEq for Line<T>
 where
-    T: PartialEq,
+    T: Zero + One,
+    T: Sub<Output = T>,
+    T: Mul<Output = T>,
+    T: Neg<Output = T>,
+    T: Clone,
 {
     fn eq(&self, other: &Self) -> bool {
-        self.a == other.a
+        other.passes_through(&self.a) && other.passes_through(&self.b)
     }
 }
 
