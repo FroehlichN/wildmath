@@ -18,6 +18,7 @@ limitations under the License.
 use num::{Zero, One};
 use std::ops::{Mul, Div, Add, Sub, Neg};
 use linalg::{Matrix, ColumnVector};
+use polynumber::*;
 
 
 /// Represents some geometric object or nothing
@@ -66,6 +67,20 @@ where
               + pi.c.clone() * self.z.clone()
               + pi.d.clone();
         r.is_zero()
+    }
+}
+
+impl<T> Point<T>
+where
+    T: Zero + One,
+    T: Sub<Output = T>,
+    T: Mul<Output = T>,
+    T: Neg<Output = T>,
+    T: Clone,
+{
+    pub fn is_collinear(&self, p2: &Self, p3: &Self) -> bool {
+        let l = Line::new(p2.clone(),p3.clone());
+        l.passes_through(&self)
     }
 }
 
@@ -261,6 +276,44 @@ impl<T> Plane<T>
 impl<T> Plane<T>
 where
     T: Zero + One,
+    T: PartialEq,
+    T: Sub<Output = T>,
+    T: Mul<Output = T>,
+    T: Neg<Output = T>,
+    T: Clone,
+{
+    pub fn newp(a: Point<T>, b: Point<T>, c: Point<T>) -> Plane<T> {
+        if a.is_collinear(&b, &c) {
+            panic!("Plane cannot be defined by collinear points");
+        }
+        let x = create_polynumber_var!(x; x,y,z; T);
+        let y = create_polynumber_var!(y; x,y,z; T);
+        let z = create_polynumber_var!(z; x,y,z; T);
+        let one = create_polynumber_one!(x,y,z; T);
+
+        let mut mv = Vec::new();
+        mv.push(vec![x - one.clone()*a.x.clone(),
+                     y - one.clone()*a.y.clone(),
+                     z - one.clone()*a.z.clone()]);
+        mv.push(vec![one.clone()*(b.x - a.x.clone()),
+                     one.clone()*(b.y - a.y.clone()),
+                     one.clone()*(b.z - a.z.clone())]);
+        mv.push(vec![one.clone()*(c.x - a.x),
+                     one.clone()*(c.y - a.y),
+                     one*(c.z - a.z)]);
+        let m = Matrix::new(mv);
+        let det = m.determinant();
+        let a = det.get(1).get(0).get(0);
+        let b = det.get(0).get(1).get(0);
+        let c = det.get(0).get(0).get(1);
+        let d = det.get(0).get(0).get(0);
+        Plane { a: a, b: b, c: c, d: d }
+    }
+}
+
+impl<T> Plane<T>
+where
+    T: Zero + One,
     T: Sub<Output = T>,
     T: Div<Output = T>,
     T: Mul<Output = T>,
@@ -336,18 +389,19 @@ pub struct Tetrahedron<T> {
 
 impl<T> Tetrahedron<T>
 where
-    T: One,
+    T: Zero + One,
     T: Add<Output = T>,
     T: Sub<Output = T>,
     T: Mul<Output = T>,
     T: Div<Output = T>,
+    T: Neg<Output = T>,
     T: Clone,
 {
     pub fn new(a1: Point<T>, a2: Point<T>, a3: Point<T>)
         -> Tetrahedron<T> {
-/*        if a1.is_collinear(&a2, &a3) {
+        if a1.is_collinear(&a2, &a3) {
             panic!("Tetrahedron cannot have collinear points");
-        }*/
+        }
         Tetrahedron { points: [a1, a2, a3] }
     }
 
@@ -466,6 +520,17 @@ mod tests {
                 },
             _ => assert!(false),
         }
+    }
+
+    #[test]
+    fn three_points_define_a_plane() {
+        let p1 = Point::new(1,0,-1);
+        let p2 = Point::new(2,1,3);
+        let p3 = Point::new(-4,2,5);
+        let pi = Plane::newp(p1.clone(),p2.clone(),p3.clone());
+        assert!(p1.lies_on(&pi));
+        assert!(p2.lies_on(&pi));
+        assert!(p3.lies_on(&pi));
     }
 }
 

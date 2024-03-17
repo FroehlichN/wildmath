@@ -9,4 +9,5 @@ edition = "2021"
 [dependencies]
 num = "0.3"
 linalg = { path = "../linalg" }
+polynumber = { path = "../polynumber" }
 

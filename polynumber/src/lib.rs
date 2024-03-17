@@ -16,7 +16,7 @@ limitations under the License.
 */
 
 use num::{Zero,One};
-use std::ops::{Mul, Add, Sub, Div};
+use std::ops::{Mul, Add, Sub, Div, Neg};
 use std::fmt;
 
 /// Construct variables of a polynumber, commonly known as polynomial.
@@ -186,6 +186,18 @@ where
     }
 }
 
+impl<T> Neg for PolyNumber<T>
+where
+    T: PartialEq + Zero + One + Mul + Add + Sub + Clone,
+    T: Sub<Output = T>,
+{
+    type Output = PolyNumber<T>;
+
+    fn neg(self) -> PolyNumber<T> {
+        PolyNumber::<T>::zero() - self
+    }
+}
+
 impl<T> Mul for PolyNumber<T>
 where
     T: Mul<Output = T>,
@@ -251,6 +263,27 @@ where
     }
 }
 
+impl<T> Mul<T> for PolyNumber<PolyNumber<PolyNumber<T>>>
+where
+    T: Mul,
+    PolyNumber<PolyNumber<T>>: One,
+    PolyNumber<PolyNumber<T>>: Mul<Output = PolyNumber<PolyNumber<T>>>,
+    PolyNumber<PolyNumber<T>>: Mul<T, Output = PolyNumber<PolyNumber<T>>>,
+    T: Clone,
+{
+    type Output = PolyNumber<PolyNumber<PolyNumber<T>>>;
+
+    fn mul(self, other: T) -> PolyNumber<PolyNumber<PolyNumber<T>>> {
+        let mut p: Vec<PolyNumber<PolyNumber<T>>> = Vec::new();
+
+        for a in self.n {
+            p.push(a.clone() * (PolyNumber::<PolyNumber<T>>::one() * other.clone()));
+        }
+
+        return PolyNumber::new_var(p, &self.var);
+    }
+}
+
 impl<T> PolyNumber<T>
 where
     T: Clone,
@@ -303,7 +336,7 @@ impl<T> PolyNumber<T>
 where
     T: PartialEq + Zero + One + Mul + Add + Sub + Clone,
 {
-    fn ltrans(&self, c: T) -> PolyNumber<T> {
+    pub fn ltrans(&self, c: T) -> PolyNumber<T> {
         let q = PolyNumber::new_var(vec![c,T::one()], &self.var);
         return self.eval(q);
     }
@@ -313,7 +346,7 @@ impl<T> PolyNumber<PolyNumber<T>>
 where
     T: PartialEq + Zero + One + Mul + Add + Sub + Clone,
 {
-    fn ltrans2(&self, r: T, s: T) -> PolyNumber<PolyNumber<T>> {
+    pub fn ltrans2(&self, r: T, s: T) -> PolyNumber<PolyNumber<T>> {
         let a = PolyNumber::new_var(vec![r,T::one()], &self.var); // r + a
         let dvar = "d".to_string() + &self.var.to_string();
         let b = PolyNumber::new_var(vec![PolyNumber::new_var(vec![s], &dvar), // s
@@ -388,7 +421,7 @@ where
     T: PartialEq + Zero + One + Mul + Add + Sub + Clone,
     T: Sub<Output = T>,
 {
-    fn tangent(self, k: usize, c: T) -> PolyNumber<T> {
+    pub fn tangent(self, k: usize, c: T) -> PolyNumber<T> {
         let p_alpha_plus_c = self.ltrans(c.clone());
         let trunc = p_alpha_plus_c.truncate(k);
         return trunc.ltrans(T::zero() - c);
@@ -414,7 +447,7 @@ where
     T: PartialEq,
     T: Clone,
 {
-    fn taylor(self) -> PolyNumber<PolyNumber<T>> {
+    pub fn taylor(self) -> PolyNumber<PolyNumber<T>> {
         let dvar = "d".to_string() + &self.var.to_string();
         let p = PolyNumber::new_var(vec! [ PolyNumber::new_var(vec![T::zero(),T::one()], &dvar),
                                        PolyNumber::new_var(vec![T::one(),T::zero()], &dvar) ], &self.var );
@@ -429,7 +462,7 @@ where
     T: PartialEq,
     T: Clone,
 {
-    fn taylor2(self) -> PolyNumber<PolyNumber<PolyNumber<PolyNumber<T>>>> {
+    pub fn taylor2(self) -> PolyNumber<PolyNumber<PolyNumber<PolyNumber<T>>>> {
         let apg = PolyNumber::new(vec![PolyNumber::new(vec![T::zero(),T::one()]), // a
                                       PolyNumber::new(vec![T::one(),T::zero()]) ]); // g
         let bpd = PolyNumber::new(vec![
@@ -454,7 +487,7 @@ where
     T: PartialEq,
     T: Clone,
 {
-    fn derivative(self, grade: usize) -> PolyNumber<T> {
+    pub fn derivative(self, grade: usize) -> PolyNumber<T> {
         let tp = self.taylor();
         let  s = tp.n.get(grade);
         match s {
@@ -471,7 +504,7 @@ where
     T: PartialEq,
     T: Clone,
 {
-    fn derivative2(self, i : usize, j : usize) -> PolyNumber<PolyNumber<T>> {
+    pub fn derivative2(self, i : usize, j : usize) -> PolyNumber<PolyNumber<T>> {
         let tp = self.clone().taylor2();
 
         let bpol : PolyNumber<PolyNumber<PolyNumber<T>>>;
@@ -499,7 +532,7 @@ where
     T: Sub<Output = T>,
     T: Div<Output = T>,
 {
-    fn newton_approx(self, k : T, r1 : T) -> T {
+    pub fn newton_approx(self, k : T, r1 : T) -> T {
         let t = self.tangent(1,r1);
         let o = &t.n[0];
         let s = &t.n[1];
