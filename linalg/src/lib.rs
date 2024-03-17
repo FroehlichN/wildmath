@@ -245,7 +245,6 @@ where
 impl<T> Matrix<T>
 where
     T: Zero + One,
-    T: Div<Output = T>,
     T: Mul<Output = T>,
     T: Sub<Output = T>,
     T: Neg<Output = T>,
@@ -259,7 +258,7 @@ where
         } else if self.rows == 1 {
             return self.get(0,0);
         } else {
-            let mone = T::zero() - T::one();
+            let mone = - T::one();
             let mut sign = mone.clone();
             let mut det = T::zero();
             for ri in 0..self.rows {
@@ -270,7 +269,17 @@ where
             return det;
         }
     }
+}
 
+impl<T> Matrix<T>
+where
+    T: Zero + One,
+    T: Div<Output = T>,
+    T: Mul<Output = T>,
+    T: Sub<Output = T>,
+    T: Neg<Output = T>,
+    T: Clone,
+{
     pub fn inverse(&self) -> Option<Matrix<T>> {
         if self.rows != self.cols {
             return None;

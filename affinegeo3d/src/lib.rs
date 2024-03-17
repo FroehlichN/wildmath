@@ -75,7 +75,15 @@ where
 /// Represents a line in 3D
 #[derive(Debug, Clone)]
 pub struct Line<T> {
-    a: T,
+    a: Point<T>,
+    b: Point<T>,
+}
+
+impl<T> Line<T>
+{
+    pub fn new(a: Point<T>, b: Point<T>) -> Line<T> {
+        Line { a:a, b:b }
+    }
 }
 
 impl<T> PartialEq for Line<T>
@@ -84,6 +92,24 @@ where
 {
     fn eq(&self, other: &Self) -> bool {
         self.a == other.a
+    }
+}
+
+impl<T> Line<T>
+where
+    T: Zero + One,
+    T: Sub<Output = T>,
+    T: Mul<Output = T>,
+    T: Neg<Output = T>,
+    T: Clone,
+{
+    pub fn passes_through(&self, point: &Point<T>) -> bool {
+        let mut mv = Vec::new();
+        mv.push(vec![self.a.x.clone(), self.a.y.clone(), self.a.z.clone()]);
+        mv.push(vec![self.b.x.clone(), self.b.y.clone(), self.b.z.clone()]);
+        mv.push(vec![point.x.clone(), point.y.clone(), point.z.clone()]);
+        let m = Matrix::new(mv);
+        m.determinant().is_zero()
     }
 }
 
@@ -224,6 +250,17 @@ mod tests {
                                  assert!(p.lies_on(&pi3));},
             _ => assert!(false),
         }
+    }
+
+    #[test]
+    fn line_passes_through_point() {
+        let p1 = Point::new(3,1,1);
+        let p2 = Point::new(2,2,-1);
+        let p3 = Point::new(1,3,-3);
+        let p4 = Point::new(0,4,3);
+        let l = Line::new(p1,p2);
+        assert!(l.passes_through(&p3));
+        assert!(!l.passes_through(&p4));
     }
 }
 
