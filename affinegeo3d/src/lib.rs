@@ -227,6 +227,18 @@ where
     }
 }
 
+impl<T> Line<T>
+where
+    T: Zero,
+    T: Add,
+    T: Mul<Output = T>,
+    T: Clone,
+{
+    pub fn lies_on(&self, plane: &Plane<T>) -> bool {
+        self.a.lies_on(&plane) && self.b.lies_on(&plane)
+    }
+}
+
 
 /// Represents a plane in 3D
 /// a*x + b*y + c*z + d = 0
@@ -255,9 +267,39 @@ where
     T: Neg<Output = T>,
     T: Clone,
 {
-    pub fn meet(self, others: &[Self]) -> GeoObj<T> {
+    pub fn meet(&self, others: &[Self]) -> GeoObj<T> {
         if others.len() == 0 {
             return GeoObj::<T>::Nothing;
+        }
+
+        if others.len() == 1 {
+            let pi1 = Plane::new(T::one(),T::zero(),T::zero(),T::zero());
+            let pi2 = Plane::new(T::zero(),T::one(),T::zero(),T::zero());
+            let pi3 = Plane::new(T::zero(),T::zero(),T::one(),T::zero());
+
+            let go1 = self.meet(&[others[0].clone(), pi1]);
+            let go2 = self.meet(&[others[0].clone(), pi2]);
+            let go3 = self.meet(&[others[0].clone(), pi3]);
+
+            match (go1, go2, go3) {
+                (GeoObj::<T>::Nothing, GeoObj::<T>::Nothing, GeoObj::<T>::Nothing) =>
+                    return GeoObj::<T>::Nothing,
+                (GeoObj::<T>::Nothing, GeoObj::<T>::Nothing, GeoObj::<T>::Point(_p3)) =>
+                    return GeoObj::<T>::Nothing,
+                (GeoObj::<T>::Nothing, GeoObj::<T>::Point(_p2), GeoObj::<T>::Nothing) =>
+                    return GeoObj::<T>::Nothing,
+                (GeoObj::<T>::Nothing, GeoObj::<T>::Point(p2), GeoObj::<T>::Point(p3)) =>
+                    return GeoObj::<T>::Line(Line::new(p2,p3)),
+                (GeoObj::<T>::Point(_p1), GeoObj::<T>::Nothing, GeoObj::<T>::Nothing) =>
+                    return GeoObj::<T>::Nothing,
+                (GeoObj::<T>::Point(p1), GeoObj::<T>::Nothing, GeoObj::<T>::Point(p3)) =>
+                    return GeoObj::<T>::Line(Line::new(p1,p3)),
+                (GeoObj::<T>::Point(p1), GeoObj::<T>::Point(p2), GeoObj::<T>::Nothing) =>
+                    return GeoObj::<T>::Line(Line::new(p1,p2)),
+                (GeoObj::<T>::Point(p1), GeoObj::<T>::Point(p2), GeoObj::<T>::Point(_p3)) =>
+                    return GeoObj::<T>::Line(Line::new(p1,p2)),
+                _ => return GeoObj::<T>::Nothing,
+            };
         }
 
         if others.len() == 2 {
@@ -388,6 +430,42 @@ mod tests {
         assert!(pm.as_ref().unwrap().lies_on(&pi));
         let pr = Point::new(Ratio::new(3,2),Ratio::from(0),Ratio::new(-7,2));
         assert_eq!(*pm.as_ref().unwrap(),pr);
+    }
+
+    #[test]
+    fn two_planes_meet_in_one_line() {
+        let pi1 = Plane::new(Ratio::from(1),Ratio::from(2),Ratio::from(-1),Ratio::from(3));
+        let pi2 = Plane::new(Ratio::from(3),Ratio::from(7),Ratio::from(2),Ratio::from(-1));
+        let go = pi1.meet(&[pi2.clone()]);
+        match go {
+            GeoObj::Line(l) => {
+                    assert!(l.lies_on(&pi1));
+                    assert!(l.lies_on(&pi2));
+                    let p = Point::new(Ratio::from(-23),Ratio::from(10),Ratio::from(0));
+                    let v = Vector::new(Ratio::from(11),Ratio::from(-5),Ratio::from(1));
+                    let l2 = Line::newv(p,v);
+                    assert_eq!(l,l2);
+                },
+            _ => assert!(false),
+        }
+    }
+
+    #[test]
+    fn two_planes_meet_in_one_line_2() {
+        let pi1 = Plane::new(Ratio::from(1),Ratio::from(3),Ratio::from(-2),Ratio::from(-2));
+        let pi2 = Plane::new(Ratio::from(2),Ratio::from(6),Ratio::from(-5),Ratio::from(-3));
+        let go = pi1.meet(&[pi2.clone()]);
+        match go {
+            GeoObj::Line(l) => {
+                    assert!(l.lies_on(&pi1));
+                    assert!(l.lies_on(&pi2));
+                    let p = Point::new(Ratio::from(4),Ratio::from(0),Ratio::from(1));
+                    let v = Vector::new(Ratio::from(-3),Ratio::from(1),Ratio::from(0));
+                    let l2 = Line::newv(p,v);
+                    assert_eq!(l,l2);
+                },
+            _ => assert!(false),
+        }
     }
 }
 
