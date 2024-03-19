@@ -217,6 +217,20 @@ where
         }
         Matrix { rows: self.rows-1, cols: self.cols-1, elem: m }
     }
+
+    pub fn transpose(&self) -> Matrix<T> {
+        let rows = self.cols;
+        let cols = self.rows;
+        let mut m = Vec::new();
+        for ri in 0..rows {
+            let mut row = Vec::new();
+            for ci in 0..cols {
+                row.push(self.get(ci,ri));
+            }
+            m.push(row);
+        }
+        Matrix { rows: rows, cols: cols, elem: m }
+    }
 }
 
 impl<T> Matrix<T>
@@ -348,6 +362,30 @@ where
             let mut row : Vec<T> = Vec::new();
             for ci in 0..cols {
                 row.push(self.get(ri,ci) + other.get(ri,ci));
+            }
+            elem.push(row);
+        }
+        Matrix { rows: rows, cols: cols, elem: elem }
+    }
+}
+
+impl<T> Sub for Matrix<T>
+where
+    T: Zero,
+    T: Sub<Output = T>,
+    T: Clone,
+{
+    type Output = Matrix<T>;
+
+    fn sub(self, other: Self) -> Matrix<T> {
+        let rows = if self.rows > other.rows {self.rows} else {other.rows};
+        let cols = if self.cols > other.cols {self.cols} else {other.cols};
+
+        let mut elem : Vec<Vec<T>> = Vec::new();
+        for ri in 0..rows {
+            let mut row : Vec<T> = Vec::new();
+            for ci in 0..cols {
+                row.push(self.get(ri,ci) - other.get(ri,ci));
             }
             elem.push(row);
         }

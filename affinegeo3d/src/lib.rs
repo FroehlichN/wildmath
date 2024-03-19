@@ -17,7 +17,7 @@ limitations under the License.
 
 use num::{Zero, One};
 use std::ops::{Mul, Div, Add, Sub, Neg};
-use linalg::{Matrix, ColumnVector};
+use linalg::{Matrix, ColumnVector, RowVector};
 use polynumber::*;
 
 
@@ -441,6 +441,41 @@ where
     }
 }
 
+impl<T> Plane<T>
+where
+    T: Zero + One,
+    T: Add<Output = T>,
+    T: Sub<Output = T>,
+    T: Mul<Output = T>,
+    T: Div<Output = T>,
+    T: Clone,
+{
+    pub fn projection_matrix(&self, direction: &Vector<T>) -> Matrix<T> {
+        let pv = vec![self.a.clone(), self.b.clone(), self.c.clone()];
+        let dv = vec![direction.x.clone(), direction.y.clone(), direction.z.clone()];
+        let zerov = vec![T::zero(), T::zero(), T::zero()];
+
+        let s = T::one() / (RowVector::<T>::new(pv.clone()) * ColumnVector::<T>::new(dv.clone()));
+
+        let ident = Matrix::<T>::identitiy(3,3);
+
+        let mut dmtv = Vec::new();
+        dmtv.push(dv);
+        dmtv.push(zerov.clone());
+        dmtv.push(zerov.clone());
+        let dmt = Matrix::<T>::new(dmtv);
+        let dm = dmt.transpose();
+
+        let mut pmv = Vec::new();
+        pmv.push(pv);
+        pmv.push(zerov.clone());
+        pmv.push(zerov.clone());
+        let pm = Matrix::<T>::new(pmv);
+
+        ident - dm*pm*s
+    }
+}
+
 
 /// Represents a 3D tetrahedon
 /// T is type of the coordinates of the points
@@ -604,6 +639,36 @@ mod tests {
         assert!(a.lies_on(&pi));
         assert!((a.clone()+u).lies_on(&pi));
         assert!((a+v).lies_on(&pi));
+    }
+
+    #[test]
+    fn projections_onto_a_plane() {
+        let pi1 = Plane::new(Ratio::from(1),Ratio::from(-5),Ratio::from(2),Ratio::from(0));
+        let v1 = Vector::new(Ratio::from(1),Ratio::from(1),Ratio::from(3));
+        let v2 = Vector::new(Ratio::from(1),Ratio::from(-5),Ratio::from(2));
+        let pm1 = pi1.projection_matrix(&v1);
+        let pm2 = pi1.projection_matrix(&v2);
+        assert_eq!(pm1.clone()*pm1.clone(),pm1.clone());
+        assert_eq!(pm2.clone()*pm2.clone(),pm2.clone());
+
+        let u1 = ColumnVector::new(vec![Ratio::from(12),Ratio::from(-341),Ratio::from(35)]);
+        let u2 = ColumnVector::new(vec![Ratio::from(-123),Ratio::from(-55),Ratio::from(32)]);
+
+        let pu11 = pm1.clone()*u1.clone();
+        let pu12 = pm1*u2.clone();
+        let pu21 = pm2.clone()*u1;
+        let pu22 = pm2*u2;
+
+        let vpu11 = Vector::new(pu11.get(0), pu11.get(1), pu11.get(2));
+        let vpu12 = Vector::new(pu12.get(0), pu12.get(1), pu12.get(2));
+        let vpu21 = Vector::new(pu21.get(0), pu21.get(1), pu21.get(2));
+        let vpu22 = Vector::new(pu22.get(0), pu22.get(1), pu22.get(2));
+
+        let o = Point::new(Ratio::from(0),Ratio::from(0),Ratio::from(0));
+        assert!((o.clone() + vpu11).lies_on(&pi1));
+        assert!((o.clone() + vpu12).lies_on(&pi1));
+        assert!((o.clone() + vpu21).lies_on(&pi1));
+        assert!((o + vpu22).lies_on(&pi1));
     }
 }
 
