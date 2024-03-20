@@ -15,7 +15,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-use affinegeo::*;
+use affinegeo2d::*;
 use polynumber::*;
 
 fn main() {
@@ -322,15 +322,15 @@ mod tests {
         let vhk1 = TwoVector::new0e(ehk1);
         let vhk2 = TwoVector::new0e(ehk2);
 
-        let sh = affinegeo::Reflection::new(vh.clone());
-        let sk = affinegeo::Reflection::new(vk.clone());
-        let rh = affinegeo::Rotation::new(vh.clone());
-        let rk = affinegeo::Rotation::new(vk.clone());
+        let sh = affinegeo2d::Reflection::new(vh.clone());
+        let sk = affinegeo2d::Reflection::new(vk.clone());
+        let rh = affinegeo2d::Rotation::new(vh.clone());
+        let rk = affinegeo2d::Rotation::new(vk.clone());
 
-        assert_eq!(sh.clone()*sk.clone(),affinegeo::Rotation::new(vhk1.clone()));
-        assert_eq!(rh.clone()*rk.clone(),affinegeo::Rotation::new(vhk2.clone()));
-        assert_eq!(sh.clone()*rk.clone(),affinegeo::Reflection::new(vhk2.clone()));
-        assert_eq!(rh.clone()*sk.clone(),affinegeo::Reflection::new(vhk1.clone()));
+        assert_eq!(sh.clone()*sk.clone(),affinegeo2d::Rotation::new(vhk1.clone()));
+        assert_eq!(rh.clone()*rk.clone(),affinegeo2d::Rotation::new(vhk2.clone()));
+        assert_eq!(sh.clone()*rk.clone(),affinegeo2d::Reflection::new(vhk2.clone()));
+        assert_eq!(rh.clone()*sk.clone(),affinegeo2d::Reflection::new(vhk1.clone()));
     }
     #[test]
     fn proof_addition_theorem_for_circle_sum() {

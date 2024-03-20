@@ -1,5 +1,5 @@
 [package]
-name = "affinegeo"
+name = "affinegeo2d"
 version = "0.1.0"
 authors = ["Norbert Fröhlich <norbert.froehlich@alice.de>"]
 edition = "2018"
