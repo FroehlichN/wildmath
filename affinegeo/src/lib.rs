@@ -15,9 +15,9 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-use num::{Zero};
-use std::ops::{Mul, Add, Sub};
-use linalg::{ColumnVector, RowVector};
+use num::{Zero, One};
+use std::ops::{Mul, Add, Sub, Div};
+use linalg::{ColumnVector, RowVector, Matrix};
 
 
 
@@ -187,6 +187,35 @@ impl<T> Plane<T>
     }
 }
 
+impl<T> Plane<T>
+where
+    T: Zero + One,
+    T: Add<Output = T>,
+    T: Sub<Output = T>,
+    T: Mul<Output = T>,
+    T: Div<Output = T>,
+    T: Clone,
+{
+    pub fn projection_matrix(&self, direction: &Vector<T>) -> Matrix<T> {
+        let pv = self.coords.clone();
+        let dv = direction.columnvector().elem;
+
+        let s = T::one() / (RowVector::<T>::new(pv.clone()) * ColumnVector::<T>::new(dv.clone()));
+
+        let ident = Matrix::<T>::identitiy(dv.len(),pv.len());
+
+        let mut dmtv = Vec::new();
+        dmtv.push(dv);
+        let dmt = Matrix::<T>::new(dmtv);
+        let dm = dmt.transpose();
+
+        let mut pmv = Vec::new();
+        pmv.push(pv);
+        let pm = Matrix::<T>::new(pmv);
+
+        ident - dm*pm*s
+    }
+}
 
 
 #[cfg(test)]
@@ -239,5 +268,36 @@ mod tests {
         let v2 = Vector::from(vec![Ratio::new(6,1), Ratio::new(-12,1)]);
         assert_eq!(v1*s,v2);
     }
+
+    #[test]
+    fn projections_onto_a_plane() {
+        let pi1 = Plane::new(vec![Ratio::from(1),Ratio::from(-5),Ratio::from(2)],Ratio::from(0));
+        let v1 = Vector::from(vec![Ratio::from(1),Ratio::from(1),Ratio::from(3)]);
+        let v2 = Vector::from(vec![Ratio::from(1),Ratio::from(-5),Ratio::from(2)]);
+        let pm1 = pi1.projection_matrix(&v1);
+        let pm2 = pi1.projection_matrix(&v2);
+        assert_eq!(pm1.clone()*pm1.clone(),pm1.clone());
+        assert_eq!(pm2.clone()*pm2.clone(),pm2.clone());
+
+        let u1 = ColumnVector::new(vec![Ratio::from(12),Ratio::from(-341),Ratio::from(35)]);
+        let u2 = ColumnVector::new(vec![Ratio::from(-123),Ratio::from(-55),Ratio::from(32)]);
+
+        let pu11 = pm1.clone()*u1.clone();
+        let pu12 = pm1*u2.clone();
+        let pu21 = pm2.clone()*u1;
+        let pu22 = pm2*u2;
+
+        let vpu11 = Vector::from(pu11.elem);
+        let vpu12 = Vector::from(pu12.elem);
+        let vpu21 = Vector::from(pu21.elem);
+        let vpu22 = Vector::from(pu22.elem);
+
+        let o = Point::new(vec![Ratio::from(0),Ratio::from(0),Ratio::from(0)]);
+        assert!((o.clone() + vpu11).lies_on(&pi1));
+        assert!((o.clone() + vpu12).lies_on(&pi1));
+        assert!((o.clone() + vpu21).lies_on(&pi1));
+        assert!((o + vpu22).lies_on(&pi1));
+    }
+
 }
 
