@@ -115,7 +115,7 @@ where
 
 #[derive(Debug, Clone)]
 pub struct ColumnVector<T> {
-    elem: Vec<T>,
+    pub elem: Vec<T>,
 }
 
 impl<T> ColumnVector<T>
@@ -155,6 +155,28 @@ where
             }
         }
         return true;
+    }
+}
+
+impl<T> Add for ColumnVector<T>
+where
+    T: Zero,
+    T: Add<Output = T>,
+    T: Clone,
+{
+    type Output = ColumnVector<T>;
+
+    fn add(self, other: Self) -> ColumnVector<T> {
+        let srows = self.elem.len();
+        let orows = other.elem.len();
+        let rows = if srows > orows {srows} else {orows};
+
+        let mut elems = Vec::new();
+        for ri in 0..rows {
+            let s = self.get(ri) + other.get(ri);
+            elems.push(s);
+        }
+        ColumnVector::new(elems)
     }
 }
 

@@ -78,6 +78,34 @@ impl<T> Vector<T>
     }
 }
 
+impl<T> Vector<T>
+where
+    T: Zero,
+{
+    pub fn from(coords: Vec<T>) -> Vector<T> {
+        let mut zero = Vec::new();
+        for (_, _) in coords.iter().enumerate() {
+            zero.push(T::zero());
+        }
+        let start = Point::new(zero);
+        let end = Point::new(coords);
+        Vector::new(start, end)
+    }
+}
+
+impl<T> Vector<T>
+where
+    T: Zero,
+    T: Sub<Output = T>,
+    T: Clone,
+{
+    pub fn columnvector(&self) -> ColumnVector<T> {
+        let selfs = ColumnVector::new(self.start.coords.clone());
+        let selfe = ColumnVector::new(self.end.coords.clone());
+        selfe - selfs
+    }
+}
+
 impl<T> PartialEq for Vector<T>
 where
     T: PartialEq,
@@ -86,19 +114,28 @@ where
     T: Clone,
 {
     fn eq(&self, other: &Self) -> bool {
-        let selfs = ColumnVector::new(self.start.coords.clone());
-        let selfe = ColumnVector::new(self.end.coords.clone());
-
-        let others = ColumnVector::new(other.start.coords.clone());
-        let othere = ColumnVector::new(other.end.coords.clone());
-
-        let s = selfe - selfs;
-        let o = othere - others;
-
+        let s = self.columnvector();
+        let o = other.columnvector();
         s == o
     }
 }
 
+impl<T> Add for Vector<T>
+where
+    T: Zero,
+    T: Add<Output = T>,
+    T: Sub<Output = T>,
+    T: Clone,
+{
+    type Output = Vector<T>;
+
+    fn add(self, other: Self) -> Vector<T> {
+        let selfendvec = ColumnVector::new(self.end.coords);
+        let sumendvec = selfendvec + other.columnvector();
+        let sumend = Point::new(sumendvec.elem);
+        Vector::new(self.start, sumend)
+    }
+}
 
 
 /// Represents an n-D plane
@@ -143,6 +180,14 @@ mod tests {
         let v1 = Vector::new(a1, a2);
         let v2 = Vector::new(a3, a4);
         assert_eq!(v1,v2);
+    }
+
+    #[test]
+    fn add_vectors() {
+        let v1 = Vector::from(vec![Ratio::new(2,1), Ratio::new(3,1)]);
+        let v2 = Vector::from(vec![Ratio::new(2,1), Ratio::new(-4,1)]);
+        let v3 = Vector::from(vec![Ratio::new(4,1), Ratio::new(-1,1)]);
+        assert_eq!(v1+v2,v3);
     }
 
 }
