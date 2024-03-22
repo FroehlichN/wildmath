@@ -50,6 +50,22 @@ where
     }
 }
 
+impl<T> Add<Vector<T>> for Point<T>
+where
+    T: Zero,
+    T: Add<Output = T>,
+    T: Sub<Output = T>,
+    T: Clone,
+{
+    type Output = Point<T>;
+
+    fn add(self, other: Vector<T>) -> Point<T> {
+        let selfvec = ColumnVector::new(self.coords);
+        let sumvec = selfvec + other.columnvector();
+        Point::new(sumvec.elem)
+    }
+}
+
 impl<T> PartialEq for Point<T>
 where
     T: Zero,
@@ -190,5 +206,12 @@ mod tests {
         assert_eq!(v1+v2,v3);
     }
 
+    #[test]
+    fn add_point_and_vector() {
+        let p1 = Point::new(vec![1,2,3]);
+        let v1 = Vector::from(vec![4,5,6]);
+        let p2 = Point::new(vec![5,7,9]);
+        assert_eq!(p1+v1,p2);
+    }
 }
 
