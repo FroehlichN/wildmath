@@ -202,6 +202,26 @@ where
     }
 }
 
+impl<T> Mul<T> for ColumnVector<T>
+where
+    T: Zero,
+    T: Mul<Output = T>,
+    T: Clone,
+{
+    type Output = ColumnVector<T>;
+
+    fn mul(self, scalar: T) -> ColumnVector<T> {
+        let rows = self.elem.len();
+
+        let mut elems = Vec::new();
+        for ri in 0..rows {
+            let d = self.get(ri) * scalar.clone();
+            elems.push(d);
+        }
+        ColumnVector::new(elems)
+    }
+}
+
 
 #[derive(Debug, Clone)]
 pub struct Matrix<T> {

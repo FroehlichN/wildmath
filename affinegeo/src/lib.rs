@@ -153,6 +153,24 @@ where
     }
 }
 
+impl<T> Mul<T> for Vector<T>
+where
+    T: Zero,
+    T: Sub<Output = T>,
+    T: Mul<Output = T>,
+    T: Clone,
+{
+    type Output = Vector<T>;
+
+    fn mul(self, scalar: T) -> Vector<T> {
+        let vec = self.columnvector();
+        let startvec = ColumnVector::new(self.start.coords.clone());
+        let endvec = startvec + vec * scalar;
+        let end = Point::new(endvec.elem);
+        Vector::new(self.start, end)
+    }
+}
+
 
 /// Represents an n-D plane
 /// a1*x1 + a2*x2 + a3*x3 + ... = d
@@ -212,6 +230,14 @@ mod tests {
         let v1 = Vector::from(vec![4,5,6]);
         let p2 = Point::new(vec![5,7,9]);
         assert_eq!(p1+v1,p2);
+    }
+
+    #[test]
+    fn scalar_vector_mul() {
+        let s = Ratio::new(3,1);
+        let v1 = Vector::from(vec![Ratio::new(2,1), Ratio::new(-4,1)]);
+        let v2 = Vector::from(vec![Ratio::new(6,1), Ratio::new(-12,1)]);
+        assert_eq!(v1*s,v2);
     }
 }
 
