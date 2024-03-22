@@ -158,6 +158,28 @@ where
     }
 }
 
+impl<T> Sub for ColumnVector<T>
+where
+    T: Zero,
+    T: Sub<Output = T>,
+    T: Clone,
+{
+    type Output = ColumnVector<T>;
+
+    fn sub(self, other: Self) -> ColumnVector<T> {
+        let srows = self.elem.len();
+        let orows = other.elem.len();
+        let rows = if srows > orows {srows} else {orows};
+
+        let mut elems = Vec::new();
+        for ri in 0..rows {
+            let d = self.get(ri) - other.get(ri);
+            elems.push(d);
+        }
+        ColumnVector::new(elems)
+    }
+}
+
 
 #[derive(Debug, Clone)]
 pub struct Matrix<T> {
