@@ -154,6 +154,10 @@ where
         v1*v2
     }
 
+    pub fn is_perpendicular(&self, other: &Self) -> bool {
+        self.dot_blue(other).is_zero()
+    }
+
     pub fn quadrance_blue(&self) -> T {
         self.dot_blue(&self)
     }
@@ -375,5 +379,11 @@ mod tests {
         assert_eq!(a1.quadrance(&a2),9);
     }
 
+    #[test]
+    fn perpendicular_vectors() {
+        let v = Vector::from(vec![1,-2,3]);
+        let u = Vector::from(vec![4,-1,-2]);
+        assert!(v.is_perpendicular(&u));
+    }
 }
 
