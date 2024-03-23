@@ -50,6 +50,19 @@ where
     }
 }
 
+impl<T> Point<T>
+where
+    T: Zero,
+    T: Sub<Output = T>,
+    T: Mul<Output = T>,
+    T: Clone,
+{
+    pub fn quadrance(&self, other: &Self) -> T {
+        let v = Vector::new((*self).clone(), (*other).clone());
+        v.quadrance_blue()
+    }
+}
+
 impl<T> Add<Vector<T>> for Point<T>
 where
     T: Zero,
@@ -119,6 +132,30 @@ where
         let selfs = ColumnVector::new(self.start.coords.clone());
         let selfe = ColumnVector::new(self.end.coords.clone());
         selfe - selfs
+    }
+    pub fn rowvector(&self) -> RowVector<T> {
+        let selfs = RowVector::new(self.start.coords.clone());
+        let selfe = RowVector::new(self.end.coords.clone());
+        selfe - selfs
+    }
+}
+
+impl<T> Vector<T>
+where
+    T: Zero,
+    T: Sub<Output = T>,
+    T: Mul<Output = T>,
+    T: Clone,
+{
+    pub fn dot_blue(&self, other: &Self) -> T {
+        let v1 = self.rowvector();
+        let v2 = other.columnvector();
+
+        v1*v2
+    }
+
+    pub fn quadrance_blue(&self) -> T {
+        self.dot_blue(&self)
     }
 }
 
@@ -297,6 +334,24 @@ mod tests {
         assert!((o.clone() + vpu12).lies_on(&pi1));
         assert!((o.clone() + vpu21).lies_on(&pi1));
         assert!((o + vpu22).lies_on(&pi1));
+    }
+
+    #[test]
+    fn quadrance() {
+        let p1 = Point::new(vec![Ratio::new(2,1), Ratio::new(1,1)]);
+        let p2 = Point::new(vec![Ratio::new(6,1), Ratio::new(2,1)]);
+        let q  = Ratio::new(17,1);
+        assert_eq!(p1.quadrance(&p2),q);
+    }
+
+    #[test]
+    fn quadrance_between_one_points() {
+        let a1 = Point::new(vec![2]);
+        let a2 = Point::new(vec![5]);
+        let a3 = Point::new(vec![7]);
+        assert_eq!(a2.quadrance(&a3),4);
+        assert_eq!(a1.quadrance(&a3),25);
+        assert_eq!(a1.quadrance(&a2),9);
     }
 
 }

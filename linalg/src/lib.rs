@@ -112,6 +112,29 @@ where
     }
 }
 
+impl<T> Sub for RowVector<T>
+where
+    T: Zero,
+    T: Sub<Output = T>,
+    T: Clone,
+{
+    type Output = RowVector<T>;
+
+    fn sub(self, other: Self) -> RowVector<T> {
+        let scols = self.elem.len();
+        let ocols = other.elem.len();
+        let cols = if scols > ocols {scols} else {ocols};
+
+        let mut elems = Vec::new();
+        for ri in 0..cols {
+            let d = self.get(ri) - other.get(ri);
+            elems.push(d);
+        }
+        RowVector::new(elems)
+    }
+}
+
+
 
 #[derive(Debug, Clone)]
 pub struct ColumnVector<T> {
