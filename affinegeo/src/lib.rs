@@ -233,13 +233,11 @@ where
     T: Div<Output = T>,
     T: Clone,
 {
-    pub fn projection_matrix(&self, direction: &Vector<T>) -> Matrix<T> {
+    pub fn projection_on_line_matrix(&self, direction: &Vector<T>) -> Matrix<T> {
         let pv = self.coords.clone();
         let dv = direction.columnvector().elem;
 
         let s = T::one() / (RowVector::<T>::new(pv.clone()) * ColumnVector::<T>::new(dv.clone()));
-
-        let ident = Matrix::<T>::identitiy(dv.len(),pv.len());
 
         let mut dmtv = Vec::new();
         dmtv.push(dv);
@@ -249,8 +247,31 @@ where
         let mut pmv = Vec::new();
         pmv.push(pv);
         let pm = Matrix::<T>::new(pmv);
+        dm*pm*s
+    }
 
-        ident - dm*pm*s
+    pub fn projection_on_plane_matrix(&self, direction: &Vector<T>) -> Matrix<T> {
+        let pm = self.projection_on_line_matrix(direction);
+        let dvlen = direction.columnvector().elem.len();
+        let pvlen = self.coords.len();
+        let ident = Matrix::<T>::identitiy(dvlen,pvlen);
+
+        ident - pm
+    }
+
+    pub fn reflection_across_plane_matrix(&self, direction: &Vector<T>) -> Matrix<T> {
+        let pm = self.projection_on_line_matrix(direction);
+        let dvlen = direction.columnvector().elem.len();
+        let pvlen = self.coords.len();
+        let ident = Matrix::<T>::identitiy(dvlen,pvlen);
+        let two = T::one()+T::one();
+
+        ident - pm*two
+    }
+
+    pub fn reflection_across_line_matrix(&self, direction: &Vector<T>) -> Matrix<T> {
+        let mone = T::zero() - T::one();
+        self.reflection_across_plane_matrix(direction) * mone
     }
 }
 
@@ -311,8 +332,8 @@ mod tests {
         let pi1 = Plane::new(vec![Ratio::from(1),Ratio::from(-5),Ratio::from(2)],Ratio::from(0));
         let v1 = Vector::from(vec![Ratio::from(1),Ratio::from(1),Ratio::from(3)]);
         let v2 = Vector::from(vec![Ratio::from(1),Ratio::from(-5),Ratio::from(2)]);
-        let pm1 = pi1.projection_matrix(&v1);
-        let pm2 = pi1.projection_matrix(&v2);
+        let pm1 = pi1.projection_on_plane_matrix(&v1);
+        let pm2 = pi1.projection_on_plane_matrix(&v2);
         assert_eq!(pm1.clone()*pm1.clone(),pm1.clone());
         assert_eq!(pm2.clone()*pm2.clone(),pm2.clone());
 
