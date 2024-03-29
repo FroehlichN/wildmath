@@ -15,10 +15,9 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-use num::{Num, Integer,Zero,One};
+use num::{Num, Integer,One};
 use std::ops::{Div, Mul, Add, Sub, Neg};
 use std::fmt::Debug;
-use std::cmp;
 
 
 #[derive(Debug)]
@@ -38,7 +37,7 @@ where
     T: Num,
     T: Copy,
 {
-    fn x(&self) -> Option<T> {
+    pub fn x(&self) -> Option<T> {
        let mut m = T::zero();
        let mut n = T::zero();
 
@@ -186,7 +185,7 @@ where
     }
 }
 
-fn pentagonal_nr<T>(n: T) -> Option<T>
+pub fn pentagonal_nr<T>(n: T) -> Option<T>
 where
     T: Num,
     T: Copy,
@@ -201,7 +200,7 @@ where
     }
 }
 
-fn sum_of_divisors<T>(i: T) -> T
+pub fn sum_of_divisors<T>(i: T) -> T
 where
     T: Integer,
     T: Copy,
@@ -240,7 +239,7 @@ where
     return s;
 }
 
-fn nr_of_partitions<T>(i: T) -> T
+pub fn nr_of_partitions<T>(i: T) -> T
 where
     T: Integer,
     T: Copy,
@@ -279,7 +278,7 @@ where
     return s;
 }
 
-fn factorial<T>(n: T) -> T
+pub fn factorial<T>(n: T) -> T
 where
     T: Integer,
     T: Copy,
@@ -293,7 +292,7 @@ where
     return p;
 }
 
-fn pascal_array<T>(m: T, k: T) -> T
+pub fn pascal_array<T>(m: T, k: T) -> T
 where
     T: Integer,
     T: Copy,
@@ -301,7 +300,7 @@ where
     factorial(m+k)/(factorial(m)*factorial(k))
 }
 
-fn choose<T>(n: T, k: T) -> T
+pub fn choose<T>(n: T, k: T) -> T
 where
     T: Integer,
     T: Copy,
