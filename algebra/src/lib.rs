@@ -309,6 +309,33 @@ where
     factorial(n)/(factorial(k)*factorial(n-k))
 }
 
+pub fn prime_factors<T>(number: T) -> Vec<T>
+where
+    T: One,
+    T: PartialEq,
+    T: Add<Output = T>,
+    T: Mul<Output = T>,
+    T: Div<Output = T>,
+    T: Copy,
+{
+    let mut pf = Vec::new();
+    let mut rest = number;
+    let mut factor = T::one() + T::one();
+    while rest != T::one() {
+        loop {
+            let n = rest / factor;
+            if n * factor == rest {
+                pf.push(factor);
+                rest = n;
+            } else {
+                break;
+            }
+        }
+        factor = factor + T::one();
+    }
+    pf
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -407,6 +434,17 @@ mod tests {
         assert_eq!(pascal_array(4,6),210);
         assert_eq!(choose(3,1),3);
         assert_eq!(choose(4,2),6);
+    }
+    #[test]
+    fn prime_factorization() {
+        assert_eq!(prime_factors(6),vec![2,3]);
+        assert_eq!(prime_factors(10+23),vec![3,11]);
+        assert_eq!(prime_factors(10*10+23),vec![3,41]);
+        assert_eq!(prime_factors(10*10*10+23),vec![3,11,31]);
+        assert_eq!(prime_factors(10*10*10*10+23),vec![3,13,257]);
+        assert_eq!(prime_factors(10*10*10*10*10+23),vec![3,7,11,433]);
+        assert_eq!(prime_factors(10*10*10*10*10*10+23),vec![3,333341]);
+        assert_eq!(prime_factors(10*10*10*10*10*10*10+23),vec![3,11,19,41,389]);
     }
 }
 
