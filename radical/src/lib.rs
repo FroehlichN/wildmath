@@ -16,7 +16,7 @@ limitations under the License.
 */
 
 use num::{Integer};
-use std::ops::{Mul, Add};
+use std::ops::{Mul, Add, Sub, Neg};
 use algebra::prime_factors;
 
 /// Represents natural numbers extended with their nth roots
@@ -279,6 +279,36 @@ where
     }
 }
 
+impl<T> Sub<Root<T>> for Root<T>
+where
+    T: Integer,
+    T: Neg<Output = T>,
+    T: Copy,
+{
+    type Output = Root<T>;
+
+    fn sub(self, other: Self) -> Root<T> {
+        self + (-other.clone())
+    }
+}
+
+impl<T> Neg for Root<T>
+where
+    T: Integer,
+    T: Neg<Output = T>,
+    T: Copy,
+{
+    type Output = Root<T>;
+
+    fn neg(self) -> Root<T> {
+        let mut sum = Vec::new();
+        for (_, val) in self.sum.iter().enumerate() {
+            sum.push(-val.clone());
+        }
+        Root {sum: sum}
+    }
+}
+
 impl<T> RootProduct<T>
 where
     T: Integer,
@@ -312,6 +342,19 @@ where
         }
 
         true
+    }
+}
+
+impl<T> Neg for RootProduct<T>
+where
+    T: Integer,
+    T: Neg<Output = T>,
+    T: Copy,
+{
+    type Output = RootProduct<T>;
+
+    fn neg(self) -> RootProduct<T> {
+        RootProduct {factor: -self.factor, product: self.product}
     }
 }
 

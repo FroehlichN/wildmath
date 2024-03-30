@@ -561,6 +561,9 @@ where
 mod tests {
     use super::*;
     use num::rational::{Ratio};
+    use polynumber::*;
+    use radical::Root;
+
     #[test]
     fn matrix_addition() {
         let m1 = Matrix::new(vec![vec![-1, 0], vec![0, 1]]);
@@ -632,6 +635,24 @@ mod tests {
                                   vec![Ratio::new(-60,305),Ratio::new(20,305),Ratio::new(5,305)]]);
         assert_eq!(m1.inverse(),Some(m2));
         assert_eq!(m1.clone() * m1.inverse().unwrap(),Matrix::identitiy(3,3));
+    }
+    #[test]
+    fn eigenvalues_of_2d_matrix() {
+        let lambda = create_polynumber_var!(lambda; lambda; i32);
+        let one = create_polynumber_one!(lambda; i32);
+        let m1 = Matrix::new(vec![vec![one.clone() * (-1) - lambda.clone(), one.clone() * (-2)],
+                                  vec![one.clone() * 4,one.clone() * 5 - lambda.clone()]]);
+        let det = m1.determinant();
+        let a = det.get(2);
+        let b = det.get(1);
+        let c = det.get(0);
+        let p = b/a;
+        let q = c/a;
+        let d = Root::root(2,p*p/4-q);
+        let l1 = Root::from_int(-p/2) + d.clone();
+        let l2 = Root::from_int(-p/2) - d;
+        assert_eq!(l1,Root::from_int(3));
+        assert_eq!(l2,Root::from_int(1));
     }
 }
 
