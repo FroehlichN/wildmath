@@ -15,48 +15,70 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-use num::{Integer};
+use num::{Integer,Zero,One};
+use num::rational::{Ratio};
 use std::ops::{Mul, Add, Sub, Neg};
 use algebra::prime_factors;
 
 /// Represents natural numbers extended with their nth roots
 #[derive(Debug, Clone)]
-pub struct Root<T> {
-    sum: Vec<RootProduct<T>>,
+pub struct Root<T,P>
+where
+    T: Clone,
+    P: Integer,
+    P: Copy,
+{
+    sum: Vec<RootProduct<T,P>>,
 }
 
 /// Represents a product of natural numbers extended with their nth roots
 #[derive(Debug, Clone)]
-struct RootProduct<T> {
+struct RootProduct<T,P>
+where
+    P: Integer,
+    P: Copy,
+{
     factor: T,
-    product: Vec<RootPrime<T>>,
+    product: Vec<RootPrime<P>>,
 }
 
 /// Represents the nth root of a prime number
 #[derive(Debug, Clone,PartialEq)]
-struct RootPrime<T> {
+struct RootPrime<P>
+where
+    P: Integer,
+    P: Copy,
+{
     degree: u32,
     exponent: u32,
-    radicand: T,
+    radicand: P,
 }
 
-impl<T> Root<T>
+impl<T,P> Root<T,P>
+where
+    T: Clone,
+    P: Integer,
+    P: Copy,
 {
-    pub fn from_int(num: T) -> Root<T> {
+    pub fn from(num: T) -> Root<T,P> {
         let p = Vec::new();
         let rp = RootProduct { factor: num, product: p };
         Root { sum: vec![rp] }
     }
 }
 
-impl<T> Root<T>
+impl<T,P> Root<T,P>
 where
-    T: Integer,
-    T: Copy,
+    T: One,
+    T: Mul<P, Output = T>,
+    T: Clone,
+    P: Integer,
+    P: Copy,
+    Root<T,P>: Mul<Output = Root<T,P>>,
 {
-    pub fn root(degree: u32, radicand: T) -> Root<T> {
+    pub fn root(degree: u32, radicand: P) -> Root<T,P> {
         let pf = prime_factors(radicand);
-        let mut product = Root::from_int(T::one());
+        let mut product = Root::from(T::one());
         for (_, f) in pf.iter().enumerate() {
             let rprimef = RootPrime {degree: degree, exponent: 1, radicand: *f};
             let rprodf = RootProduct {factor: T::one(), product: vec![rprimef]};
@@ -67,10 +89,37 @@ where
     }
 }
 
-impl<T> PartialEq for Root<T>
+impl<P> Root<Ratio<P>,P>
 where
-    T: Integer,
-    T: Copy,
+    P: Integer,
+    P: Copy,
+{
+    pub fn root_of_ratio(degree: u32, radicand: Ratio<P>) -> Root<Ratio<P>,P> {
+        let pf_numer = prime_factors(radicand.numer().clone());
+        let pf_denom = prime_factors(radicand.denom().clone());
+        let mut product = Root::from(Ratio::<P>::one()/radicand.denom());
+        for (_, f) in pf_numer.iter().enumerate() {
+            let rprimef = RootPrime {degree: degree, exponent: 1, radicand: *f};
+            let rprodf = RootProduct {factor: Ratio::<P>::one(), product: vec![rprimef]};
+            let rootf = Root{sum: vec![rprodf]};
+            product = product * rootf;
+        }
+        for (_, f) in pf_denom.iter().enumerate() {
+            let rprimef = RootPrime {degree: degree, exponent: 1, radicand: *f};
+            let rprodf = RootProduct {factor: Ratio::<P>::one(), product: vec![rprimef]};
+            let rootf = Root{sum: vec![rprodf]};
+            product = product * rootf;
+        }
+        product
+    }
+}
+
+impl<T,P> PartialEq for Root<T,P>
+where
+    T: PartialEq,
+    T: Clone,
+    P: Integer,
+    P: Copy,
 {
     fn eq(&self, other: &Self) -> bool {
         for (_, sval) in self.sum.iter().enumerate() {
@@ -103,15 +152,18 @@ where
     }
 }
 
-impl<T> Mul<Root<T>> for Root<T>
+impl<T,P> Mul<Root<T,P>> for Root<T,P>
 where
-    T: Integer,
-    T: Copy,
+    T: Zero,
+    T: Clone,
+    P: Integer,
+    P: Copy,
+    Root<T,P>: Mul<RootProduct<T,P>, Output = Root<T,P>>,
 {
-    type Output = Root<T>;
+    type Output = Root<T,P>;
 
-    fn mul(self, other: Self) -> Root<T> {
-        let mut sum = Root::from_int(T::zero());
+    fn mul(self, other: Self) -> Root<T,P> {
+        let mut sum = Root::from(T::zero());
         for (_, s) in self.sum.iter().enumerate() {
             sum = sum.clone() + other.clone() * s.clone();
         }
@@ -119,15 +171,18 @@ where
     }
 }
 
-impl<T> Mul<RootProduct<T>> for Root<T>
+impl<T,P> Mul<RootProduct<T,P>> for Root<T,P>
 where
-    T: Integer,
-    T: Copy,
+    T: Zero,
+    T: Clone,
+    P: Integer,
+    P: Copy,
+    RootProduct<T,P>: Mul<Output = RootProduct<T,P>>,
 {
-    type Output = Root<T>;
+    type Output = Root<T,P>;
 
-    fn mul(self, other: RootProduct<T>) -> Root<T> {
-        let mut sum = Root::from_int(T::zero());
+    fn mul(self, other: RootProduct<T,P>) -> Root<T,P> {
+        let mut sum = Root::from(T::zero());
         for (_, s) in self.sum.iter().enumerate() {
             let p = s.clone() * other.clone();
             let rp = Root { sum: vec![p] };
@@ -137,10 +192,12 @@ where
     }
 }
 
-impl<T> PartialEq for RootProduct<T>
+impl<T,P> PartialEq for RootProduct<T,P>
 where
-    T: Integer,
-    T: Copy,
+    T: PartialEq,
+    T: Clone,
+    P: Integer,
+    P: Copy,
 {
     fn eq(&self, other: &Self) -> bool {
         if self.factor != other.factor {
@@ -178,14 +235,17 @@ where
 }
 
 
-impl<T> Mul<RootProduct<T>> for RootProduct<T>
+impl<T,P> Mul<RootProduct<T,P>> for RootProduct<T,P>
 where
-    T: Integer,
-    T: Copy,
+    T: One,
+    T: Mul<P, Output = T>,
+    T: Clone,
+    P: Integer,
+    P: Copy,
 {
-    type Output = RootProduct<T>;
+    type Output = RootProduct<T,P>;
 
-    fn mul(self, other: RootProduct<T>) -> RootProduct<T> {
+    fn mul(self, other: RootProduct<T,P>) -> RootProduct<T,P> {
         let mut factor = self.factor.clone() * other.factor.clone();
 
         // search for common root primes and reduce, if possible
@@ -234,14 +294,17 @@ where
     }
 }
 
-impl<T> Add<Root<T>> for Root<T>
+impl<T,P> Add<Root<T,P>> for Root<T,P>
 where
-    T: Integer,
-    T: Copy,
+    T: Zero,
+    T: Add<Output = T>,
+    T: Clone,
+    P: Integer,
+    P: Copy,
 {
-    type Output = Root<T>;
+    type Output = Root<T,P>;
 
-    fn add(self, other: Self) -> Root<T> {
+    fn add(self, other: Self) -> Root<T,P> {
 
         let mut ssum = self.sum.clone();
         let mut osum = other.sum.clone();
@@ -257,7 +320,7 @@ where
                     common_factor_found = true;
                     ssum.remove(sidx);
                     osum.remove(oidx);
-                    let factor = sval.factor + oval.factor;
+                    let factor = sval.factor.clone() + oval.factor.clone();
                     if !factor.is_zero() {
                         let rp = RootProduct {factor: factor, product: sval.product.clone()};
                         ssum.push(rp);
@@ -279,28 +342,31 @@ where
     }
 }
 
-impl<T> Sub<Root<T>> for Root<T>
+impl<T,P> Sub<Root<T,P>> for Root<T,P>
 where
-    T: Integer,
     T: Neg<Output = T>,
-    T: Copy,
+    T: Clone,
+    P: Integer,
+    P: Copy,
+    Root<T,P>: Add<Output = Root<T,P>>,
 {
-    type Output = Root<T>;
+    type Output = Root<T,P>;
 
-    fn sub(self, other: Self) -> Root<T> {
+    fn sub(self, other: Self) -> Root<T,P> {
         self + (-other.clone())
     }
 }
 
-impl<T> Neg for Root<T>
+impl<T,P> Neg for Root<T,P>
 where
-    T: Integer,
     T: Neg<Output = T>,
-    T: Copy,
+    T: Clone,
+    P: Integer,
+    P: Copy,
 {
-    type Output = Root<T>;
+    type Output = Root<T,P>;
 
-    fn neg(self) -> Root<T> {
+    fn neg(self) -> Root<T,P> {
         let mut sum = Vec::new();
         for (_, val) in self.sum.iter().enumerate() {
             sum.push(-val.clone());
@@ -309,10 +375,11 @@ where
     }
 }
 
-impl<T> RootProduct<T>
+impl<T,P> RootProduct<T,P>
 where
-    T: Integer,
-    T: Copy,
+    T: Clone,
+    P: Integer,
+    P: Copy,
 {
     pub fn eq_product(&self, other: &Self) -> bool {
         for (_, sval) in self.product.iter().enumerate() {
@@ -345,15 +412,16 @@ where
     }
 }
 
-impl<T> Neg for RootProduct<T>
+impl<T,P> Neg for RootProduct<T,P>
 where
-    T: Integer,
     T: Neg<Output = T>,
-    T: Copy,
+    T: Clone,
+    P: Integer,
+    P: Copy,
 {
-    type Output = RootProduct<T>;
+    type Output = RootProduct<T,P>;
 
-    fn neg(self) -> RootProduct<T> {
+    fn neg(self) -> RootProduct<T,P> {
         RootProduct {factor: -self.factor, product: self.product}
     }
 }
@@ -366,22 +434,28 @@ mod tests {
     #[test]
     fn square_root_squared() {
         let sq_root_two = Root::root(2,2);
-        assert_eq!(sq_root_two.clone() * sq_root_two, Root::from_int(2));
+        assert_eq!(sq_root_two.clone() * sq_root_two, Root::from(2));
 
         let sq_root_three = Root::root(2,3);
-        assert_eq!(sq_root_three.clone() * sq_root_three, Root::from_int(3));
+        assert_eq!(sq_root_three.clone() * sq_root_three, Root::from(3));
     }
 
     #[test]
     fn cube_root_cubed() {
         let cb_root_two = Root::root(3,2);
-        assert_eq!(cb_root_two.clone() * cb_root_two.clone() * cb_root_two, Root::from_int(2));
+        assert_eq!(cb_root_two.clone() * cb_root_two.clone() * cb_root_two, Root::from(2));
 
         let sq_root_three = Root::root(2,3);
         let cq_root_three = Root::root(3,3);
         assert_eq!(sq_root_three.clone() * cq_root_three.clone() * cq_root_three.clone() * cq_root_three,
-                   Root::from_int(3) * sq_root_three);
+                   Root::from(3) * sq_root_three);
     }
 
+    #[test]
+    fn root_of_rational_number() {
+        let r1 = Ratio::new(4,3);
+        let root1 = Root::root_of_ratio(2,r1);
+        assert_eq!(root1.clone() * root1, Root::from(r1));
+    }
 }
 
