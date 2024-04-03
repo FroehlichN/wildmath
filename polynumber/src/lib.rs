@@ -1,5 +1,5 @@
 /*
-Copyright 2023 Norbert Fröhlich
+Copyright 2023 - 2024 Norbert Fröhlich
 
 
 Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,9 +15,11 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-use num::{Zero,One};
+use num::{Integer,Zero,One};
+use num::rational::{Ratio};
 use std::ops::{Mul, Add, Sub, Div, Neg};
 use std::fmt;
+use radical::Root;
 
 /// Construct variables of a polynumber, commonly known as polynomial.
 /// first argument is the wanted variable.
@@ -597,6 +599,60 @@ where
     }
 }
 
+impl<T> PolyNumber<Ratio<T>>
+where
+    T: Integer,
+    T: Copy,
+    T: std::fmt::Debug,
+    T: std::fmt::Display,
+    Ratio<T>: Neg<Output = Ratio<T>>,
+{
+    fn solve(&self) -> Vec<Root::<Ratio<T>,T>> {
+        let mut result = Vec::new();
+        let zero = Ratio::zero();
+
+        if self.order().is_zero() {
+            return result;
+        } else if self.n.last().unwrap().is_zero() {
+            let mut start = self.n.clone();
+            start.pop();
+            let pn = PolyNumber::new_var(start, &self.var);
+            result.append(&mut pn.solve());
+            return result;
+        } else if self.n.first().unwrap().is_zero() {
+            result.push(Root::from(zero));
+            let mut tail = self.n.clone();
+            tail.remove(0);
+            let pn = PolyNumber::new_var(tail, &self.var);
+            result.append(&mut pn.solve());
+            return result;
+        } else if self.order() == 1 {
+            return result;
+        } else if self.order() == 2 {
+            let a = *self.n.get(0).unwrap();
+            let b = *self.n.get(1).unwrap();
+            result.push(Root::from(-a/b));
+            return result;
+        } else if self.order() == 3 {
+            let a = *self.n.get(0).unwrap();
+            let b = *self.n.get(1).unwrap();
+            let c = *self.n.get(2).unwrap();
+            let p = b/c;
+            let q = a/c;
+            let two = Ratio::one() + Ratio::one();
+            let p2 = -p/two;
+            let d = Root::root_of_ratio(2,p2*p2-q);
+            let x1 = Root::from(p2) - d.clone();
+            let x2 = Root::from(p2) + d;
+            result.push(x1);
+            result.push(x2);
+            return result;
+        } else {
+            panic!("Solving polynumber {:?} not implemented",self);
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -873,6 +929,16 @@ mod tests {
         let a3 = p.clone().newton_approx(5.0f64,a2);
         assert_approx_eq!(a3, 1535605927.0f64/891756243.0f64, 0.0000001f64);
         let a4 = p.clone().newton_approx(5.0f64,a3);
+    }
+    #[test]
+    fn solving_polynumbers_with_roots() {
+        let p = PolyNumber::new_var(vec![Ratio::from(4),Ratio::from(2)], "x");
+        let s = p.solve();
+        assert_eq!(s,vec![Root::from(Ratio::from(-2))]);
+
+        let p2 = PolyNumber::new_var(vec![Ratio::from(3),Ratio::from(-4),Ratio::from(1)], "x");
+        let s2 = p2.solve();
+        assert_eq!(s2,vec![Root::from(Ratio::from(1)),Root::from(Ratio::from(3))]);
     }
 }
 

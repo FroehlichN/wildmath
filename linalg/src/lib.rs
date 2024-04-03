@@ -649,10 +649,10 @@ mod tests {
         let p = b/a;
         let q = c/a;
         let d = Root::root(2,p*p/4-q);
-        let l1 = Root::from_int(-p/2) + d.clone();
-        let l2 = Root::from_int(-p/2) - d;
-        assert_eq!(l1,Root::from_int(3));
-        assert_eq!(l2,Root::from_int(1));
+        let l1 = Root::from(-p/2) + d.clone();
+        let l2 = Root::from(-p/2) - d;
+        assert_eq!(l1,Root::from(3));
+        assert_eq!(l2,Root::from(1));
     }
 }
 
