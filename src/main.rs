@@ -17,9 +17,12 @@ limitations under the License.
 
 use affinegeo2d::*;
 use polynumber::*;
+use num::rational::{Ratio};
+use linalg::{Matrix};
 
 fn main() {
     meet_of_fermat_and_bernoulli();
+    eigenvalues_of_2d_matracies();
 }
 
 fn meet_of_fermat_and_bernoulli() {
@@ -60,6 +63,23 @@ fn meet_of_fermat_and_bernoulli() {
 
         println!("Iteration {:?} : {:?}",n,m);
     }
+}
+
+fn eigenvalues_of_2d_matracies() {
+    let m1 = Matrix::new(vec![vec![Ratio::from(3),Ratio::from(2)],
+                              vec![Ratio::from(0),Ratio::from(5)]]);
+    let ev1 = m1.eigenvalues();
+    println!("Eigenvalues of {:?} = {:?}",m1,ev1);
+
+    let m2 = Matrix::new(vec![vec![Ratio::from(4),Ratio::from(6)],
+                              vec![Ratio::from(6),Ratio::from(4)]]);
+    let ev2 = m2.eigenvalues();
+    println!("Eigenvalues of {:?} = {:?}",m2,ev2);
+
+    let m3 = Matrix::new(vec![vec![Ratio::from(13),Ratio::from(-9)],
+                              vec![Ratio::from(24),Ratio::from(-17)]]);
+    let ev3 = m3.eigenvalues();
+    println!("Eigenvalues of {:?} = {:?}",m3,ev3);
 }
 
 #[cfg(test)]

@@ -15,4 +15,5 @@ polyratio = { path = "polyratio" }
 extrational = { path = "extrational" }
 finite = { path = "finite" }
 projectivegeo = { path = "projectivegeo" }
+linalg = { path = "linalg" }
 
