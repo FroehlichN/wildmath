@@ -607,7 +607,7 @@ where
     T: std::fmt::Display,
     Ratio<T>: Neg<Output = Ratio<T>>,
 {
-    fn solve(&self) -> Vec<Root::<Ratio<T>,T>> {
+    pub fn solve(&self) -> Vec<Root::<Ratio<T>,T>> {
         let mut result = Vec::new();
         let zero = Ratio::zero();
 

@@ -15,8 +15,11 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-use num::{Zero,One};
+use num::{Integer,Zero,One};
 use std::ops::{Add,Sub,Mul,Div,Neg};
+use num::rational::{Ratio};
+use polynumber::*;
+use radical::Root;
 
 
 #[derive(Debug, Clone)]
@@ -326,7 +329,7 @@ where
     T: One,
     T: Clone,
 {
-    pub fn identitiy(rows: usize, cols: usize) -> Matrix<T> {
+    pub fn identity(rows: usize, cols: usize) -> Matrix<T> {
         let mut m = Vec::new();
         for ri in 0..rows {
             let mut row = Vec::new();
@@ -501,16 +504,18 @@ where
     }
 }
 
-impl<T> Mul<Matrix<T>> for Matrix<T>
+impl<T,P> Mul<Matrix<P>> for Matrix<T>
 where
     T: Zero,
     T: Add<Output = T>,
-    T: Mul<Output = T>,
+    T: Mul<P, Output = T>,
     T: Clone,
+    P: Zero,
+    P: Clone,
 {
     type Output = Matrix<T>;
 
-    fn mul(self, other: Matrix<T>) -> Matrix<T> {
+    fn mul(self, other: Matrix<P>) -> Matrix<T> {
         let rows = self.rows;
         let cols = other.cols;
         let scount = if self.cols < other.rows {self.cols} else {other.rows};
@@ -556,13 +561,31 @@ where
     }
 }
 
+impl<T> Matrix<Ratio<T>>
+where
+    T: Integer,
+    T: Copy,
+    T: std::fmt::Debug,
+    T: std::fmt::Display,
+    Ratio<T>: Neg<Output = Ratio<T>>,
+{
+    pub fn eigenvalues(&self) -> Vec<Root<Ratio<T>,T>> {
+        if self.cols != self.rows {
+            return Vec::new();
+        }
+
+        let lambda = create_polynumber_var!(lambda; lambda; Ratio::<T>);
+        let ident = Matrix::<PolyNumber<Ratio<T>>>::identity(self.rows, self.cols);
+        let m1 = ident.clone() * self.clone() - ident * lambda;
+        let det = m1.determinant();
+        det.solve()
+    }
+}
+
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use num::rational::{Ratio};
-    use polynumber::*;
-    use radical::Root;
 
     #[test]
     fn matrix_addition() {
@@ -634,25 +657,15 @@ mod tests {
                                   vec![Ratio::new(-17,305),Ratio::new(26,305),Ratio::new(37,305)],
                                   vec![Ratio::new(-60,305),Ratio::new(20,305),Ratio::new(5,305)]]);
         assert_eq!(m1.inverse(),Some(m2));
-        assert_eq!(m1.clone() * m1.inverse().unwrap(),Matrix::identitiy(3,3));
+        assert_eq!(m1.clone() * m1.inverse().unwrap(),Matrix::identity(3,3));
     }
     #[test]
     fn eigenvalues_of_2d_matrix() {
-        let lambda = create_polynumber_var!(lambda; lambda; i32);
-        let one = create_polynumber_one!(lambda; i32);
-        let m1 = Matrix::new(vec![vec![one.clone() * (-1) - lambda.clone(), one.clone() * (-2)],
-                                  vec![one.clone() * 4,one.clone() * 5 - lambda.clone()]]);
-        let det = m1.determinant();
-        let a = det.get(2);
-        let b = det.get(1);
-        let c = det.get(0);
-        let p = b/a;
-        let q = c/a;
-        let d = Root::root(2,p*p/4-q);
-        let l1 = Root::from(-p/2) + d.clone();
-        let l2 = Root::from(-p/2) - d;
-        assert_eq!(l1,Root::from(3));
-        assert_eq!(l2,Root::from(1));
+        let m1 = Matrix::new(vec![vec![Ratio::from(-1), Ratio::from(-2)],
+                                  vec![Ratio::from(4), Ratio::from(5)]]);
+        let ev = m1.eigenvalues();
+        assert_eq!(ev[0],Root::from(Ratio::from(1)));
+        assert_eq!(ev[1],Root::from(Ratio::from(3)));
     }
 }
 
