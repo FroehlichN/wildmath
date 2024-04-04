@@ -310,16 +310,21 @@ where
 
 pub fn prime_factors<T>(number: T) -> Vec<T>
 where
-    T: One,
-    T: PartialEq,
-    T: Add<Output = T>,
-    T: Mul<Output = T>,
-    T: Div<Output = T>,
+    T: Integer,
+    T: Neg<Output = T>,
     T: Copy,
 {
     let mut pf = Vec::new();
-    let mut rest = number;
+    let mut rest;
     let mut factor = T::one() + T::one();
+
+    if number < T::zero() {
+        pf.push(-T::one());
+        rest = - number;
+    } else {
+        rest = number;
+    }
+
     while rest != T::one() {
         loop {
             let n = rest / factor;
@@ -444,6 +449,10 @@ mod tests {
         assert_eq!(prime_factors(10*10*10*10*10+23),vec![3,7,11,433]);
         assert_eq!(prime_factors(10*10*10*10*10*10+23),vec![3,333341]);
         assert_eq!(prime_factors(10*10*10*10*10*10*10+23),vec![3,11,19,41,389]);
+    }
+    #[test]
+    fn prime_factorization_of_negative_numbers() {
+        assert_eq!(prime_factors(-6),vec![-1,2,3]);
     }
 }
 

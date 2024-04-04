@@ -602,6 +602,7 @@ where
 impl<T> PolyNumber<Ratio<T>>
 where
     T: Integer,
+    T: Neg<Output = T>,
     T: Copy,
     T: std::fmt::Debug,
     T: std::fmt::Display,

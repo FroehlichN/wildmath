@@ -73,6 +73,7 @@ where
     T: Mul<P, Output = T>,
     T: Clone,
     P: Integer,
+    P: Neg<Output = P>,
     P: Copy,
     Root<T,P>: Mul<Output = Root<T,P>>,
 {
@@ -92,6 +93,7 @@ where
 impl<P> Root<Ratio<P>,P>
 where
     P: Integer,
+    P: Neg<Output = P>,
     P: Copy,
 {
     pub fn root_of_ratio(degree: u32, radicand: Ratio<P>) -> Root<Ratio<P>,P> {
