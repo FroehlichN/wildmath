@@ -107,7 +107,7 @@ where
             product = product * rootf;
         }
         for (_, f) in pf_denom.iter().enumerate() {
-            let rprimef = RootPrime {degree: degree, exponent: 1, radicand: *f};
+            let rprimef = RootPrime {degree: degree, exponent: degree - 1, radicand: *f};
             let rprodf = RootProduct {factor: Ratio::<P>::one(), product: vec![rprimef]};
             let rootf = Root{sum: vec![rprodf]};
             product = product * rootf;
@@ -458,6 +458,10 @@ mod tests {
         let r1 = Ratio::new(4,3);
         let root1 = Root::root_of_ratio(2,r1);
         assert_eq!(root1.clone() * root1, Root::from(r1));
+
+        let r2 = Ratio::new(4,3);
+        let root2 = Root::root_of_ratio(3,r2);
+        assert_eq!(root2.clone() * root2.clone() * root2, Root::from(r2));
     }
 }
 
