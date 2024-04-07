@@ -17,7 +17,7 @@ limitations under the License.
 
 use num::{Integer,Zero,One};
 use num::rational::{Ratio};
-use std::ops::{Mul, Add, Sub, Neg};
+use std::ops::{Mul, Add, Sub, Neg, Div};
 use algebra::prime_factors;
 
 /// Represents natural numbers extended with their nth roots
@@ -377,6 +377,74 @@ where
     }
 }
 
+impl<T,P> Div for Root<T,P>
+where
+    T: One + Zero,
+    T: Sub<Output = T>,
+    T: Div<Output = T>,
+    T: Div<P, Output = T>,
+    T: Clone,
+    P: Integer,
+    P: Copy,
+    Root<T,P>: Mul<Output = Root<T,P>>,
+    Root<T,P>: Sub<Output = Root<T,P>>,
+{
+    type Output = Root<T,P>;
+
+    fn div(self, other: Self) -> Root<T,P> {
+        self * other.inverse()
+    }
+}
+
+impl<T,P> Root<T,P>
+where
+    T: One + Zero,
+    T: Sub<Output = T>,
+    T: Div<Output = T>,
+    T: Div<P, Output = T>,
+    T: Clone,
+    P: Integer,
+    P: Copy,
+    Root<T,P>: Mul<Output = Root<T,P>>,
+    Root<T,P>: Sub<Output = Root<T,P>>,
+{
+    pub fn inverse(&self) -> Root<T,P> {
+        let s0 = self.sum[0].clone();
+        let rpone = RootProduct {factor: T::one(), product: vec![]};
+        let mut r0 = Root {sum: vec![rpone / s0.clone()]};
+        loop {
+            let rone = Root::from(T::one());
+            let t0 = self.clone() * r0.clone();
+            let d0 = rone - t0;
+            if d0.sum.len().is_zero() {
+                return r0;
+            }
+            if !d0.has_roots() {
+                let m = Root::from(T::one() / (T::one() - d0.sum[0].factor.clone()));
+                return r0 * m;
+            }
+            r0 = r0.clone() + Root {sum: vec![d0.sum[0].clone() / s0.clone()]};
+        }
+    }
+}
+
+impl<T,P> Root<T,P>
+where
+    T: Zero,
+    T: Clone,
+    P: Integer,
+    P: Copy,
+{
+    pub fn has_roots(&self) -> bool {
+        for (_, s) in self.sum.iter().enumerate() {
+            if !s.factor.is_zero() && s.product.len() > 0 {
+                return true;
+            }
+        }
+        false
+    }
+}
+
 impl<T,P> RootProduct<T,P>
 where
     T: Clone,
@@ -428,6 +496,26 @@ where
     }
 }
 
+impl<T,P> Div for RootProduct<T,P>
+where
+    T: Div<Output = T>,
+    T: Div<P, Output = T>,
+    P: Integer,
+    P: Copy,
+{
+    type Output = RootProduct<T,P>;
+
+    fn div(self, other: Self) -> RootProduct<T,P> {
+        let mut factor = self.factor / other.factor;
+        let mut product = self.product.clone();
+        for (_, p) in other.product.iter().enumerate() {
+            let rprime = RootPrime {degree: p.degree, exponent: p.degree - p.exponent, radicand: p.radicand};
+            factor = factor / p.radicand;
+            product.push(rprime);
+        }
+        RootProduct {factor: factor, product: product}
+    }
+}
 
 #[cfg(test)]
 mod tests {
@@ -462,6 +550,15 @@ mod tests {
         let r2 = Ratio::new(4,3);
         let root2 = Root::root_of_ratio(3,r2);
         assert_eq!(root2.clone() * root2.clone() * root2, Root::from(r2));
+    }
+
+    #[test]
+    fn invers_of_rational_number() {
+        let r1 = Root::from(Ratio::from(1)) + Root::root(3,2);
+        let r2 = Root::from(Ratio::new(1,3)) *
+            (Root::from(Ratio::from(1)) - Root::root(3,2) + Root::root(3,2) * Root::root(3,2));
+        assert_eq!(r1.inverse(),r2);
+        assert_eq!(r1.inverse()*r1.clone(),Root::from(Ratio::from(1)));
     }
 }
 
