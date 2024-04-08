@@ -69,7 +69,7 @@ where
 
 impl<T,P> Root<T,P>
 where
-    T: One,
+    T: Zero + One,
     T: Mul<P, Output = T>,
     T: Clone,
     P: Integer,
@@ -78,6 +78,9 @@ where
     Root<T,P>: Mul<Output = Root<T,P>>,
 {
     pub fn root(degree: u32, radicand: P) -> Root<T,P> {
+        if radicand.is_zero() {
+            return Root::from(T::zero());
+        }
         let pf = prime_factors(radicand);
         let mut product = Root::from(T::one());
         for (_, f) in pf.iter().enumerate() {
@@ -191,6 +194,22 @@ where
             sum = sum + rp;
         }
         sum
+    }
+}
+
+impl<T,P> Mul<T> for Root<T,P>
+where
+    T: Zero,
+    T: Clone,
+    P: Integer,
+    P: Copy,
+    RootProduct<T,P>: Mul<Output = RootProduct<T,P>>,
+{
+    type Output = Root<T,P>;
+
+    fn mul(self, other: T) -> Root<T,P> {
+        let rp = RootProduct{ factor: other, product: vec![] };
+        self * rp
     }
 }
 
@@ -559,6 +578,39 @@ mod tests {
             (Root::from(Ratio::from(1)) - Root::root(3,2) + Root::root(3,2) * Root::root(3,2));
         assert_eq!(r1.inverse(),r2);
         assert_eq!(r1.inverse()*r1.clone(),Root::from(Ratio::from(1)));
+    }
+
+    #[test]
+    fn multiplication_with_one() {
+        let one = Root::from(1);
+        let val = Root::from(5) + Root::root(2, 2) * 10;
+        assert_eq!(one.clone() * val.clone(), val);
+        assert_eq!(val.clone() * one, val);
+    }
+
+    #[test]
+    fn commute_add_mul() {
+        let val1 = Root::from(1234) + Root::root(2, 2) * 78;
+        let val2 = Root::from(329587) + Root::root(2, 2) * 10294;
+        assert_eq!(val1.clone() + val2.clone(), val2.clone() + val1.clone());
+        assert_eq!(val1.clone() * val2.clone(), val2.clone() * val1.clone());
+    }
+
+    #[test]
+    fn inverse() {
+        let a = 198;
+        let b = 897;
+        let one = Ratio::new(1,1);
+        let val1 = Root::from(one*a) + Root::root_of_ratio(2, one*2) * (one * b);
+        let val2 = val1.inverse();
+        assert_eq!(val1 * val2, Root::from(one));
+    }
+
+    #[test]
+    fn square_root_two() {
+        let rt = Root::from(0) + Root::root(2, 2);
+        let two = Root::from(2) + Root::root(2, 0);
+        assert_eq!(rt.clone() * rt, two);
     }
 }
 

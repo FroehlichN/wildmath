@@ -315,6 +315,11 @@ where
     T: Copy,
 {
     let mut pf = Vec::new();
+
+    if number.is_zero() {
+        return pf;
+    }
+
     let mut rest;
     let mut factor = T::one() + T::one();
 
