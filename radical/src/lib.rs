@@ -49,8 +49,7 @@ where
     P: Integer,
     P: Copy,
 {
-    degree: u32,
-    exponent: u32,
+    exponent: Ratio::<u32>,
     radicand: P,
 }
 
@@ -84,7 +83,7 @@ where
         let pf = prime_factors(radicand);
         let mut product = Root::from(T::one());
         for (_, f) in pf.iter().enumerate() {
-            let rprimef = RootPrime {degree: degree, exponent: 1, radicand: *f};
+            let rprimef = RootPrime {exponent: Ratio::new(1, degree), radicand: *f};
             let rprodf = RootProduct {factor: T::one(), product: vec![rprimef]};
             let rootf = Root{sum: vec![rprodf]};
             product = product * rootf;
@@ -104,13 +103,13 @@ where
         let pf_denom = prime_factors(radicand.denom().clone());
         let mut product = Root::from(Ratio::<P>::one()/radicand.denom());
         for (_, f) in pf_numer.iter().enumerate() {
-            let rprimef = RootPrime {degree: degree, exponent: 1, radicand: *f};
+            let rprimef = RootPrime {exponent: Ratio::new(1, degree), radicand: *f};
             let rprodf = RootProduct {factor: Ratio::<P>::one(), product: vec![rprimef]};
             let rootf = Root{sum: vec![rprodf]};
             product = product * rootf;
         }
         for (_, f) in pf_denom.iter().enumerate() {
-            let rprimef = RootPrime {degree: degree, exponent: degree - 1, radicand: *f};
+            let rprimef = RootPrime {exponent: Ratio::new(degree - 1, degree), radicand: *f};
             let rprodf = RootProduct {factor: Ratio::<P>::one(), product: vec![rprimef]};
             let rootf = Root{sum: vec![rprodf]};
             product = product * rootf;
@@ -279,19 +278,19 @@ where
             for (orpi, orp) in other.product.iter().enumerate() {
                 if common_root_prime_found {break;}
 
-                if srp.degree == orp.degree && srp.radicand == orp.radicand {
+                if srp.radicand == orp.radicand {
                     common_root_prime_found = true;
                     sproduct.remove(srpi);
                     oproduct.remove(orpi);
 
                     let mut exponent = srp.exponent + orp.exponent;
-                    if exponent >= srp.degree {
+                    if exponent >= Ratio::from(1) {
                         factor = factor * srp.radicand;
-                        exponent = exponent - srp.degree;
+                        exponent = exponent - Ratio::from(1);
                     }
 
-                    if exponent > 0 {
-                        let rp = RootPrime { degree: srp.degree, exponent: exponent, radicand: srp.radicand };
+                    if exponent > Ratio::from(0) {
+                        let rp = RootPrime { exponent: exponent, radicand: srp.radicand };
                         sproduct.push(rp);
                     }
                 }
@@ -528,7 +527,8 @@ where
         let mut factor = self.factor / other.factor;
         let mut product = self.product.clone();
         for (_, p) in other.product.iter().enumerate() {
-            let rprime = RootPrime {degree: p.degree, exponent: p.degree - p.exponent, radicand: p.radicand};
+            let exp = Ratio::from(1) - p.exponent;
+            let rprime = RootPrime {exponent: exp, radicand: p.radicand};
             factor = factor / p.radicand;
             product.push(rprime);
         }
@@ -611,6 +611,17 @@ mod tests {
         let rt = Root::from(0) + Root::root(2, 2);
         let two = Root::from(2) + Root::root(2, 0);
         assert_eq!(rt.clone() * rt, two);
+    }
+
+    #[test]
+    fn addition_of_exponents() {
+        let two = Root::from(Ratio::from(2));
+        let sqrt2 = Root::root_of_ratio(2, Ratio::from(2));
+        let root6th2 = Root::root_of_ratio(6, Ratio::from(2));
+        let root3rd2 = Root::root_of_ratio(3, Ratio::from(2));
+        let r1 = sqrt2.clone()*root3rd2.clone()*sqrt2.clone();
+        let r2 = two.clone()*root6th2.clone()*root6th2.clone();
+        assert_eq!(r1,r2);
     }
 }
 
