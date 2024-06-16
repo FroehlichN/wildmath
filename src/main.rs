@@ -18,11 +18,13 @@ limitations under the License.
 use affinegeo2d::*;
 use polynumber::*;
 use num::rational::{Ratio};
-use linalg::{Matrix};
+use linalg::{Matrix,ColumnVector};
 
 fn main() {
     meet_of_fermat_and_bernoulli();
     eigenvalues_of_2d_matracies();
+    line_trough_two_point();
+    parabola_through_three_points();
 }
 
 fn meet_of_fermat_and_bernoulli() {
@@ -81,6 +83,24 @@ fn eigenvalues_of_2d_matracies() {
     let ev3 = m3.eigenvalues();
     println!("Eigenvalues of {:?} = {:?}",m3,ev3);
 }
+
+fn line_trough_two_point() {
+    let m1 = Matrix::new(vec![vec![Ratio::from(1), Ratio::from(-1)],
+                              vec![Ratio::from(1), Ratio::from(5)]]);
+    let v1 = ColumnVector::new(vec![Ratio::from(2),Ratio::from(4)]);
+    let v2 = m1.inverse().unwrap() * v1;
+    println!("Line going through [-1,2] and [5,4]: y = {:?} + {:?} * x",v2.get(0),v2.get(1));
+}
+
+fn parabola_through_three_points() {
+    let m1 = Matrix::new(vec![vec![Ratio::from(1), Ratio::from(-3), Ratio::from(9)],
+                              vec![Ratio::from(1), Ratio::from(0), Ratio::from(0)],
+                              vec![Ratio::from(1), Ratio::from(1), Ratio::from(1)]]);
+    let v1 = ColumnVector::new(vec![Ratio::from(4), Ratio::from(-2), Ratio::from(5)]);
+    let v2 = m1.inverse().unwrap() * v1;
+    println!("Parabola going through [-3,4], [0,-2], and [1,5]: y = {:?} + {:?} * x + {:?} * x^2",v2.get(0),v2.get(1),v2.get(2));
+}
+
 
 #[cfg(test)]
 mod tests {
