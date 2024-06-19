@@ -27,9 +27,9 @@ use radical::Root;
 /// ctype is the type of the coefficients. The type has to implement Zero and One.
 /// E.g. for a polynomial in two variables like 1 + 3x - 5.7xy^2, you can
 /// create the x with
-///   let x = create_polynumber_var(x; x,y ; Ratio::<i64>)
+///   let x = create_polynumber_var!(x; x,y ; Ratio::<i64>)
 /// and the y with
-///   let y = create_polynumber_var(y; x,y ; Ratio::<i64>)
+///   let y = create_polynumber_var!(y; x,y ; Ratio::<i64>)
 #[macro_export]
 macro_rules! create_polynumber_var {
     ( $var: ident ; $first: ident ; $ctype: ty) => {

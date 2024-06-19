@@ -1,5 +1,5 @@
 /*
-Copyright 2023 Norbert Fröhlich
+Copyright 2023 - 2024 Norbert Fröhlich
 
 
 Licensed under the Apache License, Version 2.0 (the "License");
@@ -16,7 +16,9 @@ limitations under the License.
 */
 
 use num::{Zero,One,Integer};
+use std::ops::{Mul, Add, Sub, Neg};
 use num::rational::Ratio;
+use polynumber::*;
 
 
 type Sequence<T> = Vec<T>;
@@ -59,6 +61,33 @@ where
     return f;
 }
 
+#[derive(Debug,Clone,PartialEq)]
+pub struct PolySequence<T>
+where
+    PolyNumber<T>: PartialEq,
+    T: std::fmt::Display,
+{
+    p: PolyNumber<T>,
+}
+
+
+impl<T> PolySequence<T>
+where
+    T: PartialEq + Zero + One + Mul + Add + Clone,
+    T: Sub<Output = T>,
+    T: Neg<Output = T>,
+    T: std::fmt::Display,
+{
+    pub fn forward_diff(&self) -> PolySequence<T> {
+        let p = self.p.ltrans(T::one()) - self.p.clone();
+        PolySequence{p: p}
+    }
+
+    pub fn backward_diff(&self) -> PolySequence<T> {
+        let p = self.p.clone() - self.p.ltrans(-T::one());
+        PolySequence{p: p}
+    }
+}
 
 #[cfg(test)]
 mod tests {
@@ -90,6 +119,19 @@ mod tests {
                     Ratio::new(3,5),Ratio::new(2,3),Ratio::new(3,4),Ratio::new(4,5),
                     Ratio::new(5,6),Ratio::new(1,1)]);
         assert_eq!(f6,s6);
+    }
+
+    #[test]
+    fn forward_difference() {
+        let alpha = create_polynumber_var!(alpha; alpha ; Ratio::<i64>);
+        let alpha2 = alpha.clone()*alpha.clone();
+        let alpha3 = alpha2.clone() * alpha.clone();
+        let one = create_polynumber_one!(alpha ; Ratio::<i64>);
+        let p1 = alpha3.clone();
+        let s1 = PolySequence{p:p1};
+        let p2 = alpha2.clone()*Ratio::from(3)+alpha.clone()*Ratio::from(3)+one*Ratio::from(1);
+        let s2 = PolySequence{p:p2};
+        assert_eq!(s1.forward_diff(),s2)
     }
 }
 
