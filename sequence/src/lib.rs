@@ -133,5 +133,19 @@ mod tests {
         let s2 = PolySequence{p:p2};
         assert_eq!(s1.forward_diff(),s2)
     }
+
+    #[test]
+    fn backward_difference() {
+        let alpha = create_polynumber_var!(alpha; alpha ; Ratio::<i64>);
+        let alpha2 = alpha.clone()*alpha.clone();
+        let alpha3 = alpha2.clone() * alpha.clone();
+        let alpha4 = alpha3.clone() * alpha.clone();
+        let one = create_polynumber_one!(alpha ; Ratio::<i64>);
+        let p1 = alpha4.clone();
+        let s1 = PolySequence{p:p1};
+        let p2 = alpha3.clone()*Ratio::from(4)-alpha2.clone()*Ratio::from(6)+alpha.clone()*Ratio::from(4)-one*Ratio::from(1);
+        let s2 = PolySequence{p:p2};
+        assert_eq!(s1.backward_diff(),s2)
+    }
 }
 
