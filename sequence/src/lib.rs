@@ -16,9 +16,10 @@ limitations under the License.
 */
 
 use num::{Zero,One,Integer};
-use std::ops::{Mul, Add, Sub, Neg};
+use std::ops::{Mul, Add, Sub, Neg, Div};
 use num::rational::Ratio;
 use polynumber::*;
+use algebra::factorial;
 
 
 type Sequence<T> = Vec<T>;
@@ -61,31 +62,53 @@ where
     return f;
 }
 
-#[derive(Debug,Clone,PartialEq)]
-pub struct PolySequence<T>
+pub fn forward_diff<T>(s: Sequence<T>) -> Sequence<T>
 where
-    PolyNumber<T>: PartialEq,
-    T: std::fmt::Display,
+    T: Sub<Output = T>,
+    T: Clone,
 {
-    p: PolyNumber<T>,
+    let mut ds = Sequence::new();
+    if s.len() < 2 {
+        return ds;
+    }
+
+    for i in 1..s.len() {
+        ds.push(s[i].clone() - s[i-1].clone());
+    }
+    ds
 }
 
 
-impl<T> PolySequence<T>
+pub fn polynumber<T>(s0: Sequence<T>) -> PolyNumber<T>
 where
-    T: PartialEq + Zero + One + Mul + Add + Clone,
+    T: PartialEq + PartialOrd + Zero + One + Mul + Add + Clone,
     T: Sub<Output = T>,
     T: Neg<Output = T>,
+    T: Div<Output = T>,
     T: std::fmt::Display,
 {
-    pub fn forward_diff(&self) -> PolySequence<T> {
-        let p = self.p.ltrans(T::one()) - self.p.clone();
-        PolySequence{p: p}
+    let one = create_polynumber_one!(alpha ; T);
+    if s0.len() == 0 {
+        return one.clone() * T::zero();
     }
 
-    pub fn backward_diff(&self) -> PolySequence<T> {
-        let p = self.p.clone() - self.p.ltrans(-T::one());
-        PolySequence{p: p}
+    let mut p = one.clone() * s0[0].clone();
+    let mut s1 = s0.clone();
+    let alpha = create_polynumber_var!(alpha; alpha ; T);
+    let mut index : usize = 1;
+    let mut k = T::one();
+
+    loop {
+        s1 = forward_diff(s1);
+        if s1.len() == 0 {
+            return p;
+        }
+
+        let denom = factorial(k.clone());
+        p = p.clone() + alpha.lowering_factorial_power(index) * (s1[0].clone()/denom);
+
+        index = index + 1;
+        k = k.clone() + T::one();
     }
 }
 
@@ -122,30 +145,16 @@ mod tests {
     }
 
     #[test]
-    fn forward_difference() {
+    fn polynumber_from_sequence() {
+        let s1 = Sequence::from([Ratio::from(0),Ratio::from(1),Ratio::from(5),
+            Ratio::from(14),Ratio::from(30),Ratio::from(55),Ratio::from(91),
+            Ratio::from(140)]);
+        let p1 = polynumber(s1);
         let alpha = create_polynumber_var!(alpha; alpha ; Ratio::<i64>);
-        let alpha2 = alpha.clone()*alpha.clone();
-        let alpha3 = alpha2.clone() * alpha.clone();
         let one = create_polynumber_one!(alpha ; Ratio::<i64>);
-        let p1 = alpha3.clone();
-        let s1 = PolySequence{p:p1};
-        let p2 = alpha2.clone()*Ratio::from(3)+alpha.clone()*Ratio::from(3)+one*Ratio::from(1);
-        let s2 = PolySequence{p:p2};
-        assert_eq!(s1.forward_diff(),s2)
-    }
-
-    #[test]
-    fn backward_difference() {
-        let alpha = create_polynumber_var!(alpha; alpha ; Ratio::<i64>);
-        let alpha2 = alpha.clone()*alpha.clone();
-        let alpha3 = alpha2.clone() * alpha.clone();
-        let alpha4 = alpha3.clone() * alpha.clone();
-        let one = create_polynumber_one!(alpha ; Ratio::<i64>);
-        let p1 = alpha4.clone();
-        let s1 = PolySequence{p:p1};
-        let p2 = alpha3.clone()*Ratio::from(4)-alpha2.clone()*Ratio::from(6)+alpha.clone()*Ratio::from(4)-one*Ratio::from(1);
-        let s2 = PolySequence{p:p2};
-        assert_eq!(s1.backward_diff(),s2)
+        let p2 = alpha.clone()*(alpha.clone()+one.clone())
+            *(alpha.clone()*Ratio::from(2)+one)*Ratio::new(1,6);
+        assert_eq!(p1,p2);
     }
 }
 

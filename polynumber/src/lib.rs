@@ -654,6 +654,43 @@ where
     }
 }
 
+impl<T> PolyNumber<T>
+where
+    T: PartialEq + Zero + One + Mul + Add + Clone,
+    T: Sub<Output = T>,
+    T: Neg<Output = T>,
+    T: std::fmt::Display,
+{
+    pub fn forward_diff(&self) -> PolyNumber<T> {
+        self.ltrans(T::one()) - self.clone()
+    }
+
+    pub fn backward_diff(&self) -> PolyNumber<T> {
+        self.clone() - self.ltrans(-T::one())
+    }
+
+    pub fn lowering_factorial_power(&self, n: usize) -> PolyNumber<T> {
+        if n == 0 {
+            return PolyNumber::new_var(vec![T::one()], &self.var);
+        }
+        if n == 1 {
+            return self.clone();
+        }
+        self.clone() * self.ltrans(-T::one()).lowering_factorial_power(n-1)
+    }
+
+    pub fn raising_factorial_power(&self, n: usize) -> PolyNumber<T> {
+        if n == 0 {
+            return PolyNumber::new_var(vec![T::one()], &self.var);
+        }
+        if n == 1 {
+            return self.clone();
+        }
+        self.clone() * self.ltrans(T::one()).raising_factorial_power(n-1)
+    }
+}
+
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -940,6 +977,27 @@ mod tests {
         let p2 = PolyNumber::new_var(vec![Ratio::from(3),Ratio::from(-4),Ratio::from(1)], "x");
         let s2 = p2.solve();
         assert_eq!(s2,vec![Root::from(Ratio::from(1)),Root::from(Ratio::from(3))]);
+    }
+    #[test]
+    fn forward_difference() {
+        let alpha = create_polynumber_var!(alpha; alpha ; Ratio::<i64>);
+        let alpha2 = alpha.clone()*alpha.clone();
+        let alpha3 = alpha2.clone() * alpha.clone();
+        let one = create_polynumber_one!(alpha ; Ratio::<i64>);
+        let p1 = alpha3.clone();
+        let p2 = alpha2.clone()*Ratio::from(3)+alpha.clone()*Ratio::from(3)+one*Ratio::from(1);
+        assert_eq!(p1.forward_diff(),p2)
+    }
+    #[test]
+    fn backward_difference() {
+        let alpha = create_polynumber_var!(alpha; alpha ; Ratio::<i64>);
+        let alpha2 = alpha.clone()*alpha.clone();
+        let alpha3 = alpha2.clone() * alpha.clone();
+        let alpha4 = alpha3.clone() * alpha.clone();
+        let one = create_polynumber_one!(alpha ; Ratio::<i64>);
+        let p1 = alpha4.clone();
+        let p2 = alpha3.clone()*Ratio::from(4)-alpha2.clone()*Ratio::from(6)+alpha.clone()*Ratio::from(4)-one*Ratio::from(1);
+        assert_eq!(p1.backward_diff(),p2)
     }
 }
 

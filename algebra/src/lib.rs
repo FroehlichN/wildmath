@@ -280,14 +280,17 @@ where
 
 pub fn factorial<T>(n: T) -> T
 where
-    T: Integer,
-    T: Copy,
+    T: Add<Output = T>,
+    T: Mul<Output = T>,
+    T: One,
+    T: PartialOrd,
+    T: Clone,
 {
     let mut f = T::one();
     let mut p = T::one();
     while f <= n {
-        p = p * f;
-        f = f + T::one();
+        p = p.clone() * f.clone();
+        f = f.clone() + T::one();
     }
     return p;
 }
