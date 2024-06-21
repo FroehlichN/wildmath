@@ -145,7 +145,7 @@ mod tests {
     }
 
     #[test]
-    fn polynumber_from_sequence() {
+    fn polynumber_from_sequence_of_square_pyramidal_numbers() {
         let s1 = Sequence::from([Ratio::from(0),Ratio::from(1),Ratio::from(5),
             Ratio::from(14),Ratio::from(30),Ratio::from(55),Ratio::from(91),
             Ratio::from(140)]);
@@ -155,6 +155,18 @@ mod tests {
         let p2 = alpha.clone()*(alpha.clone()+one.clone())
             *(alpha.clone()*Ratio::from(2)+one)*Ratio::new(1,6);
         assert_eq!(p1,p2);
+    }
+
+    #[test]
+    fn polynumber_from_sequence_of_cubes() {
+        let s1 = Sequence::from([Ratio::from(0),Ratio::from(1),Ratio::from(9),
+            Ratio::from(36),Ratio::from(100),Ratio::from(225),Ratio::from(441)]);
+        let p1 = polynumber(s1);
+        let alpha = create_polynumber_var!(alpha; alpha ; Ratio::<i64>);
+        let one = create_polynumber_one!(alpha ; Ratio::<i64>);
+        let p2 = alpha.clone()*(alpha.clone()+one.clone())*Ratio::new(1,2);
+        let p3 = p2.clone() * p2;
+        assert_eq!(p1,p3);
     }
 }
 
