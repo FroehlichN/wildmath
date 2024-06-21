@@ -669,24 +669,24 @@ where
         self.clone() - self.ltrans(-T::one())
     }
 
-    pub fn lowering_factorial_power(&self, n: usize) -> PolyNumber<T> {
+    pub fn falling_power(&self, n: usize) -> PolyNumber<T> {
         if n == 0 {
             return PolyNumber::new_var(vec![T::one()], &self.var);
         }
         if n == 1 {
             return self.clone();
         }
-        self.clone() * self.ltrans(-T::one()).lowering_factorial_power(n-1)
+        self.clone() * self.ltrans(-T::one()).falling_power(n-1)
     }
 
-    pub fn raising_factorial_power(&self, n: usize) -> PolyNumber<T> {
+    pub fn rising_power(&self, n: usize) -> PolyNumber<T> {
         if n == 0 {
             return PolyNumber::new_var(vec![T::one()], &self.var);
         }
         if n == 1 {
             return self.clone();
         }
-        self.clone() * self.ltrans(T::one()).raising_factorial_power(n-1)
+        self.clone() * self.ltrans(T::one()).rising_power(n-1)
     }
 }
 

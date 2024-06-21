@@ -105,7 +105,7 @@ where
         }
 
         let denom = factorial(k.clone());
-        p = p.clone() + alpha.lowering_factorial_power(index) * (s1[0].clone()/denom);
+        p = p.clone() + alpha.falling_power(index) * (s1[0].clone()/denom);
 
         index = index + 1;
         k = k.clone() + T::one();
