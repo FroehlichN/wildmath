@@ -457,7 +457,7 @@ where
 
         let s = T::one() / (RowVector::<T>::new(pv.clone()) * ColumnVector::<T>::new(dv.clone()));
 
-        let ident = Matrix::<T>::identitiy(3,3);
+        let ident = Matrix::<T>::identity(3,3);
 
         let mut dmtv = Vec::new();
         dmtv.push(dv);

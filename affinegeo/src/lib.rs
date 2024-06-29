@@ -258,7 +258,7 @@ where
         let pm = self.projection_on_line_matrix(direction);
         let dvlen = direction.columnvector().elem.len();
         let pvlen = self.coords.len();
-        let ident = Matrix::<T>::identitiy(dvlen,pvlen);
+        let ident = Matrix::<T>::identity(dvlen,pvlen);
 
         ident - pm
     }
@@ -267,7 +267,7 @@ where
         let pm = self.projection_on_line_matrix(direction);
         let dvlen = direction.columnvector().elem.len();
         let pvlen = self.coords.len();
-        let ident = Matrix::<T>::identitiy(dvlen,pvlen);
+        let ident = Matrix::<T>::identity(dvlen,pvlen);
         let two = T::one()+T::one();
 
         ident - pm*two
