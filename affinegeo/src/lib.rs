@@ -324,6 +324,38 @@ where
         let mone = T::zero() - T::one();
         self.reflection_across_plane_matrix(direction) * mone
     }
+
+    pub fn some_point(&self) -> Point<T> {
+        let dim = self.coords.len();
+        let mut coords = Vec::new();
+        if self.d.is_zero() {
+            for _i in 0..dim {
+                coords.push(T::zero());
+            }
+            return Point::new(coords);
+        }
+
+        for _i in 0..dim {
+            coords.push(T::one());
+        }
+        let v1 = ColumnVector::new(coords);
+        let p1 = RowVector::new(self.coords.clone());
+        let d1 = p1*v1.clone();
+        let v2 = v1 * (self.d.clone() / d1);
+
+        Point::new(v2.elem)
+    }
+
+    pub fn quadrance(&self, point: &Point<T>) -> T {
+        let normal = Vector::from(self.coords.clone());
+        let cva = ColumnVector::new(point.coords.clone());
+        let pv = self.some_point();
+        let cvv = ColumnVector::new(pv.coords);
+        let cvg = cva - cvv;
+        let vg = Vector::from(cvg.elem);
+        let vu = normal.projection(&vg);
+        vu.quadrance_blue()
+    }
 }
 
 
@@ -462,6 +494,32 @@ mod tests {
         let o = Point::new(vec![Ratio::from(0),Ratio::from(0)]);
         let pp = o + vpu;
         assert!(pp.lies_on(&l));
+    }
+
+    #[test]
+    fn quadrance_from_line_to_point_1() {
+        // In 2D, planes are lines
+        let nv = Vector::from(vec![Ratio::from(3),Ratio::from(4)]);
+        let p = Point::new(vec![Ratio::from(0),Ratio::from(1)]);
+        let l = Plane::from(p.clone(),nv);
+
+        // Point A
+        let a = Point::new(vec![Ratio::from(1),Ratio::from(2)]);
+
+        let q = l.quadrance(&a);
+        assert_eq!(q,Ratio::new(49,25));
+    }
+
+    #[test]
+    fn quadrance_from_line_to_point_2() {
+        // In 2D, planes are lines
+        let l = Plane::new(vec![Ratio::from(1),Ratio::from(-2)],Ratio::from(5));
+
+        // Point A
+        let a = Point::new(vec![Ratio::from(5),Ratio::from(-2)]);
+
+        let q = l.quadrance(&a);
+        assert_eq!(q,Ratio::new(16,5));
     }
 
     #[test]
