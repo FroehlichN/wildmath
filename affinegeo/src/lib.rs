@@ -362,6 +362,50 @@ mod tests {
     }
 
     #[test]
+    fn projection_onto_a_line_1() {
+        // In 2D planes are lines
+        let coords = vec![Ratio::from(4),Ratio::from(1)];
+        let l = Plane::new(coords.clone(),Ratio::from(0));
+        // Projection along the normal to the plane (line)
+        let nv = Vector::from(coords);
+        let pm = l.projection_on_plane_matrix(&nv);
+        assert_eq!(pm.clone()*pm.clone(),pm.clone());
+
+        let v1 = ColumnVector::new(vec![Ratio::from(3),Ratio::from(2)]);
+
+        // Projection vector
+        let pu = pm*v1;
+        let vpu = Vector::from(pu.elem);
+
+        // Origin
+        let o = Point::new(vec![Ratio::from(0),Ratio::from(0)]);
+        let pp = o + vpu;
+        assert!(pp.lies_on(&l));
+    }
+
+    #[test]
+    fn projection_onto_a_line_2() {
+        // In 2D planes are lines
+        let coords = vec![Ratio::from(3),Ratio::from(2)];
+        let l = Plane::new(coords.clone(),Ratio::from(0));
+        // Projection along the normal to the plane (line)
+        let nv = Vector::from(coords);
+        let pm = l.projection_on_plane_matrix(&nv);
+        assert_eq!(pm.clone()*pm.clone(),pm.clone());
+
+        let v1 = ColumnVector::new(vec![Ratio::from(4),Ratio::from(1)]);
+
+        // Projection vector
+        let pu = pm*v1;
+        let vpu = Vector::from(pu.elem);
+
+        // Origin
+        let o = Point::new(vec![Ratio::from(0),Ratio::from(0)]);
+        let pp = o + vpu;
+        assert!(pp.lies_on(&l));
+    }
+
+    #[test]
     fn quadrance() {
         let p1 = Point::new(vec![Ratio::new(2,1), Ratio::new(1,1)]);
         let p2 = Point::new(vec![Ratio::new(6,1), Ratio::new(2,1)]);
