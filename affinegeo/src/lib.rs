@@ -178,6 +178,29 @@ where
     }
 }
 
+impl<T> Vector<T>
+where
+    T: Zero + One,
+    T: Sub<Output = T>,
+    T: Mul<Output = T>,
+    T: Div<Output = T>,
+    T: Clone,
+{
+    pub fn reflection_in_normal(&self, other: &Self) -> Vector<T> {
+        let vw = self.dot_blue(&other);
+        let vv = self.dot_blue(&self);
+        let two = T::one()+T::one();
+        other.clone() - self.clone() * (two*vw/vv)
+    }
+
+    pub fn reflection_in_vector(&self, other: &Self) -> Vector<T> {
+        let vw = self.dot_blue(&other);
+        let vv = self.dot_blue(&self);
+        let two = T::one()+T::one();
+        self.clone() * (two*vw/vv) - other.clone()
+    }
+}
+
 impl<T> PartialEq for Vector<T>
 where
     T: PartialEq,
@@ -561,6 +584,42 @@ mod tests {
         let v = Vector::from(vec![1,-2,3]);
         let u = Vector::from(vec![4,-1,-2]);
         assert!(v.is_perpendicular(&u));
+    }
+
+    #[test]
+    fn reflection_in_normal() {
+        let v = Vector::from(vec![Ratio::from(1),Ratio::from(-2),Ratio::from(3)]);
+        let v1 = Vector::from(vec![Ratio::from(-4),Ratio::from(5),Ratio::from(6)]);
+        let v2 = Vector::from(vec![Ratio::from(7),Ratio::from(-8),Ratio::from(-9)]);
+
+        let mv1 = v.reflection_in_normal(&v1);
+        let mv2 = v.reflection_in_normal(&v2);
+
+        assert_eq!(mv1.dot_blue(&mv2),v1.dot_blue(&v2));
+
+        let mmv1 = v.reflection_in_normal(&mv1);
+        let mmv2 = v.reflection_in_normal(&mv2);
+
+        assert_eq!(mmv1,v1);
+        assert_eq!(mmv2,v2);
+    }
+
+    #[test]
+    fn reflection_in_vector() {
+        let v = Vector::from(vec![Ratio::from(1),Ratio::from(-2),Ratio::from(3)]);
+        let v1 = Vector::from(vec![Ratio::from(-4),Ratio::from(5),Ratio::from(6)]);
+        let v2 = Vector::from(vec![Ratio::from(7),Ratio::from(-8),Ratio::from(-9)]);
+
+        let mv1 = v.reflection_in_vector(&v1);
+        let mv2 = v.reflection_in_vector(&v2);
+
+        assert_eq!(mv1.dot_blue(&mv2),v1.dot_blue(&v2));
+
+        let mmv1 = v.reflection_in_vector(&mv1);
+        let mmv2 = v.reflection_in_vector(&mv2);
+
+        assert_eq!(mmv1,v1);
+        assert_eq!(mmv2,v2);
     }
 }
 
