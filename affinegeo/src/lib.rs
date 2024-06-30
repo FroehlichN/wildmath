@@ -262,6 +262,21 @@ impl<T> Plane<T>
 
 impl<T> Plane<T>
 where
+    T: Zero,
+    T: Sub<Output = T>,
+    T: Mul<Output = T>,
+    T: Clone,
+{
+    pub fn from(point: Point<T>, normal: Vector<T>) -> Plane<T> {
+        let pv = Vector::from(point.coords.clone());
+        let d = normal.dot_blue(&pv);
+        let ncv = normal.columnvector();
+        Plane::new(ncv.elem, d)
+    }
+}
+
+impl<T> Plane<T>
+where
     T: Zero + One,
     T: Add<Output = T>,
     T: Sub<Output = T>,
@@ -326,6 +341,18 @@ mod tests {
         assert!(p1.lies_on(&pi));
         assert!(p2.lies_on(&pi));
         assert!(p3.lies_on(&pi));
+    }
+
+    #[test]
+    fn point_normal_form_of_a_line() {
+        // In 2D, planes are lines
+        let nv = Vector::from(vec![Ratio::from(2),Ratio::from(-1)]);
+        let p = Point::new(vec![Ratio::from(-1),Ratio::from(3)]);
+        let l = Plane::from(p.clone(),nv);
+        assert!(p.lies_on(&l));
+        // Adding a direction vector
+        let dv = Vector::from(vec![Ratio::from(1),Ratio::from(2)]);
+        assert!((p+dv).lies_on(&l));
     }
 
     #[test]
