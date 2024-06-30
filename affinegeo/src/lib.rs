@@ -163,6 +163,21 @@ where
     }
 }
 
+impl<T> Vector<T>
+where
+    T: Zero,
+    T: Sub<Output = T>,
+    T: Mul<Output = T>,
+    T: Div<Output = T>,
+    T: Clone,
+{
+    pub fn projection(&self, other: &Self) -> Vector<T> {
+        let vw = self.dot_blue(&other);
+        let vv = self.dot_blue(&self);
+        self.clone() * (vw/vv)
+    }
+}
+
 impl<T> PartialEq for Vector<T>
 where
     T: PartialEq,
@@ -191,6 +206,23 @@ where
         let sumendvec = selfendvec + other.columnvector();
         let sumend = Point::new(sumendvec.elem);
         Vector::new(self.start, sumend)
+    }
+}
+
+impl<T> Sub for Vector<T>
+where
+    T: Zero,
+    T: Sub<Output = T>,
+    T: Sub<Output = T>,
+    T: Clone,
+{
+    type Output = Vector<T>;
+
+    fn sub(self, other: Self) -> Vector<T> {
+        let selfendvec = ColumnVector::new(self.end.coords);
+        let subendvec = selfendvec - other.columnvector();
+        let subend = Point::new(subendvec.elem);
+        Vector::new(self.start, subend)
     }
 }
 
@@ -403,6 +435,22 @@ mod tests {
         let o = Point::new(vec![Ratio::from(0),Ratio::from(0)]);
         let pp = o + vpu;
         assert!(pp.lies_on(&l));
+    }
+
+    #[test]
+    fn projection_of_vector_onto_vector() {
+        let v1 = Vector::from(vec![Ratio::from(3),Ratio::from(2)]);
+        let v2 = Vector::from(vec![Ratio::from(4),Ratio::from(1)]);
+        let u1 = v2.projection(&v1);
+        let u2 = v1.projection(&v2);
+        let wmu1 = v1.clone() - u1.clone();
+        let wmu2 = v2.clone() - u2.clone();
+        assert!(wmu1.is_perpendicular(&u1));
+        assert!(wmu2.is_perpendicular(&u2));
+        let lambda1 = v2.columnvector().get(0) / u1.columnvector().get(0);
+        let lambda2 = v1.columnvector().get(0) / u2.columnvector().get(0);
+        assert_eq!(u1 * lambda1, v2);
+        assert_eq!(u2 * lambda2, v1);
     }
 
     #[test]
