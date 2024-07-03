@@ -59,7 +59,7 @@ where
 {
     pub fn quadrance(&self, other: &Self) -> T {
         let v = Vector::new((*self).clone(), (*other).clone());
-        v.quadrance_blue()
+        v.quadrance()
     }
 }
 
@@ -98,18 +98,56 @@ where
 pub struct Vector<T> {
     start: Point<T>,
     end: Point<T>,
+    dot: fn(Vector<T>, other: Vector<T>) -> T,
 }
 
 impl<T> Vector<T>
+where
+    T: Zero,
+    T: Sub<Output = T>,
+    T: Mul<Output = T>,
+    T: Clone,
 {
     pub fn new(start: Point<T>, end: Point<T>) -> Vector<T> {
-        Vector {start: start, end: end}
+        Vector {start: start, end: end, dot: dot_blue}
+    }
+}
+
+
+fn dot_blue<T>(lhs: Vector<T>, rhs: Vector<T>) -> T
+where
+    T: Zero,
+    T: Sub<Output = T>,
+    T: Mul<Output = T>,
+    T: Clone,
+{
+    let v1 = lhs.rowvector();
+    let v2 = rhs.columnvector();
+
+    v1*v2
+}
+
+
+impl<T> Mul for Vector<T>
+where
+    T: Zero,
+    T: Sub<Output = T>,
+    T: Mul<Output = T>,
+    T: Clone,
+{
+    type Output = T;
+
+    fn mul(self, rhs: Self) -> T {
+        (self.dot)(self, rhs)
     }
 }
 
 impl<T> Vector<T>
 where
     T: Zero,
+    T: Sub<Output = T>,
+    T: Mul<Output = T>,
+    T: Clone,
 {
     pub fn from(coords: Vec<T>) -> Vector<T> {
         let mut zero = Vec::new();
@@ -147,19 +185,12 @@ where
     T: Mul<Output = T>,
     T: Clone,
 {
-    pub fn dot_blue(&self, other: &Self) -> T {
-        let v1 = self.rowvector();
-        let v2 = other.columnvector();
-
-        v1*v2
-    }
-
     pub fn is_perpendicular(&self, other: &Self) -> bool {
-        self.dot_blue(other).is_zero()
+        (self.clone() * other.clone()).is_zero()
     }
 
-    pub fn quadrance_blue(&self) -> T {
-        self.dot_blue(&self)
+    pub fn quadrance(&self) -> T {
+        self.clone() * self.clone()
     }
 }
 
@@ -172,8 +203,8 @@ where
     T: Clone,
 {
     pub fn projection(&self, other: &Self) -> Vector<T> {
-        let vw = self.dot_blue(&other);
-        let vv = self.dot_blue(&self);
+        let vw = self.clone() * other.clone();
+        let vv = self.clone() * self.clone();
         self.clone() * (vw/vv)
     }
 }
@@ -187,15 +218,15 @@ where
     T: Clone,
 {
     pub fn reflection_in_normal(&self, other: &Self) -> Vector<T> {
-        let vw = self.dot_blue(&other);
-        let vv = self.dot_blue(&self);
+        let vw = self.clone() * other.clone();
+        let vv = self.clone() * self.clone();
         let two = T::one()+T::one();
         other.clone() - self.clone() * (two*vw/vv)
     }
 
     pub fn reflection_in_vector(&self, other: &Self) -> Vector<T> {
-        let vw = self.dot_blue(&other);
-        let vv = self.dot_blue(&self);
+        let vw = self.clone() * other.clone();
+        let vv = self.clone() * self.clone();
         let two = T::one()+T::one();
         self.clone() * (two*vw/vv) - other.clone()
     }
@@ -220,6 +251,7 @@ where
     T: Zero,
     T: Add<Output = T>,
     T: Sub<Output = T>,
+    T: Mul<Output = T>,
     T: Clone,
 {
     type Output = Vector<T>;
@@ -236,7 +268,7 @@ impl<T> Sub for Vector<T>
 where
     T: Zero,
     T: Sub<Output = T>,
-    T: Sub<Output = T>,
+    T: Mul<Output = T>,
     T: Clone,
 {
     type Output = Vector<T>;
@@ -292,7 +324,7 @@ where
 {
     pub fn from(point: Point<T>, normal: Vector<T>) -> Plane<T> {
         let pv = Vector::from(point.coords.clone());
-        let d = normal.dot_blue(&pv);
+        let d = normal.clone() * pv;
         let ncv = normal.columnvector();
         Plane::new(ncv.elem, d)
     }
@@ -377,7 +409,7 @@ where
         let cvg = cva - cvv;
         let vg = Vector::from(cvg.elem);
         let vu = normal.projection(&vg);
-        vu.quadrance_blue()
+        vu.quadrance()
     }
 }
 
@@ -606,7 +638,7 @@ mod tests {
         let mv1 = v.reflection_in_normal(&v1);
         let mv2 = v.reflection_in_normal(&v2);
 
-        assert_eq!(mv1.dot_blue(&mv2),v1.dot_blue(&v2));
+        assert_eq!(mv1.clone() * mv2.clone(),v1.clone() * v2.clone());
 
         let mmv1 = v.reflection_in_normal(&mv1);
         let mmv2 = v.reflection_in_normal(&mv2);
@@ -624,7 +656,7 @@ mod tests {
         let mv1 = v.reflection_in_vector(&v1);
         let mv2 = v.reflection_in_vector(&v2);
 
-        assert_eq!(mv1.dot_blue(&mv2),v1.dot_blue(&v2));
+        assert_eq!(mv1.clone() * mv2.clone(),v1.clone() * v2.clone());
 
         let mmv1 = v.reflection_in_vector(&mv1);
         let mmv2 = v.reflection_in_vector(&mv2);
