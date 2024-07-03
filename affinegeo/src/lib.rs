@@ -580,6 +580,17 @@ mod tests {
     }
 
     #[test]
+    fn quadrances_in_right_triangle() {
+        let a = Point::new(vec![1,2,4]);
+        let b = Point::new(vec![4,3,2]);
+        let c = Point::new(vec![5,4,4]);
+        let qab = a.quadrance(&b);
+        let qbc = b.quadrance(&c);
+        let qca = c.quadrance(&a);
+        assert_eq!(qab+qbc,qca);
+    }
+
+    #[test]
     fn perpendicular_vectors() {
         let v = Vector::from(vec![1,-2,3]);
         let u = Vector::from(vec![4,-1,-2]);
