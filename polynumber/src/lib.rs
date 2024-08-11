@@ -160,6 +160,19 @@ where
     }
 }
 
+impl<T> Add<T> for PolyNumber<T>
+where
+    T: One,
+    T: Add<Output = T>,
+    T: Clone,
+{
+    type Output = PolyNumber<T>;
+
+    fn add(self, other: T) -> PolyNumber<T> {
+        return self + Self::one() * other
+    }
+}
+
 impl<T> Sub for PolyNumber<T>
 where
     T: PartialEq + Zero + One + Mul + Add + Sub + Clone,
@@ -381,6 +394,68 @@ where
 {
     fn one() -> PolyNumber<T> {
         return PolyNumber::new_var(vec![T::one()], "");
+    }
+}
+
+impl<T> Div for PolyNumber<T>
+where
+    T: Zero,
+    T: One,
+    T: Sub<Output = T>,
+    T: Div<Output = T>,
+    PolyNumber<T>: Sub<Output = PolyNumber<T>>,
+    T: Clone,
+{
+    type Output = PolyNumber<T>;
+
+    fn div(self, other: Self) -> Self {
+        let s_ord = self.order();
+        if s_ord < 1
+        {
+            return PolyNumber::new_var(vec![T::zero()], &self.var);
+        }
+
+        let o_ord = other.order();
+        if o_ord < 1
+        {
+            return PolyNumber::new_var(vec![T::one()], &self.var);
+        }
+
+        if s_ord < o_ord
+        {
+            return PolyNumber::new_var(vec![T::zero()], &self.var);
+        }
+
+        let s = self.n.last().unwrap();
+        if s.is_zero() {
+            let mut start = self.n.clone();
+            start.pop();
+            let pn = PolyNumber::new_var(start, &self.var);
+
+            return pn / other;
+        }
+
+        let o = other.n.last().unwrap();
+        if o.is_zero() {
+            let mut start = other.n.clone();
+            start.pop();
+            let pn = PolyNumber::new_var(start, &self.var);
+
+            return self / pn;
+        }
+
+        let r = s.clone() / o.clone();
+        let q_ord = s_ord - o_ord;
+
+        let mut v : Vec<T> = Vec::new();
+        for _n in 0..q_ord {
+            v.push(T::zero());
+        }
+        v.push(r.clone());
+
+        let q = PolyNumber::new_var(v, &self.var);
+        let res = self - other.clone()*q.clone();
+        return q + res / other;
     }
 }
 
@@ -998,6 +1073,15 @@ mod tests {
         let p1 = alpha4.clone();
         let p2 = alpha3.clone()*Ratio::from(4)-alpha2.clone()*Ratio::from(6)+alpha.clone()*Ratio::from(4)-one*Ratio::from(1);
         assert_eq!(p1.backward_diff(),p2)
+    }
+    #[test]
+    fn division() {
+        let x = create_polynumber_var!(x; x ; Ratio::<i64>);
+        let x2 = x.clone() * x.clone();
+        let p = x2*Ratio::from(5) + x.clone()*Ratio::from(3) + Ratio::from(1);
+        let q = x.clone()*Ratio::from(2) + Ratio::from(1);
+        let r = x.clone()*Ratio::new(5,2) + Ratio::new(1,4);
+        assert_eq!(p/q,r);
     }
 }
 
