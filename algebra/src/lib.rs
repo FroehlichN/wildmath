@@ -320,6 +320,29 @@ where
     choose(two*n, n)/(n + T::one())
 }
 
+pub fn hyper_catalan<T>(n: Vec<T>) -> T
+where
+    T: Integer,
+    T: Copy,
+{
+    let two = T::one() + T::one();
+    let mut f1 = two;
+    let mut f2 = T::one();
+    let mut n1 = T::zero();
+    let mut n2 = T::one();
+    for m in &n {
+        n1 = n1 + f1 * *m;
+        n2 = n2 + f2 * *m;
+        f1 = f1 + T::one();
+        f2 = f2 + T::one();
+    }
+    let mut hc = factorial(n1)/factorial(n2);
+    for m in n {
+        hc = hc/factorial(m);
+    }
+    hc
+}
+
 pub fn prime_factors<T>(number: T) -> Vec<T>
 where
     T: Integer,
@@ -485,6 +508,23 @@ mod tests {
         assert_eq!(catalan(9i64),4862);
         assert_eq!(catalan(10i64),16796);
         assert_eq!(catalan(11i128),58786);
+    }
+    #[test]
+    fn hyper_catalan_numbers() {
+        assert_eq!(hyper_catalan(vec![0]),1);
+        assert_eq!(hyper_catalan(vec![1]),1);
+        assert_eq!(hyper_catalan(vec![2]),2);
+        assert_eq!(hyper_catalan(vec![3]),5);
+        assert_eq!(hyper_catalan(vec![4]),14);
+        assert_eq!(hyper_catalan(vec![5]),42);
+        assert_eq!(hyper_catalan(vec![6i64]),132);
+        assert_eq!(hyper_catalan(vec![7i64]),429);
+        assert_eq!(hyper_catalan(vec![8i64]),1430);
+        assert_eq!(hyper_catalan(vec![9i64]),4862);
+        assert_eq!(hyper_catalan(vec![10i128]),16796);
+        assert_eq!(hyper_catalan(vec![11i128]),58786);
+        assert_eq!(hyper_catalan(vec![2,0,1]),28);
+        assert_eq!(hyper_catalan(vec![7i128,5i128]),2283421140);
     }
 }
 
