@@ -311,6 +311,15 @@ where
     factorial(n)/(factorial(k)*factorial(n-k))
 }
 
+pub fn catalan<T>(n: T) -> T
+where
+    T: Integer,
+    T: Copy,
+{
+    let two = T::one() + T::one();
+    choose(two*n, n)/(n + T::one())
+}
+
 pub fn prime_factors<T>(number: T) -> Vec<T>
 where
     T: Integer,
@@ -461,6 +470,21 @@ mod tests {
     #[test]
     fn prime_factorization_of_negative_numbers() {
         assert_eq!(prime_factors(-6),vec![-1,2,3]);
+    }
+    #[test]
+    fn catalan_numbers() {
+        assert_eq!(catalan(0),1);
+        assert_eq!(catalan(1),1);
+        assert_eq!(catalan(2),2);
+        assert_eq!(catalan(3),5);
+        assert_eq!(catalan(4),14);
+        assert_eq!(catalan(5),42);
+        assert_eq!(catalan(6i64),132);
+        assert_eq!(catalan(7i64),429);
+        assert_eq!(catalan(8i64),1430);
+        assert_eq!(catalan(9i64),4862);
+        assert_eq!(catalan(10i64),16796);
+        assert_eq!(catalan(11i128),58786);
     }
 }
 
