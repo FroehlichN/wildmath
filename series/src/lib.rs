@@ -36,6 +36,10 @@ impl<T> FormalPowerSeries<T>
     pub fn new(f: FormalPowerFn<T>) -> Self {
         FormalPowerSeries{ f: f }
     }
+
+    pub fn coef(&self, n: T) -> T {
+        (self.f)(n)
+    }
 }
 
 
@@ -102,6 +106,18 @@ mod tests {
         let a = FormalPowerSeries::new(Box::new(|n: i32| n));
         let b = FormalPowerSeries::new(Box::new(|n: i32| n*n));
         let _c = a * b;
+    }
+    #[test]
+    fn coefficient_extraction_from_formal_power_series() {
+        let leibniz = |n: i32| (2*n+1) * if n%2 > 0 {-1} else {1};
+        let a = FormalPowerSeries::new(Box::new(leibniz));
+
+        assert_eq!(a.coef(0),1);
+        assert_eq!(a.coef(1),-3);
+        assert_eq!(a.coef(2),5);
+        assert_eq!(a.coef(3),-7);
+        assert_eq!(a.coef(4),9);
+        assert_eq!(a.coef(5),-11);
     }
 }
 
