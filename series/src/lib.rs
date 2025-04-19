@@ -15,7 +15,9 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-use std::ops::{Add};
+use num::{Zero,One};
+use std::ops::{Add,Sub,Mul};
+use std::cmp::PartialOrd;
 
 
 /// Represents a formal power series of form sum(f(n)*x^n,n=0..infinity).
@@ -53,6 +55,38 @@ where
     }
 }
 
+impl<T> Mul for FormalPowerSeries<T>
+where
+    T: Add<Output = T>,
+    T: Sub<Output = T>,
+    T: Mul<Output = T>,
+    T: PartialOrd,
+    T: Zero,
+    T: One,
+    T: 'static,
+    T: Clone,
+{
+    type Output = FormalPowerSeries<T>;
+
+    fn mul(self, other: Self) -> FormalPowerSeries<T> {
+        let sf = std::boxed::Box::leak(self.f);
+        let of = std::boxed::Box::leak(other.f);
+
+        let sum = |f: &dyn Fn(T)->T, k: T| {
+                let mut a = T::zero();
+                let mut l = T::zero();
+                while l <= k {
+                    a = a + f(l.clone());
+                    l = l + T::one();
+                }
+                return a;
+            };
+        let lsum = std::boxed::Box::leak(Box::new(sum));
+        let cauchy = Box::new(|k: T| lsum(&|l: T|(sf)(l.clone()) * (of)(k.clone()-l),k.clone()));
+        FormalPowerSeries::new(cauchy)
+    }
+}
+
 
 #[cfg(test)]
 mod tests {
@@ -62,6 +96,12 @@ mod tests {
         let a = FormalPowerSeries::new(Box::new(|n: i32| n*n));
         let b = FormalPowerSeries::new(Box::new(|n: i32| n*n*n));
         let _c = a + b;
+    }
+    #[test]
+    fn multiplying_formal_power_series() {
+        let a = FormalPowerSeries::new(Box::new(|n: i32| n));
+        let b = FormalPowerSeries::new(Box::new(|n: i32| n*n));
+        let _c = a * b;
     }
 }
 
