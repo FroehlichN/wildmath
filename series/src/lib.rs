@@ -96,18 +96,6 @@ where
 mod tests {
     use super::*;
     #[test]
-    fn adding_formal_power_series() {
-        let a = FormalPowerSeries::new(Box::new(|n: i32| n*n));
-        let b = FormalPowerSeries::new(Box::new(|n: i32| n*n*n));
-        let _c = a + b;
-    }
-    #[test]
-    fn multiplying_formal_power_series() {
-        let a = FormalPowerSeries::new(Box::new(|n: i32| n));
-        let b = FormalPowerSeries::new(Box::new(|n: i32| n*n));
-        let _c = a * b;
-    }
-    #[test]
     fn coefficient_extraction_from_formal_power_series() {
         let leibniz = |n: i32| (2*n+1) * if n%2 > 0 {-1} else {1};
         let a = FormalPowerSeries::new(Box::new(leibniz));
@@ -118,6 +106,36 @@ mod tests {
         assert_eq!(a.coef(3),-7);
         assert_eq!(a.coef(4),9);
         assert_eq!(a.coef(5),-11);
+    }
+    #[test]
+    fn adding_formal_power_series() {
+        let leibniz = |n: i32| (2*n+1) * if n%2 > 0 {-1} else {1};
+        let a = FormalPowerSeries::new(Box::new(leibniz));
+        let ifodd = |n: i32| if n%2 > 0 {n+1} else {0};
+        let b = FormalPowerSeries::new(Box::new(ifodd));
+        let c = a + b;
+
+        assert_eq!(c.coef(0),1);
+        assert_eq!(c.coef(1),-1);
+        assert_eq!(c.coef(2),5);
+        assert_eq!(c.coef(3),-3);
+        assert_eq!(c.coef(4),9);
+        assert_eq!(c.coef(5),-5);
+    }
+    #[test]
+    fn multiplying_formal_power_series() {
+        let leibniz = |n: i32| (2*n+1) * if n%2 > 0 {-1} else {1};
+        let a = FormalPowerSeries::new(Box::new(leibniz));
+        let ifodd = |n: i32| if n%2 > 0 {n+1} else {0};
+        let b = FormalPowerSeries::new(Box::new(ifodd));
+        let c = a * b;
+
+        assert_eq!(c.coef(0),0);
+        assert_eq!(c.coef(1),2);
+        assert_eq!(c.coef(2),-6);
+        assert_eq!(c.coef(3),14);
+        assert_eq!(c.coef(4),-26);
+        assert_eq!(c.coef(5),44);
     }
 }
 
