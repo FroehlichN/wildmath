@@ -82,7 +82,7 @@ where
 
 
 /// Represents a formal power series in several variables of form
-/// sum(f(n1,n2,n3,...)*x1^n1*x2^n2*x3^n3... ; n1,n2,3=0..infinity).
+/// sum(f(n1,n2,n3,...)*x1^n1*x2^n2*x3^n3... ; n1,n2,n3,...=0..infinity).
 /// Coefficients are calculated by a function f taking the vector
 /// of indices n1,n2,n3,... as an input.
 /// The resulting sum is an infinite polynumber in as many variables
@@ -165,10 +165,80 @@ where
     }
 }
 
+impl<T> FormalPowerSeries<T>
+where
+    T: Zero + One + PartialOrd + Clone,
+    T: Add<Output = T>,
+{
+    /// Calculate f(n1,n2,n3,...)*x1^n1*x2^n2*x3^n3...
+    pub fn series_elem(&self, x: Vec<T>, n: Vec<T>) -> T {
+
+        let mut xpower = T::one();
+        for (xi, xv) in x.iter().enumerate() {
+            let nxio = n.get(xi);
+
+            let nxi = match nxio {
+                    Some(n) => (*n).clone(),
+                    None => T::zero(),
+                };
+
+            let mut i = T::zero();
+            while i < nxi {
+                xpower = xpower * (*xv).clone();
+                i = i + T::one();
+            }
+        }
+
+        self.coef(n) * xpower
+    }
+
+    /// Calculate partial sum of a formal power series
+    /// sum(f(n1,n2,n3,...)*x1^n1*x2^n2*x3^n3... ; n1,n2,n3,...=0..infinity)
+    /// from n1=n2=n3=...=0 until all combinations of n1+n2+n3+...=nmax
+    /// at the vector x = (x1, x2, x3 , ...).
+    pub fn partial_sum(&self, x: Vec<T>, nmax: T) -> T {
+
+        let mut nstart: Vec<T> = Vec::new();
+        for _i in 0..x.len() {
+            nstart.push(T::zero());
+        }
+
+        return self.partial_sum_from_nstart(x, nstart, nmax);
+    }
+
+    fn partial_sum_from_nstart(&self, x: Vec<T>, nstart: Vec<T>, nmax: T) -> T {
+        let mut nsum = T::zero();
+        for (_ni, nv) in nstart.clone().iter().enumerate() {
+            nsum = nsum + (*nv).clone();
+        }
+
+        if nsum > nmax {
+            return T::zero();
+        }
+
+        let mut sum = self.series_elem(x.clone(),nstart.clone());
+
+        if nsum == nmax {
+            return sum;
+        }
+
+        for (ni, nv) in nstart.iter().enumerate() {
+            let np1 = (*nv).clone() + T::one();
+            let mut n2 = nstart.clone();
+            n2[ni] = np1;
+
+            sum = sum + self.partial_sum_from_nstart(x.clone(), n2, nmax.clone());
+        }
+        return sum;
+    }
+}
+
 
 #[cfg(test)]
 mod tests {
     use super::*;
+    use assert_approx_eq::assert_approx_eq;
+    use algebra::factorial;
     #[test]
     fn coefficient_extraction_from_formal_power_series() {
         let leibniz = |n: Vec<i32>| (2*n[0]+1) * if n[0]%2 > 0 {-1} else {1};
@@ -210,6 +280,13 @@ mod tests {
         assert_eq!(c.coef(vec![3]),14);
         assert_eq!(c.coef(vec![4]),-26);
         assert_eq!(c.coef(vec![5]),44);
+    }
+    #[test]
+    fn calculate_euler_number() {
+        let expf = |n: Vec<f64>| 1.0 / factorial(n[0]);
+        let exps = FormalPowerSeries::new(Box::new(expf));
+        let exp1 = exps.partial_sum(vec![1.0],20.0);
+        assert_approx_eq!(exp1, 2.718281828, 1E-9);
     }
 }
 
