@@ -603,6 +603,19 @@ where
     }
 }
 
+impl<T> PolyNumber<PolyNumber<T>>
+where
+    T: Zero,
+    T: One,
+    T: PartialEq,
+    T: Clone,
+{
+    pub fn laplacian(self) -> PolyNumber<PolyNumber<T>> {
+        return self.clone().derivative2(1,0).derivative2(1,0)
+             + self.clone().derivative2(0,1).derivative2(0,1);
+    }
+}
+
 impl<T> PolyNumber<T>
 where
     T: PartialEq + Zero + One + Mul + Add + Sub + Clone,
@@ -1013,6 +1026,22 @@ mod tests {
         assert_eq!(q.clone().derivative2(1,0).derivative2(1,0), d02q);
         assert_eq!(q.clone().derivative2(0,1), d1q);
         assert_eq!(q.clone().derivative2(0,1).derivative2(0,1), d12q);
+    }
+    #[test]
+    fn laplacian_of_bi_polynumbers() {
+        // create bi-polynumbers
+        let ba = create_polynumber_var!(a; a,b ; i32);
+        let bb  = create_polynumber_var!(b;  a,b ; i32);
+        let bone = create_polynumber_one!(a,b ; i32);
+        let btwo = bone.clone() + bone.clone();
+        let bfour = btwo.clone() + btwo.clone();
+        let b16 = bfour.clone() * bfour.clone();
+
+        let q = ba.clone()*ba.clone() + bb.clone()*bb.clone();
+        let q2 = q.clone() * q.clone();
+
+        assert_eq!(q.clone().laplacian(),bfour);
+        assert_eq!(q2.laplacian(),b16*q);
     }
     #[test]
     fn tangent_plane() {
