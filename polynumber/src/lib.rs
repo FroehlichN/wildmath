@@ -585,7 +585,7 @@ where
         let tp = self.clone().taylor2();
 
         let bpol : PolyNumber<PolyNumber<PolyNumber<T>>>;
-        let s = tp.n.get(j);
+        let s = tp.n.get(i);
         match s {
             Some(p) => bpol = (*p).clone(),
             None    => return Self::zero(),
@@ -593,7 +593,7 @@ where
 
         let mut v : Vec<PolyNumber<T>> = Vec::new();
         for b in bpol.n {
-            let go = b.n.get(i);
+            let go = b.n.get(j);
             match go {
                 Some(g) => v.push((*g).clone()),
                 None    => v.push(PolyNumber::<T>::zero()),
@@ -972,22 +972,47 @@ mod tests {
         assert_eq!(p.taylor2(),t);
     }
     #[test]
-    fn derivatives_of_by_polynumbers() {
-        let p = PolyNumber::new_var(vec![PolyNumber::new_var(vec![-1,0,1], "a" ), // -1 + a^2
-                                    PolyNumber::new_var(vec![0], "a" ),
-                                    PolyNumber::new_var(vec![1], "a" ) ], "b"); // b^2
-        let d01 = PolyNumber::new_var(vec![PolyNumber::new_var(vec![0], "a" ),
-                                      PolyNumber::new_var(vec![2], "a" ) ], "b"); // 2b
-        let d02 = PolyNumber::new_var(vec![PolyNumber::new_var(vec![1], "a" ) ], "b"); // 1
-        let d10 = PolyNumber::new_var(vec![PolyNumber::new_var(vec![0,2], "a" ) ], "b"); // 2a
-        let d11 = PolyNumber::new_var(vec![PolyNumber::new_var(vec![0], "a" ) ], "b"); // 0
-        let d20 = PolyNumber::new_var(vec![PolyNumber::new_var(vec![1], "a" ) ], "b"); // 1
+    fn derivatives_of_bi_polynumbers() {
+        // create bi-polynumbers
+        let ba = create_polynumber_var!(a; a,b ; i32);
+        let bb  = create_polynumber_var!(b;  a,b ; i32);
+        let bzero = create_polynumber_zero!(a,b ; i32);
+        let bone = create_polynumber_one!(a,b ; i32);
+        let btwo = bone.clone() + bone.clone();
+
+        let p = ba.clone()*ba.clone() - bone.clone() + bb.clone()*bb.clone();
+
+        let d01 = btwo.clone()*bb.clone();
+        let d02 = bone.clone();
+        let d10 = btwo.clone()*ba.clone();
+        let d11 = bzero.clone();
+        let d20 = bone.clone();
         assert_eq!(p.clone().derivative2(0,0),p.clone());
         assert_eq!(p.clone().derivative2(0,1),d01);
         assert_eq!(p.clone().derivative2(0,2),d02);
         assert_eq!(p.clone().derivative2(1,0),d10);
         assert_eq!(p.clone().derivative2(1,1),d11);
         assert_eq!(p.clone().derivative2(2,0),d20);
+    }
+    #[test]
+    fn partial_derivatives_of_bi_polynumbers() {
+        // create bi-polynumbers
+        let ba = create_polynumber_var!(a; a,b ; i32);
+        let bb  = create_polynumber_var!(b;  a,b ; i32);
+        let bone = create_polynumber_one!(a,b ; i32);
+        let btwo = bone.clone() + bone.clone();
+
+        let q = ba.clone()*ba.clone() + bb.clone()*bb.clone();
+
+        let d0q = btwo.clone() * ba.clone();
+        let d02q = btwo.clone();
+        let d1q = btwo.clone() * bb.clone();
+        let d12q = btwo.clone();
+
+        assert_eq!(q.clone().derivative2(1,0), d0q);
+        assert_eq!(q.clone().derivative2(1,0).derivative2(1,0), d02q);
+        assert_eq!(q.clone().derivative2(0,1), d1q);
+        assert_eq!(q.clone().derivative2(0,1).derivative2(0,1), d12q);
     }
     #[test]
     fn tangent_plane() {
