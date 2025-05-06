@@ -614,6 +614,10 @@ where
         return self.clone().derivative2(1,0).derivative2(1,0)
              + self.clone().derivative2(0,1).derivative2(0,1);
     }
+
+    pub fn is_harmonic(self) -> bool {
+        return self.laplacian().is_zero();
+    }
 }
 
 impl<T> PolyNumber<T>
@@ -1042,6 +1046,33 @@ mod tests {
 
         assert_eq!(q.clone().laplacian(),bfour);
         assert_eq!(q2.laplacian(),b16*q);
+    }
+    #[test]
+    fn harmonic_bi_polynumbers() {
+        // create bi-polynumbers
+        let ba = create_polynumber_var!(a; a,b ; i32);
+        let bb  = create_polynumber_var!(b;  a,b ; i32);
+        let bone = create_polynumber_one!(a,b ; i32);
+
+        let btwo = bone.clone() + bone.clone();
+        let bthree = btwo.clone() + bone.clone();
+
+        let p1 = ba.clone()*ba.clone() - bb.clone()*bb.clone();
+        let p2 = ba.clone()*bb.clone();
+        let p3 = ba.clone()*ba.clone() + bb.clone()*bb.clone();
+        let p4 = ba.clone()*ba.clone()*ba.clone()
+               - bthree.clone()*ba.clone()*bb.clone()*bb.clone();
+        let p5 = bthree.clone()*ba.clone()*ba.clone()*bb.clone()
+               - bb.clone()*bb.clone()*bb.clone();
+
+        assert!(bone.is_harmonic());
+        assert!(ba.is_harmonic());
+        assert!(bb.is_harmonic());
+        assert!(p1.is_harmonic());
+        assert!(p2.is_harmonic());
+        assert!(!p3.is_harmonic());
+        assert!(p4.is_harmonic());
+        assert!(p5.is_harmonic());
     }
     #[test]
     fn tangent_plane() {
