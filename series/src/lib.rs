@@ -288,5 +288,27 @@ mod tests {
         let exp1 = exps.partial_sum(vec![1.0],20.0);
         assert_approx_eq!(exp1, 2.718281828, 1E-9);
     }
+    #[test]
+    fn pythagorean_trigonometric_identity() {
+        let sinf = |n: Vec<f64>| 1.0 / factorial(n[0]) * match (n[0] as i64) % 4 {
+                   0 => 0.0,
+                   1 => 1.0,
+                   2 => 0.0,
+                   3 => -1.0,
+                   _ => 0.0 };
+        let sins = FormalPowerSeries::new(Box::new(sinf.clone()));
+        let sins2 = FormalPowerSeries::new(Box::new(sinf));
+        let cosf = |n: Vec<f64>| 1.0 / factorial(n[0]) * match (n[0] as i64) % 4 {
+                   0 => 1.0,
+                   1 => 0.0,
+                   2 => -1.0,
+                   3 => 0.0,
+                   _ => 0.0 };
+        let coss = FormalPowerSeries::new(Box::new(cosf.clone()));
+        let coss2 = FormalPowerSeries::new(Box::new(cosf));
+        let pys = sins*sins2 + coss*coss2;
+        let py1 = pys.partial_sum(vec![1.0],20.0);
+        assert_approx_eq!(py1, 1.0, 1E-9);
+    }
 }
 
