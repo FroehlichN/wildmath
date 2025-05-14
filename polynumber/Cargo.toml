@@ -10,4 +10,5 @@ edition = "2021"
 num = "0.3"
 assert_approx_eq = "1.1.0"
 radical = { path = "../radical" }
+complex = { path = "../complex" }
 

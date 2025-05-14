@@ -17,6 +17,7 @@ limitations under the License.
 
 use num::{Integer,Zero,One};
 use num::rational::{Ratio};
+use complex::ComplexBlue;
 use std::ops::{Mul, Add, Sub, Div, Neg};
 use std::fmt;
 use radical::Root;
@@ -259,6 +260,24 @@ where
     }
 }
 
+impl<T> Div<T> for PolyNumber<T>
+where
+    T: Div<T, Output = T>,
+    T: Clone,
+{
+    type Output = PolyNumber<T>;
+
+    fn div(self, other: T) -> PolyNumber<T> {
+        let mut p: Vec<T> = Vec::new();
+
+        for a in self.n {
+            p.push(a / other.clone());
+        }
+
+        return PolyNumber::new_var(p, &self.var);
+    }
+}
+
 impl<T> Mul<T> for PolyNumber<PolyNumber<T>>
 where
     T: Mul,
@@ -272,6 +291,46 @@ where
 
         for a in self.n {
             p.push(a.clone() * PolyNumber::new_var(vec![other.clone()], &a.var));
+        }
+
+        return PolyNumber::new_var(p, &self.var);
+    }
+}
+
+impl<T> Mul<T> for PolyNumber<PolyNumber<ComplexBlue<T>>>
+where
+    T: Zero + One,
+    T: Mul<Output = T>,
+    T: Sub<Output = T>,
+    PolyNumber<T>: Mul<PolyNumber<T>, Output = PolyNumber<T>>,
+    T: Clone,
+{
+    type Output = PolyNumber<PolyNumber<ComplexBlue<T>>>;
+
+    fn mul(self, other: T) -> PolyNumber<PolyNumber<ComplexBlue<T>>> {
+        let mut p: Vec<PolyNumber<ComplexBlue<T>>> = Vec::new();
+
+        for a in self.n {
+            p.push(a.clone() * PolyNumber::new_var(vec![ComplexBlue::one() * other.clone()], &a.var));
+        }
+
+        return PolyNumber::new_var(p, &self.var);
+    }
+}
+
+impl<T> Div<T> for PolyNumber<PolyNumber<T>>
+where
+    T: Div,
+    PolyNumber<T>: Div<T, Output = PolyNumber<T>>,
+    T: Clone,
+{
+    type Output = PolyNumber<PolyNumber<T>>;
+
+    fn div(self, other: T) -> PolyNumber<PolyNumber<T>> {
+        let mut p: Vec<PolyNumber<T>> = Vec::new();
+
+        for a in self.n {
+            p.push(a / other.clone());
         }
 
         return PolyNumber::new_var(p, &self.var);
@@ -617,6 +676,89 @@ where
 
     pub fn is_harmonic(self) -> bool {
         return self.laplacian().is_zero();
+    }
+}
+
+impl<T> PolyNumber<PolyNumber<T>>
+where
+    T: Zero + One,
+    T: Neg<Output = T>,
+    T: Add<Output = T>,
+    T: Sub<Output = T>,
+    T: Mul<Output = T>,
+    T: Div<Output = T>,
+    T: Clone,
+    ComplexBlue<T>: Zero + One,
+    ComplexBlue<T>: Mul<Output = ComplexBlue<T>>,
+    ComplexBlue<T>: Mul<T, Output = ComplexBlue<T>>,
+    ComplexBlue<T>: PartialEq,
+    PolyNumber<PolyNumber<ComplexBlue<T>>>: Mul<Output = PolyNumber<PolyNumber<ComplexBlue<T>>>>,
+    PolyNumber<PolyNumber<ComplexBlue<T>>>: Mul<T, Output = PolyNumber<PolyNumber<ComplexBlue<T>>>>,
+    PolyNumber<PolyNumber<ComplexBlue<T>>>: Mul<ComplexBlue<T>, Output = PolyNumber<PolyNumber<ComplexBlue<T>>>>,
+{
+    // recursively peel off the harmonics of a complex bi-polynumber
+    fn poisson_harmonic_complex(p : PolyNumber<PolyNumber<ComplexBlue<T>>>) -> PolyNumber<PolyNumber<ComplexBlue<T>>> {
+        if p.is_zero() {
+            return p;
+        }
+
+        // select all terms containing only either u or v
+        let mut hv : Vec<PolyNumber<ComplexBlue<T>>> = Vec::new();
+        for (i, vi) in p.n.iter().enumerate() {
+            let mut hu : Vec<ComplexBlue<T>> = Vec::new();
+            for (j, vj) in vi.n.iter().enumerate() {
+                if j.is_zero() || i.is_zero() {
+                    hu.push(vj.clone());
+                }
+            }
+            hv.push(PolyNumber::new_var(hu,"u"));
+        }
+        let h = PolyNumber::new_var(hv,"v");
+
+        let u = create_polynumber_var!(u; u,v ; ComplexBlue::<T>);
+        let v = create_polynumber_var!(v; u,v ; ComplexBlue::<T>);
+        let r = (p - h.clone())/(u*v);
+
+        return h + Self::poisson_harmonic_complex(r);
+    }
+
+
+    // Solve the Dirichlet problem for a bi-polynumber, that is,
+    // calculate a bi-polynumber that has the same values on the unit cicle,
+    // but is harmonic.
+    pub fn poisson_harmonic(self) -> PolyNumber<PolyNumber<T>> {
+        let one = ComplexBlue::new(T::one(),T::zero());
+        let two = one.clone() + one.clone();
+        let i = ComplexBlue::new(T::zero(),T::one());
+
+        let u = create_polynumber_var!(u; u,v ; ComplexBlue::<T>);
+        let v = create_polynumber_var!(v; u,v ; ComplexBlue::<T>);
+
+        let alpha = (u.clone() + v.clone()) / two.clone();
+        let beta = (u.clone() - v.clone()) / two.clone() / i.clone();
+
+        let p1 = self.eval2(beta); // set beta = (u-v)/(2i)
+        let p =  p1.eval(alpha); // set alpha = (u+v)/2
+        let h = Self::poisson_harmonic_complex(p);
+
+        let ca = create_polynumber_var!(ca; ca,cb ; ComplexBlue::<T>);
+        let cb = create_polynumber_var!(cb; ca,cb ; ComplexBlue::<T>);
+
+        let u_in_ab = ca.clone() + cb.clone() * i.clone();
+        let v_in_ab = ca.clone() - cb.clone() * i.clone();
+
+        let ch = h.eval2(v_in_ab).eval(u_in_ab);
+
+        // convert back to original type T
+        let mut hv : Vec<PolyNumber<T>> = Vec::new();
+        for vi in ch.n {
+            let mut hu : Vec<T> = Vec::new();
+            for vj in vi.n {
+                hu.push(vj.real());
+            }
+            hv.push(PolyNumber::new_var(hu,&self.n[0].var));
+        }
+        return PolyNumber::new_var(hv,&self.var);
     }
 }
 
@@ -1073,6 +1215,34 @@ mod tests {
         assert!(!p3.is_harmonic());
         assert!(p4.is_harmonic());
         assert!(p5.is_harmonic());
+    }
+    #[test]
+    fn poisson_harmonic_of_bi_polynumber() {
+        // create bi-polynumbers
+        let a = create_polynumber_var!(a; a,b ; Ratio::<i32>);
+        let a2 = a.clone() * a.clone();
+        let a4 = a2.clone() * a2.clone();
+
+        let b  = create_polynumber_var!(b; a,b ; Ratio::<i32>);
+        let b2 = b.clone() * b.clone();
+        let b3 = b2.clone() * b.clone();
+
+        let one = create_polynumber_one!(a,b ; Ratio::<i32>);
+        let two = one.clone() + one.clone();
+        let three = two.clone() + one.clone();
+        let four = two.clone() + two.clone();
+        let p16 = four.clone() * four.clone();
+
+        let p = four.clone()*a4.clone() + three.clone()*a2.clone()*b2.clone()
+                - p16.clone()*a.clone()*b3.clone();
+
+        let d = p.clone().poisson_harmonic();
+
+        let p1 = p.clone().eval2(Ratio::new(4,5)).eval(Ratio::new(3,5));
+        let d1 = d.clone().eval2(Ratio::new(4,5)).eval(Ratio::new(3,5));
+
+        assert_eq!(p1,d1);
+        assert!(d.is_harmonic());
     }
     #[test]
     fn tangent_plane() {
