@@ -1245,6 +1245,37 @@ mod tests {
         assert!(d.is_harmonic());
     }
     #[test]
+    fn poisson_harmonic_of_bi_polynumber_2() {
+        // create bi-polynumbers
+        let a = create_polynumber_var!(a; a,b ; Ratio::<i32>);
+        let a2 = a.clone() * a.clone();
+
+        let b  = create_polynumber_var!(b; a,b ; Ratio::<i32>);
+        let b2 = b.clone() * b.clone();
+        let b3 = b2.clone() * b.clone();
+
+        let one = create_polynumber_one!(a,b ; Ratio::<i32>);
+        let two = one.clone() + one.clone();
+        let four = two.clone() + two.clone();
+        let eight = four.clone() + four.clone();
+        let p16 = four.clone() * four.clone();
+
+        let p = two.clone()*a.clone() + eight.clone()*b3.clone()
+                - p16.clone()*a2.clone()*b2.clone();
+
+        let d = p.clone().poisson_harmonic();
+
+        assert!(d.clone().is_harmonic());
+
+        let p1 = p.clone().eval2(Ratio::new(4,5)).eval(Ratio::new(3,5));
+        let d1 = d.clone().eval2(Ratio::new(4,5)).eval(Ratio::new(3,5));
+        assert_eq!(p1,d1);
+
+        let p2 = p.clone().eval2(Ratio::new(-12,13)).eval(Ratio::new(5,13));
+        let d2 = d.clone().eval2(Ratio::new(-12,13)).eval(Ratio::new(5,13));
+        assert_eq!(p2,d2);
+    }
+    #[test]
     fn tangent_plane() {
         let p = PolyNumber::new_var(vec![PolyNumber::new_var(vec![-1,0,1], "a" ), // -1 + a^2
                                     PolyNumber::new_var(vec![0], "a" ),
