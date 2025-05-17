@@ -583,6 +583,27 @@ where
     }
 }
 
+impl<T> Matrix<T>
+where
+    T: Zero,
+    T: Add,
+    T: Clone,
+{
+    pub fn trace(&self) -> T {
+        let n = if self.rows > self.cols {
+            self.cols
+        } else {
+            self.rows
+        };
+
+        let mut sum = T::zero();
+        for i in 0..n {
+            sum = sum + self.get(i,i);
+        }
+        sum
+    }
+}
+
 
 #[cfg(test)]
 mod tests {
@@ -667,6 +688,13 @@ mod tests {
         let ev = m1.eigenvalues();
         assert_eq!(ev[0],Root::from(Ratio::from(1)));
         assert_eq!(ev[1],Root::from(Ratio::from(3)));
+    }
+    #[test]
+    fn trace_of_2d_matrix() {
+        let m1 = Matrix::new(vec![vec![1,0,3],
+                                  vec![11,5,2],
+                                  vec![6,12,-5]]);
+        assert_eq!(m1.trace(), 1);
     }
 }
 
