@@ -385,16 +385,7 @@ where
     T: Neg<Output = T>,
     T: Clone,
 {
-    pub fn inverse(&self) -> Option<Matrix<T>> {
-        if self.rows != self.cols {
-            return None;
-        }
-
-        let det = self.determinant();
-        if det.is_zero() {
-            return None;
-        }
-
+    pub fn adjugate(&self) -> Matrix<T> {
         let mut m = Vec::new();
         let mone = T::zero() - T::one();
         let mut rsign = T::one();
@@ -410,7 +401,20 @@ where
             m.push(row);
             rsign = rsign.clone() * mone.clone();
         }
-        let inv = Matrix::new(m)*(T::one()/det);
+        Matrix::new(m)
+    }
+
+    pub fn inverse(&self) -> Option<Matrix<T>> {
+        if self.rows != self.cols {
+            return None;
+        }
+
+        let det = self.determinant();
+        if det.is_zero() {
+            return None;
+        }
+
+        let inv = self.adjugate()*(T::one()/det);
         Some(inv)
     }
 }

@@ -132,41 +132,9 @@ where
     T: Sub<Output = T>,
     T: Div<Output = T>,
     T: Clone,
-    T: std::fmt::Debug,
 {
     pub fn complex_conjugate(self) -> Self {
-        // check if blue
-        if self.matrix.get(0,0) == self.matrix.get(1,1)
-          && self.matrix.get(1,0) == -self.matrix.get(0,1) {
-            let re = self.matrix.get(0,0);
-            let im = self.matrix.get(0,1);
-            let m = Matrix::new(vec![vec![re.clone(),im.clone()],
-                                     vec![-im,re]]);
-            return Complex{ matrix: m };
-        }
-
-        // check if red
-        if self.matrix.get(0,0) == self.matrix.get(1,1)
-          && self.matrix.get(1,0) == self.matrix.get(0,1) {
-            let re = self.matrix.get(0,0);
-            let im = self.matrix.get(0,1);
-            let m = Matrix::new(vec![vec![re.clone(),-im.clone()],
-                                     vec![-im,re]]);
-            return Complex{ matrix: m };
-        }
-
-        // check if green
-        if self.matrix.get(0,1) == T::zero()
-          && self.matrix.get(1,0) == T::zero() {
-            let two = T::one() + T::one();
-            let re = (self.matrix.get(0,0) + self.matrix.get(1,1))/two.clone();
-            let im = (self.matrix.get(1,1) - self.matrix.get(0,0))/two;
-            let m = Matrix::new(vec![vec![re.clone()+im.clone(),T::zero()],
-                                     vec![T::zero(),re-im]]);
-            return Complex{ matrix: m };
-        }
-
-        panic!("Complex conjugate of complex number {:?} is not defined!",self.matrix);
+        Complex{ matrix: self.matrix.adjugate() }
     }
 
     pub fn quadrance(self) -> T {
@@ -188,7 +156,6 @@ where
     T: Sub<Output = T>,
     T: Div<Output = T>,
     T: Clone,
-    T: std::fmt::Debug,
 {
     type Output = Complex<T>;
 

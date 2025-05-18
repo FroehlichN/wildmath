@@ -690,7 +690,6 @@ where
     T: Mul<Output = T>,
     T: Div<Output = T>,
     T: Clone,
-    T: std::fmt::Debug,
     Complex<T>: Zero + One,
     Complex<T>: Mul<Output = Complex<T>>,
     Complex<T>: Mul<T, Output = Complex<T>>,
