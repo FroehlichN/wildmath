@@ -138,8 +138,9 @@ where
     }
 
     pub fn quadrance(self) -> T {
+        let two = T::one() + T::one();
         let q = self.clone() * self.complex_conjugate();
-        return q.matrix.get(0,0);
+        return q.matrix.trace()/two;
     }
 
     pub fn inverse(self) -> Self {
