@@ -176,13 +176,29 @@ where
     T: Div<Output = T>,
     T: Clone,
 {
-    pub fn new_from_half_slope(h: T) -> Self {
+
+    pub fn new_blue_param(h: T) -> Self {
+        let h2 = h.clone()*h.clone();
+        let two = T::one() + T::one();
+        let re = (T::one()-h2.clone())/(T::one()+h2.clone());
+        let im = two*h/(T::one()+h2);
+        Complex::new_blue(re,im)
+    }
+
+    pub fn new_red_param(h: T) -> Self {
         let h2 = h.clone()*h.clone();
         let two = T::one() + T::one();
         let re = (T::one()+h2.clone())/(T::one()-h2.clone());
         let im = two*h/(T::one()-h2);
         Complex::new_red(re,im)
     }
+
+    pub fn new_green_param(h: T) -> Self {
+        let m = Matrix::new(vec![vec![h.clone(),T::zero()],
+                                 vec![T::zero(),T::one()/h]]);
+        Complex{ matrix: m }
+    }
+
 }
 
 impl<T> Complex<T>
@@ -258,7 +274,7 @@ mod tests {
     #[test]
     fn rational_parametrization_of_unit_circle() {
         let h = Ratio::new(1,2);
-        let z = Complex::new_from_half_slope(h);
+        let z = Complex::new_red_param(h);
         let z_ = Complex::new_red(Ratio::new(5,3),Ratio::new(4,3));
         let w = Complex::new_red(Ratio::new(1,1),Ratio::new(1,2));
         let w2 = w.clone()*w.clone();
@@ -272,12 +288,12 @@ mod tests {
     #[test]
     fn stereographic_projection() {
         let h1 = Ratio::new(1,2);
-        let u1 = Complex::new_from_half_slope(h1);
+        let u1 = Complex::new_red_param(h1);
         let h2 = Ratio::new(-3,2);
-        let u2 = Complex::new_from_half_slope(h2);
+        let u2 = Complex::new_red_param(h2);
         let u3 = u1*u2;
         let h3 = lemmermeyer_product(h1,h2);
-        assert_eq!(u3,Complex::new_from_half_slope(h3));
+        assert_eq!(u3,Complex::new_red_param(h3));
     }
     #[test]
     fn collision() {
