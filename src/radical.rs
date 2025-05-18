@@ -18,7 +18,7 @@ limitations under the License.
 use num::{Integer,Zero,One};
 use num::rational::{Ratio};
 use std::ops::{Mul, Add, Sub, Neg, Div};
-use algebra::prime_factors;
+use crate::algebra::prime_factors;
 
 /// Represents natural numbers extended with their nth roots
 #[derive(Debug, Clone)]

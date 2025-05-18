@@ -17,10 +17,11 @@ limitations under the License.
 
 use num::{Integer,Zero,One};
 use num::rational::{Ratio};
-use complex::ComplexBlue;
+use crate::complex::ComplexBlue;
 use std::ops::{Mul, Add, Sub, Div, Neg};
 use std::fmt;
-use radical::Root;
+use crate::radical::Root;
+
 
 /// Construct variables of a polynumber, commonly known as polynomial.
 /// first argument is the wanted variable.

@@ -9,11 +9,7 @@ edition = "2018"
 [dependencies]
 num = "0.3"
 paste = "1.0"
-affinegeo2d = { path = "affinegeo2d" }
-polynumber = { path = "polynumber" }
-polyratio = { path = "polyratio" }
-extrational = { path = "extrational" }
-finite = { path = "finite" }
-projectivegeo = { path = "projectivegeo" }
-linalg = { path = "linalg" }
+
+[dev-dependencies]
+assert_approx_eq = "1.1.0"
 

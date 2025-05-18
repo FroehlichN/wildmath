@@ -16,10 +16,10 @@ limitations under the License.
 */
 
 
-use proportion::TwoProportion;
+use crate::proportion::TwoProportion;
 use num::{Zero,One};
 use std::ops::{Mul, Add, Sub, Div};
-use linalg::{Matrix, RowVector, ColumnVector};
+use crate::matrix::{Matrix, RowVector, ColumnVector};
 
 
 /// Represents a projective 1D point

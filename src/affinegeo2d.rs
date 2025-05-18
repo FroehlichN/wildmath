@@ -18,7 +18,7 @@ limitations under the License.
 
 use num::{Num, Zero, One, Signed};
 use std::ops::{Mul, Add, Sub, Div};
-use linalg::{Matrix, RowVector, ColumnVector};
+use crate::matrix::{Matrix, RowVector, ColumnVector};
 
 
 pub trait Point {

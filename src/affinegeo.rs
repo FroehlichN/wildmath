@@ -17,7 +17,7 @@ limitations under the License.
 
 use num::{Zero, One};
 use std::ops::{Mul, Add, Sub, Div};
-use linalg::{ColumnVector, RowVector, Matrix};
+use crate::matrix::{ColumnVector, RowVector, Matrix};
 
 
 

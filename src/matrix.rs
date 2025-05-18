@@ -18,8 +18,9 @@ limitations under the License.
 use num::{Integer,Zero,One};
 use std::ops::{Add,Sub,Mul,Div,Neg};
 use num::rational::{Ratio};
-use polynumber::*;
-use radical::Root;
+use crate::PolyNumber;
+use crate::create_polynumber_var;
+use crate::radical::Root;
 
 
 #[derive(Debug, Clone)]

@@ -15,10 +15,12 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-use affinegeo2d::*;
-use polynumber::*;
+use wildmath::affinegeo2d::*;
+use wildmath::polynumber::*;
+use wildmath::create_polynumber_var;
+use wildmath::create_polynumber_one;
 use num::rational::{Ratio};
-use linalg::{Matrix,ColumnVector};
+use wildmath::matrix::{Matrix,ColumnVector};
 
 fn main() {
     meet_of_fermat_and_bernoulli();
@@ -105,10 +107,12 @@ fn parabola_through_three_points() {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use polyratio::*;
-    use extrational::*;
-    use finite::*;
-    use projectivegeo::*;
+    use wildmath::polyratio::*;
+    use wildmath::extrational::*;
+    use wildmath::finite::*;
+    use wildmath::create_finite_field;
+    use wildmath::projectivegeo::*;
+    use wildmath::projectivegeo::Rotation;
     use num::rational::Ratio;
 
     create_finite_field!(3);
@@ -219,9 +223,9 @@ mod tests {
         let a1 = ProjOnePoint::new(Finite3::new(1),Finite3::new(1));
         let ainf = ProjOnePoint::new(Finite3::new(0),Finite3::new(1));
 
-        let r1 = projectivegeo::Rotation::new(Finite3::new(1),Finite3::new(1));
-        let rm1 = projectivegeo::Rotation::new(Finite3::new(1),Finite3::new(-1));
-        let rinf = projectivegeo::Rotation::new(Finite3::new(0),Finite3::new(1));
+        let r1 = wildmath::projectivegeo::Rotation::new(Finite3::new(1),Finite3::new(1));
+        let rm1 = wildmath::projectivegeo::Rotation::new(Finite3::new(1),Finite3::new(-1));
+        let rinf = wildmath::projectivegeo::Rotation::new(Finite3::new(0),Finite3::new(1));
 
         assert_eq!(a0.clone()*r1.clone(),a1);
         assert_eq!(a1.clone()*r1.clone(),ainf);
@@ -245,10 +249,10 @@ mod tests {
         let a1 = ProjOnePoint::new(Finite3::new(1),Finite3::new(1));
         let ainf = ProjOnePoint::new(Finite3::new(0),Finite3::new(1));
 
-        let s0 = projectivegeo::Reflection::new(Finite3::new(1),Finite3::new(0));
-        let s1 = projectivegeo::Reflection::new(Finite3::new(1),Finite3::new(1));
-        let sm1 = projectivegeo::Reflection::new(Finite3::new(1),Finite3::new(-1));
-        let sinf = projectivegeo::Reflection::new(Finite3::new(0),Finite3::new(1));
+        let s0 = wildmath::projectivegeo::Reflection::new(Finite3::new(1),Finite3::new(0));
+        let s1 = wildmath::projectivegeo::Reflection::new(Finite3::new(1),Finite3::new(1));
+        let sm1 = wildmath::projectivegeo::Reflection::new(Finite3::new(1),Finite3::new(-1));
+        let sinf = wildmath::projectivegeo::Reflection::new(Finite3::new(0),Finite3::new(1));
 
         assert_eq!(a0.clone()*s0.clone(),a0);
         assert_eq!(a1.clone()*s0.clone(),am1);
@@ -316,7 +320,7 @@ mod tests {
         let a2 = ProjOnePoint::new(Finite5::new(1),Finite5::new(2));
         let ainf = ProjOnePoint::new(Finite5::new(0),Finite5::new(1));
 
-        let r2 = projectivegeo::Rotation::new(Finite5::new(1),Finite5::new(2));
+        let r2 = wildmath::projectivegeo::Rotation::new(Finite5::new(1),Finite5::new(2));
 
         assert_eq!(am1.clone()*r2.clone(),a2);
         assert_eq!(a0.clone()*r2.clone(),a2);
@@ -362,15 +366,15 @@ mod tests {
         let vhk1 = TwoVector::new0e(ehk1);
         let vhk2 = TwoVector::new0e(ehk2);
 
-        let sh = affinegeo2d::Reflection::new(vh.clone());
-        let sk = affinegeo2d::Reflection::new(vk.clone());
-        let rh = affinegeo2d::Rotation::new(vh.clone());
-        let rk = affinegeo2d::Rotation::new(vk.clone());
+        let sh = wildmath::affinegeo2d::Reflection::new(vh.clone());
+        let sk = wildmath::affinegeo2d::Reflection::new(vk.clone());
+        let rh = wildmath::affinegeo2d::Rotation::new(vh.clone());
+        let rk = wildmath::affinegeo2d::Rotation::new(vk.clone());
 
-        assert_eq!(sh.clone()*sk.clone(),affinegeo2d::Rotation::new(vhk1.clone()));
-        assert_eq!(rh.clone()*rk.clone(),affinegeo2d::Rotation::new(vhk2.clone()));
-        assert_eq!(sh.clone()*rk.clone(),affinegeo2d::Reflection::new(vhk2.clone()));
-        assert_eq!(rh.clone()*sk.clone(),affinegeo2d::Reflection::new(vhk1.clone()));
+        assert_eq!(sh.clone()*sk.clone(),wildmath::affinegeo2d::Rotation::new(vhk1.clone()));
+        assert_eq!(rh.clone()*rk.clone(),wildmath::affinegeo2d::Rotation::new(vhk2.clone()));
+        assert_eq!(sh.clone()*rk.clone(),wildmath::affinegeo2d::Reflection::new(vhk2.clone()));
+        assert_eq!(rh.clone()*sk.clone(),wildmath::affinegeo2d::Reflection::new(vhk1.clone()));
     }
     #[test]
     fn proof_addition_theorem_for_circle_sum() {

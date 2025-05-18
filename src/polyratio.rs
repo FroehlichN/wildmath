@@ -19,8 +19,8 @@ limitations under the License.
 use num::{Zero,One,Integer};
 use std::ops::{Mul, Add, Sub, Div};
 use std::fmt;
-use polynumber::PolyNumber;
-use extrational::RatInf;
+use crate::polynumber::PolyNumber;
+use crate::extrational::RatInf;
 
 
 

@@ -17,8 +17,9 @@ limitations under the License.
 
 use num::{Zero, One};
 use std::ops::{Mul, Div, Add, Sub, Neg};
-use linalg::{Matrix, ColumnVector, RowVector};
-use polynumber::*;
+use crate::matrix::{Matrix, ColumnVector, RowVector};
+use crate::create_polynumber_one;
+use crate::create_polynumber_var;
 
 
 /// Represents some geometric object or nothing
