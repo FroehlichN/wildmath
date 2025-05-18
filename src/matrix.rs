@@ -436,6 +436,23 @@ where
     }
 }
 
+impl<T> Matrix<T>
+where
+    T: Zero,
+    T: Clone,
+{
+    pub fn is_zero(&self) -> bool {
+        for ri in 0..self.rows {
+            for ci in 0..self.cols {
+                if !(self.get(ri,ci).is_zero()) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+}
+
 impl<T> Add for Matrix<T>
 where
     T: Zero,

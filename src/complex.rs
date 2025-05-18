@@ -18,104 +18,190 @@ limitations under the License.
 
 use num::{Zero,One};
 use std::ops::{Add,Sub,Mul,Div,Neg};
+use crate::matrix::*;
 
 
-/// Represents a red complex number
+/// Represents a complex number as 2x2 matrix
 #[derive(Debug,Clone)]
-pub struct ComplexRed<T> {
-    t: T,
-    x: T,
+pub struct Complex<T> {
+    matrix: Matrix<T>,
 }
 
-impl<T> PartialEq for ComplexRed<T>
+impl<T> PartialEq for Complex<T>
 where
     T: PartialEq,
+    T: Zero,
+    T: Clone,
 {
     fn eq(&self, other: &Self) -> bool {
-        self.t == other.t && self.x == other.x
+        self.matrix == other.matrix
     }
 }
 
-impl<T> Add for ComplexRed<T>
+impl<T> Zero for Complex<T>
 where
-    T: Add<Output = T>,
+    T: Zero,
+    T: Clone,
 {
-    type Output = ComplexRed<T>;
+    fn zero() -> Complex<T> {
+        let m = Matrix::new(vec![vec![T::zero(),T::zero()],
+                                 vec![T::zero(),T::zero()]]);
+        Complex{ matrix: m }
+    }
+
+    fn is_zero(&self) -> bool {
+        self.matrix.is_zero()
+    }
+}
+
+impl<T> One for Complex<T>
+where
+    T: Zero + One,
+    T: Clone,
+{
+    fn one() -> Complex<T> {
+        let m = Matrix::new(vec![vec![T::one(),T::zero()],
+                                 vec![T::zero(),T::one()]]);
+        Complex{ matrix: m }
+    }
+}
+
+impl<T> Add for Complex<T>
+where
+    T: Zero,
+    T: Add<Output = T>,
+    T: Clone,
+{
+    type Output = Complex<T>;
 
     fn add(self, other: Self) -> Self {
-        let sumt = self.t + other.t;
-        let sumx = self.x + other.x;
-        ComplexRed{ t: sumt, x: sumx }
+        let sum = self.matrix + other.matrix;
+        Complex{ matrix: sum }
     }
 }
 
-impl<T> Mul for ComplexRed<T>
+impl<T> Sub for Complex<T>
 where
+    T: Zero,
+    T: Sub<Output = T>,
+    T: Clone,
+{
+    type Output = Complex<T>;
+
+    fn sub(self, other: Self) -> Self {
+        let sum = self.matrix - other.matrix;
+        Complex{ matrix: sum }
+    }
+}
+
+impl<T> Mul for Complex<T>
+where
+    T: Zero,
     T: Add<Output = T>,
     T: Mul<Output = T>,
     T: Clone,
 {
-    type Output = ComplexRed<T>;
+    type Output = Complex<T>;
 
     fn mul(self, other: Self) -> Self {
-        let mult = self.clone().t * other.clone().t + self.clone().x * other.clone().x;
-        let mulx = self.clone().t * other.clone().x + self.x * other.t;
-        ComplexRed{ t: mult, x: mulx }
+        let product = self.matrix * other.matrix;
+        Complex{ matrix: product }
     }
 }
 
-impl<T> Mul<T> for ComplexRed<T>
+impl<T> Mul<T> for Complex<T>
 where
-    T: Clone,
+    T: Zero,
     T: Mul<Output = T>,
+    T: Clone,
 {
-    type Output = ComplexRed<T>;
+    type Output = Complex<T>;
 
     fn mul(self, other: T) -> Self {
-        let mult = self.clone().t * other.clone();
-        let mulx = self.x * other;
-        ComplexRed{ t: mult, x: mulx }
+        let product = self.matrix * other.clone();
+        Complex{ matrix: product }
     }
 }
 
-impl<T> ComplexRed<T>
+impl<T> Complex<T>
 where
+    T: Zero + One,
     T: Neg<Output = T>,
+    T: PartialEq,
+    T: Add<Output = T>,
+    T: Sub<Output = T>,
+    T: Div<Output = T>,
+    T: Clone,
+    T: std::fmt::Debug,
 {
     pub fn complex_conjugate(self) -> Self {
-        ComplexRed{ t: self.t, x: -self.x }
-    }
-}
+        // check if blue
+        if self.matrix.get(0,0) == self.matrix.get(1,1)
+          && self.matrix.get(1,0) == -self.matrix.get(0,1) {
+            let re = self.matrix.get(0,0);
+            let im = self.matrix.get(0,1);
+            let m = Matrix::new(vec![vec![re.clone(),im.clone()],
+                                     vec![-im,re]]);
+            return Complex{ matrix: m };
+        }
 
-impl<T> ComplexRed<T>
-where
-    T: Mul<Output = T>,
-    T: Sub<Output = T>,
-    T: Clone,
-{
+        // check if red
+        if self.matrix.get(0,0) == self.matrix.get(1,1)
+          && self.matrix.get(1,0) == self.matrix.get(0,1) {
+            let re = self.matrix.get(0,0);
+            let im = self.matrix.get(0,1);
+            let m = Matrix::new(vec![vec![re.clone(),-im.clone()],
+                                     vec![-im,re]]);
+            return Complex{ matrix: m };
+        }
+
+        // check if green
+        if self.matrix.get(0,1) == T::zero()
+          && self.matrix.get(1,0) == T::zero() {
+            let two = T::one() + T::one();
+            let re = (self.matrix.get(0,0) + self.matrix.get(1,1))/two.clone();
+            let im = (self.matrix.get(1,1) - self.matrix.get(0,0))/two;
+            let m = Matrix::new(vec![vec![re.clone()+im.clone(),T::zero()],
+                                     vec![T::zero(),re-im]]);
+            return Complex{ matrix: m };
+        }
+
+        panic!("Complex conjugate of complex number {:?} is not defined!",self.matrix);
+    }
+
     pub fn quadrance(self) -> T {
-        self.clone().t*self.clone().t - self.clone().x*self.x
+        let q = self.clone() * self.complex_conjugate();
+        return q.matrix.get(0,0);
     }
-}
 
-impl<T> ComplexRed<T>
-where
-    T: One,
-    T: Neg<Output = T>,
-    T: Sub<Output = T>,
-    T: Mul<Output = T>,
-    T: Div<Output = T>,
-    ComplexRed<T>: Mul<T, Output = ComplexRed<T>>,
-    T: Clone,
-{
     pub fn inverse(self) -> Self {
         self.clone().complex_conjugate()*(T::one()/self.quadrance())
     }
 }
 
-impl<T> ComplexRed<T>
+impl<T> Div for Complex<T>
 where
-    T: One,
+    T: Zero + One,
+    T: Neg<Output = T>,
+    T: PartialEq,
+    T: Add<Output = T>,
+    T: Sub<Output = T>,
+    T: Div<Output = T>,
+    T: Clone,
+    T: std::fmt::Debug,
+{
+    type Output = Complex<T>;
+
+    fn div(self, other: Self) -> Self {
+        let div = self * other.inverse();
+        return div;
+    }
+}
+
+impl<T> Complex<T>
+where
+    T: Zero + One,
+    T: Neg<Output = T>,
     T: Mul<Output = T>,
     T: Add<Output = T>,
     T: Sub<Output = T>,
@@ -125,25 +211,63 @@ where
     pub fn new_from_half_slope(h: T) -> Self {
         let h2 = h.clone()*h.clone();
         let two = T::one() + T::one();
-        let t = (T::one()+h2.clone())/(T::one()-h2.clone());
-        let x = two*h/(T::one()-h2);
-        ComplexRed{ t: t, x: x }
+        let re = (T::one()+h2.clone())/(T::one()-h2.clone());
+        let im = two*h/(T::one()-h2);
+        Complex::new_red(re,im)
     }
 }
 
-impl<T> ComplexRed<T>
+impl<T> Complex<T>
 where
-    T: Div<Output = T>,
+    T: Zero + One,
+    T: Neg<Output = T>,
+    T: Add<Output = T>,
+    T: Sub<Output = T>,
+    T: Clone,
 {
-    pub fn velocity(self) -> T {
-        self.x / self.t
+    fn matrix_one() -> Matrix<T> {
+        Matrix::new(vec![vec![T::zero(), T::one()],
+                         vec![T::one(), T::zero()]])
     }
-}
+   fn matrix_blue() -> Matrix<T> {
+        Matrix::new(vec![vec![T::zero(), T::one()],
+                    vec![-T::one(), T::zero()]])
+    }
+    fn matrix_red() -> Matrix<T> {
+        Matrix::new(vec![vec![T::zero(), T::one()],
+                         vec![T::one(), T::zero()]])
+    }
+    fn matrix_green() -> Matrix<T> {
+        Matrix::new(vec![vec![T::one(), T::zero()],
+                    vec![T::zero(), -T::zero()]])
+    }
 
-impl<T> ComplexRed<T>
-{
-    pub fn new(t: T, x: T) -> Self {
-        ComplexRed{ t: t, x: x }
+    pub fn new(re: T, im: T) -> Self {
+        let m = Matrix::new(vec![vec![re.clone(),im.clone()],
+                                 vec![-im,re]]);
+        Complex{ matrix: m }
+    }
+
+    pub fn new_blue(re: T, im: T) -> Self {
+        let m = Matrix::new(vec![vec![re.clone(),im.clone()],
+                                 vec![-im,re]]);
+        Complex{ matrix: m }
+    }
+
+    pub fn new_red(re: T, im: T) -> Self {
+        let m = Matrix::new(vec![vec![re.clone(),im.clone()],
+                                 vec![im,re]]);
+        Complex{ matrix: m }
+    }
+
+    pub fn new_green(re: T, im: T) -> Self {
+        let m = Matrix::new(vec![vec![re.clone() - im.clone(), T::zero()],
+                                 vec![T::zero(), im+re]]);
+        Complex{ matrix: m }
+    }
+
+    pub fn real(self) -> T {
+        self.matrix.get(0,0)
     }
 }
 
@@ -158,188 +282,6 @@ where
     (h1.clone() + h2.clone())/(T::one() + h1*h2)
 }
 
-/// Represents a blue complex number
-#[derive(Debug,Clone)]
-pub struct ComplexBlue<T> {
-    t: T,
-    x: T,
-}
-
-impl<T> PartialEq for ComplexBlue<T>
-where
-    T: PartialEq,
-{
-    fn eq(&self, other: &Self) -> bool {
-        self.t == other.t && self.x == other.x
-    }
-}
-
-impl<T> Zero for ComplexBlue<T>
-where
-    T: Zero,
-{
-    fn zero() -> ComplexBlue<T> {
-        ComplexBlue{ t: T::zero(), x: T::zero() }
-    }
-
-    fn is_zero(&self) -> bool {
-        self.t.is_zero() && self.x.is_zero()
-    }
-}
-
-impl<T> One for ComplexBlue<T>
-where
-    T: Zero + One,
-    T: Sub<Output = T>,
-    T: Clone,
-{
-    fn one() -> ComplexBlue<T> {
-        ComplexBlue{ t: T::one(), x: T::zero() }
-    }
-}
-
-impl<T> Add for ComplexBlue<T>
-where
-    T: Add<Output = T>,
-{
-    type Output = ComplexBlue<T>;
-
-    fn add(self, other: Self) -> Self {
-        let sumt = self.t + other.t;
-        let sumx = self.x + other.x;
-        ComplexBlue{ t: sumt, x: sumx }
-    }
-}
-
-impl<T> Sub for ComplexBlue<T>
-where
-    T: Sub<Output = T>,
-{
-    type Output = ComplexBlue<T>;
-
-    fn sub(self, other: Self) -> Self {
-        let dift = self.t - other.t;
-        let difx = self.x - other.x;
-        ComplexBlue{ t: dift, x: difx }
-    }
-}
-
-impl<T> Mul for ComplexBlue<T>
-where
-    T: Add<Output = T>,
-    T: Sub<Output = T>,
-    T: Mul<Output = T>,
-    T: Clone,
-{
-    type Output = ComplexBlue<T>;
-
-    fn mul(self, other: Self) -> Self {
-        let mult = self.clone().t * other.clone().t - self.clone().x * other.clone().x;
-        let mulx = self.clone().t * other.clone().x + self.x * other.t;
-        ComplexBlue{ t: mult, x: mulx }
-    }
-}
-
-impl<T> Div for ComplexBlue<T>
-where
-    T: Neg<Output = T>,
-    T: Add<Output = T>,
-    T: Sub<Output = T>,
-    T: Mul<Output = T>,
-    T: Div<Output = T>,
-    T: Clone,
-{
-    type Output = ComplexBlue<T>;
-
-    fn div(self, other: Self) -> Self {
-        let div = self * other.clone().complex_conjugate() / other.quadrance();
-        return div;
-    }
-}
-
-impl<T> Mul<T> for ComplexBlue<T>
-where
-    T: Clone,
-    T: Mul<Output = T>,
-{
-    type Output = ComplexBlue<T>;
-
-    fn mul(self, other: T) -> Self {
-        let mult = self.clone().t * other.clone();
-        let mulx = self.x * other;
-        ComplexBlue{ t: mult, x: mulx }
-    }
-}
-
-impl<T> Div<T> for ComplexBlue<T>
-where
-    T: Clone,
-    T: Div<Output = T>,
-{
-    type Output = ComplexBlue<T>;
-
-    fn div(self, other: T) -> Self {
-        let divt = self.clone().t / other.clone();
-        let divx = self.x / other;
-        ComplexBlue{ t: divt, x: divx }
-    }
-}
-
-impl<T> ComplexBlue<T>
-where
-    T: Neg<Output = T>,
-{
-    pub fn complex_conjugate(self) -> Self {
-        ComplexBlue{ t: self.t, x: -self.x }
-    }
-}
-
-impl<T> ComplexBlue<T>
-where
-    T: Mul<Output = T>,
-    T: Add<Output = T>,
-    T: Clone,
-{
-    pub fn quadrance(self) -> T {
-        self.clone().t*self.clone().t + self.clone().x*self.x
-    }
-}
-
-impl<T> ComplexBlue<T>
-where
-    T: One,
-    T: Neg<Output = T>,
-    T: Add<Output = T>,
-    T: Sub<Output = T>,
-    T: Mul<Output = T>,
-    T: Div<Output = T>,
-    ComplexBlue<T>: Mul<T, Output = ComplexBlue<T>>,
-    T: Clone,
-{
-    pub fn inverse(self) -> Self {
-        self.clone().complex_conjugate()*(T::one()/self.quadrance())
-    }
-}
-
-impl<T> ComplexBlue<T>
-where
-    T: Div<Output = T>,
-{
-    pub fn velocity(self) -> T {
-        self.x / self.t
-    }
-}
-
-impl<T> ComplexBlue<T>
-{
-    pub fn new(t: T, x: T) -> Self {
-        ComplexBlue{ t: t, x: x }
-    }
-
-    pub fn real(self) -> T {
-        self.t
-    }
-}
 
 #[cfg(test)]
 mod tests {
@@ -348,62 +290,48 @@ mod tests {
     #[test]
     fn rational_parametrization_of_unit_circle() {
         let h = Ratio::new(1,2);
-        let z = ComplexRed::new_from_half_slope(h);
-        let z_ = ComplexRed::new(Ratio::new(5,3),Ratio::new(4,3));
-        let w = ComplexRed::new(Ratio::new(1,1),Ratio::new(1,2));
+        let z = Complex::new_from_half_slope(h);
+        let z_ = Complex::new_red(Ratio::new(5,3),Ratio::new(4,3));
+        let w = Complex::new_red(Ratio::new(1,1),Ratio::new(1,2));
         let w2 = w.clone()*w.clone();
-        let w2_ = ComplexRed::new(Ratio::new(5,4),Ratio::new(1,1));
+        let w2_ = Complex::new_red(Ratio::new(5,4),Ratio::new(1,1));
         let q = w.clone().quadrance();
-        let v = z.clone().velocity();
 
         assert_eq!(q,Ratio::new(3,4));
         assert_eq!(z,z_);
-        assert_eq!(v,Ratio::new(4,5));
         assert_eq!(w2,w2_);
     }
     #[test]
     fn stereographic_projection() {
         let h1 = Ratio::new(1,2);
-        let u1 = ComplexRed::new_from_half_slope(h1);
+        let u1 = Complex::new_from_half_slope(h1);
         let h2 = Ratio::new(-3,2);
-        let u2 = ComplexRed::new_from_half_slope(h2);
+        let u2 = Complex::new_from_half_slope(h2);
         let u3 = u1*u2;
         let h3 = lemmermeyer_product(h1,h2);
-        assert_eq!(u3,ComplexRed::new_from_half_slope(h3));
+        assert_eq!(u3,Complex::new_from_half_slope(h3));
     }
     #[test]
     fn collision() {
-        let b_a = ComplexRed::new(Ratio::new(1,1),Ratio::new(1,2));
+        let b_a = Complex::new_red(Ratio::new(1,1),Ratio::new(1,2));
         let a_b = b_a.clone().inverse();
-        assert_eq!(a_b.clone(),ComplexRed::new(Ratio::new(4,3),Ratio::new(-2,3)));
+        assert_eq!(a_b.clone(),Complex::new_red(Ratio::new(4,3),Ratio::new(-2,3)));
 
-        let p_1a = ComplexRed::new(Ratio::new(-1,1),Ratio::new(-1,3));
+        let p_1a = Complex::new_red(Ratio::new(-1,1),Ratio::new(-1,3));
         let p_1b = p_1a.clone() * a_b.clone();
-        assert_eq!(p_1b.clone(),ComplexRed::new(Ratio::new(-10,9),Ratio::new(2,9)));
+        assert_eq!(p_1b.clone(),Complex::new_red(Ratio::new(-10,9),Ratio::new(2,9)));
 
-        let p_2a = ComplexRed::new(Ratio::new(-1,1),Ratio::new(1,4));
+        let p_2a = Complex::new_red(Ratio::new(-1,1),Ratio::new(1,4));
         let p_2b = p_2a.clone() * a_b.clone();
-        assert_eq!(p_2b.clone(),ComplexRed::new(Ratio::new(-3,2),Ratio::new(1,1)));
+        assert_eq!(p_2b.clone(),Complex::new_red(Ratio::new(-3,2),Ratio::new(1,1)));
 
-        let r_1a = ComplexRed::new(Ratio::new(1,1),Ratio::new(-7,12));
+        let r_1a = Complex::new_red(Ratio::new(1,1),Ratio::new(-7,12));
         let r_1b = r_1a.clone() * a_b.clone();
-        assert_eq!(r_1b.clone(),ComplexRed::new(Ratio::new(31,18),Ratio::new(-13,9)));
+        assert_eq!(r_1b.clone(),Complex::new_red(Ratio::new(31,18),Ratio::new(-13,9)));
 
-        let r_2a = ComplexRed::new(Ratio::new(1,1),Ratio::new(0,1));
+        let r_2a = Complex::new_red(Ratio::new(1,1),Ratio::new(0,1));
         let r_2b = r_2a.clone() * a_b.clone();
-        assert_eq!(r_2b.clone(),ComplexRed::new(Ratio::new(4,3),Ratio::new(-2,3)));
-
-        let v_1b = p_1b.clone().velocity();
-        assert_eq!(v_1b,Ratio::new(-1,5));
-
-        let v_2b = p_2b.clone().velocity();
-        assert_eq!(v_2b,Ratio::new(-2,3));
-
-        let u_1b = r_1b.clone().velocity();
-        assert_eq!(u_1b,Ratio::new(-26,31));
-
-        let u_2b = r_2b.clone().velocity();
-        assert_eq!(u_2b,Ratio::new(-1,2));
+        assert_eq!(r_2b.clone(),Complex::new_red(Ratio::new(4,3),Ratio::new(-2,3)));
     }
 }
 

@@ -17,7 +17,7 @@ limitations under the License.
 
 use num::{Integer,Zero,One};
 use num::rational::{Ratio};
-use crate::complex::ComplexBlue;
+use crate::complex::Complex;
 use std::ops::{Mul, Add, Sub, Div, Neg};
 use std::fmt;
 use crate::radical::Root;
@@ -298,7 +298,7 @@ where
     }
 }
 
-impl<T> Mul<T> for PolyNumber<PolyNumber<ComplexBlue<T>>>
+impl<T> Mul<T> for PolyNumber<PolyNumber<Complex<T>>>
 where
     T: Zero + One,
     T: Mul<Output = T>,
@@ -306,13 +306,13 @@ where
     PolyNumber<T>: Mul<PolyNumber<T>, Output = PolyNumber<T>>,
     T: Clone,
 {
-    type Output = PolyNumber<PolyNumber<ComplexBlue<T>>>;
+    type Output = PolyNumber<PolyNumber<Complex<T>>>;
 
-    fn mul(self, other: T) -> PolyNumber<PolyNumber<ComplexBlue<T>>> {
-        let mut p: Vec<PolyNumber<ComplexBlue<T>>> = Vec::new();
+    fn mul(self, other: T) -> PolyNumber<PolyNumber<Complex<T>>> {
+        let mut p: Vec<PolyNumber<Complex<T>>> = Vec::new();
 
         for a in self.n {
-            p.push(a.clone() * PolyNumber::new_var(vec![ComplexBlue::one() * other.clone()], &a.var));
+            p.push(a.clone() * PolyNumber::new_var(vec![Complex::one() * other.clone()], &a.var));
         }
 
         return PolyNumber::new_var(p, &self.var);
@@ -682,6 +682,7 @@ where
 
 impl<T> PolyNumber<PolyNumber<T>>
 where
+    T: PartialEq,
     T: Zero + One,
     T: Neg<Output = T>,
     T: Add<Output = T>,
@@ -689,24 +690,25 @@ where
     T: Mul<Output = T>,
     T: Div<Output = T>,
     T: Clone,
-    ComplexBlue<T>: Zero + One,
-    ComplexBlue<T>: Mul<Output = ComplexBlue<T>>,
-    ComplexBlue<T>: Mul<T, Output = ComplexBlue<T>>,
-    ComplexBlue<T>: PartialEq,
-    PolyNumber<PolyNumber<ComplexBlue<T>>>: Mul<Output = PolyNumber<PolyNumber<ComplexBlue<T>>>>,
-    PolyNumber<PolyNumber<ComplexBlue<T>>>: Mul<T, Output = PolyNumber<PolyNumber<ComplexBlue<T>>>>,
-    PolyNumber<PolyNumber<ComplexBlue<T>>>: Mul<ComplexBlue<T>, Output = PolyNumber<PolyNumber<ComplexBlue<T>>>>,
+    T: std::fmt::Debug,
+    Complex<T>: Zero + One,
+    Complex<T>: Mul<Output = Complex<T>>,
+    Complex<T>: Mul<T, Output = Complex<T>>,
+    Complex<T>: PartialEq,
+    PolyNumber<PolyNumber<Complex<T>>>: Mul<Output = PolyNumber<PolyNumber<Complex<T>>>>,
+    PolyNumber<PolyNumber<Complex<T>>>: Mul<T, Output = PolyNumber<PolyNumber<Complex<T>>>>,
+    PolyNumber<PolyNumber<Complex<T>>>: Mul<Complex<T>, Output = PolyNumber<PolyNumber<Complex<T>>>>,
 {
     // recursively peel off the harmonics of a complex bi-polynumber
-    fn poisson_harmonic_complex(p : PolyNumber<PolyNumber<ComplexBlue<T>>>) -> PolyNumber<PolyNumber<ComplexBlue<T>>> {
+    fn poisson_harmonic_complex(p : PolyNumber<PolyNumber<Complex<T>>>) -> PolyNumber<PolyNumber<Complex<T>>> {
         if p.is_zero() {
             return p;
         }
 
         // select all terms containing only either u or v
-        let mut hv : Vec<PolyNumber<ComplexBlue<T>>> = Vec::new();
+        let mut hv : Vec<PolyNumber<Complex<T>>> = Vec::new();
         for (i, vi) in p.n.iter().enumerate() {
-            let mut hu : Vec<ComplexBlue<T>> = Vec::new();
+            let mut hu : Vec<Complex<T>> = Vec::new();
             for (j, vj) in vi.n.iter().enumerate() {
                 if j.is_zero() || i.is_zero() {
                     hu.push(vj.clone());
@@ -716,8 +718,8 @@ where
         }
         let h = PolyNumber::new_var(hv,"v");
 
-        let u = create_polynumber_var!(u; u,v ; ComplexBlue::<T>);
-        let v = create_polynumber_var!(v; u,v ; ComplexBlue::<T>);
+        let u = create_polynumber_var!(u; u,v ; Complex::<T>);
+        let v = create_polynumber_var!(v; u,v ; Complex::<T>);
         let r = (p - h.clone())/(u*v);
 
         return h + Self::poisson_harmonic_complex(r);
@@ -728,12 +730,12 @@ where
     // calculate a bi-polynumber that has the same values on the unit cicle,
     // but is harmonic.
     pub fn poisson_harmonic(self) -> PolyNumber<PolyNumber<T>> {
-        let one = ComplexBlue::new(T::one(),T::zero());
+        let one = Complex::new_blue(T::one(),T::zero());
         let two = one.clone() + one.clone();
-        let i = ComplexBlue::new(T::zero(),T::one());
+        let i = Complex::new_blue(T::zero(),T::one());
 
-        let u = create_polynumber_var!(u; u,v ; ComplexBlue::<T>);
-        let v = create_polynumber_var!(v; u,v ; ComplexBlue::<T>);
+        let u = create_polynumber_var!(u; u,v ; Complex::<T>);
+        let v = create_polynumber_var!(v; u,v ; Complex::<T>);
 
         let alpha = (u.clone() + v.clone()) / two.clone();
         let beta = (u.clone() - v.clone()) / two.clone() / i.clone();
@@ -742,8 +744,8 @@ where
         let p =  p1.eval(alpha); // set alpha = (u+v)/2
         let h = Self::poisson_harmonic_complex(p);
 
-        let ca = create_polynumber_var!(ca; ca,cb ; ComplexBlue::<T>);
-        let cb = create_polynumber_var!(cb; ca,cb ; ComplexBlue::<T>);
+        let ca = create_polynumber_var!(ca; ca,cb ; Complex::<T>);
+        let cb = create_polynumber_var!(cb; ca,cb ; Complex::<T>);
 
         let u_in_ab = ca.clone() + cb.clone() * i.clone();
         let v_in_ab = ca.clone() - cb.clone() * i.clone();
