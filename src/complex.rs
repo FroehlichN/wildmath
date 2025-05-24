@@ -210,8 +210,8 @@ where
     T: Clone,
 {
     fn matrix_one() -> Matrix<T> {
-        Matrix::new(vec![vec![T::zero(), T::one()],
-                         vec![T::one(), T::zero()]])
+        Matrix::new(vec![vec![T::one(), T::zero()],
+                         vec![T::zero(), T::one()]])
     }
    fn matrix_blue() -> Matrix<T> {
         Matrix::new(vec![vec![T::zero(), T::one()],
@@ -222,31 +222,27 @@ where
                          vec![T::one(), T::zero()]])
     }
     fn matrix_green() -> Matrix<T> {
-        Matrix::new(vec![vec![T::one(), T::zero()],
-                    vec![T::zero(), -T::zero()]])
+        Matrix::new(vec![vec![-T::one(), T::zero()],
+                    vec![T::zero(), T::one()]])
     }
 
     pub fn new(re: T, im: T) -> Self {
-        let m = Matrix::new(vec![vec![re.clone(),im.clone()],
-                                 vec![-im,re]]);
+        let m = Self::matrix_one()*re + Self::matrix_blue()*im;
         Complex{ matrix: m }
     }
 
     pub fn new_blue(re: T, im: T) -> Self {
-        let m = Matrix::new(vec![vec![re.clone(),im.clone()],
-                                 vec![-im,re]]);
+        let m = Self::matrix_one()*re + Self::matrix_blue()*im;
         Complex{ matrix: m }
     }
 
     pub fn new_red(re: T, im: T) -> Self {
-        let m = Matrix::new(vec![vec![re.clone(),im.clone()],
-                                 vec![im,re]]);
+        let m = Self::matrix_one()*re + Self::matrix_red()*im;
         Complex{ matrix: m }
     }
 
     pub fn new_green(re: T, im: T) -> Self {
-        let m = Matrix::new(vec![vec![re.clone() - im.clone(), T::zero()],
-                                 vec![T::zero(), im+re]]);
+        let m = Self::matrix_one()*re + Self::matrix_green()*im;
         Complex{ matrix: m }
     }
 
