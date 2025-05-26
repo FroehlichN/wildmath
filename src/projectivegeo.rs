@@ -1,5 +1,5 @@
 /*
-Copyright 2023 Norbert Fröhlich
+Copyright 2023 - 2025 Norbert Fröhlich
 
 
 Licensed under the Apache License, Version 2.0 (the "License");
@@ -16,32 +16,61 @@ limitations under the License.
 */
 
 
-use crate::proportion::TwoProportion;
+use crate::proportion::Proportion;
 use num::{Zero,One};
-use std::ops::{Mul, Add, Sub, Div};
-use crate::matrix::{Matrix, RowVector, ColumnVector};
+use std::ops::{Mul, Add, Sub, Div, Neg};
+use crate::complex::Complex;
 
 
-/// Represents a projective 1D point
+
+/// Represents a projective 1D point using a complex number
 #[derive(Debug, Clone)]
 pub struct ProjOnePoint<T> {
-    pub x : TwoProportion<T>,
+    c : Complex<T>,
 }
 
 
 impl<T> ProjOnePoint<T>
 where
-    T: Zero,
+    T: Zero + One,
+    T: Neg<Output = T>,
+    T: Sub<Output = T>,
+    T: Div<Output = T>,
     T: Clone,
 {
     pub fn new(x: T, y: T) -> ProjOnePoint<T> {
-        ProjOnePoint { x: TwoProportion::new(x,y) }
+        let _p = Proportion::new(vec![x.clone(),y.clone()]);
+        let c = Complex::new(x,y);
+        ProjOnePoint { c: c }
+    }
+
+    pub fn new_blue(x: T, y: T) -> ProjOnePoint<T> {
+        let _p = Proportion::new(vec![x.clone(),y.clone()]);
+        let c = Complex::new_blue(x,y);
+        ProjOnePoint { c: c }
+    }
+
+    pub fn new_red(x: T, y: T) -> ProjOnePoint<T> {
+        let _p = Proportion::new(vec![x.clone(),y.clone()]);
+        let c = Complex::new_red(x,y);
+        ProjOnePoint { c: c }
+    }
+
+    pub fn new_green(x: T, y: T) -> ProjOnePoint<T> {
+        let two = T::one() + T::one();
+        let a = (x.clone()+y.clone())/two.clone();
+        let b = (x.clone()-y.clone())/two;
+        let _p = Proportion::new(vec![x,y]);
+        let c = Complex::new_green(a,b);
+        ProjOnePoint { c: c }
     }
 }
 
 
 impl<T> ProjOnePoint<T>
 where
+    T: PartialEq,
+    T: Neg<Output = T>,
     T: Add<T, Output = T>,
     T: Sub<T, Output = T>,
     T: Mul<T, Output = T>,
@@ -49,140 +78,56 @@ where
     T: Zero + One,
     T: Clone,
 {
-    fn metric_blue() -> Matrix<T> {
-        Matrix::new(vec![vec![T::one(), T::zero()],
-                    vec![T::zero(), T::one()]])
-    }
-
-    fn metric_red() -> Matrix<T> {
-        Matrix::new(vec![vec![T::one(), T::zero()],
-                         vec![T::zero(), T::zero() - T::one()]])
-    }
-
-    fn metric_green() -> Matrix<T> {
-        Matrix::new(vec![vec![T::zero(), T::one()],
-                    vec![T::one(), T::zero()]])
-    }
-
-    pub fn dot_blue(&self, other: &Self) -> T {
-        self.dot_metric(&other, &ProjOnePoint::metric_blue())
-    }
-
-    pub fn dot_red(&self, other: &Self) -> T {
-        self.dot_metric(&other, &ProjOnePoint::metric_red())
-    }
-
-    pub fn dot_green(&self, other: &Self) -> T {
-        self.dot_metric(&other, &ProjOnePoint::metric_green())
-    }
-
-    pub fn dot_metric(&self, other: &Self, metric: &Matrix<T>) -> T {
-        let a = self.x.a.clone();
-        let b = self.x.b.clone();
-        let c = other.x.a.clone();
-        let d = other.x.b.clone();
-
-        let v1 = RowVector::new(vec![a, b]);
-        let v2 = ColumnVector::new(vec![c, d]);
-
-        v1*(*metric).clone()*v2
-    }
-
-    pub fn cross(&self, other: &Self) -> T {
-        let a = self.x.a.clone();
-        let b = self.x.b.clone();
-        let c = other.x.a.clone();
-        let d = other.x.b.clone();
-
-        let v1 = RowVector::new(vec![a, b]);
-        let m1 = Matrix::new(vec![vec![T::zero(), T::one()],
-                                  vec![T::zero() - T::one(), T::zero()]]);
-        let v2 = ColumnVector::new(vec![c, d]);
-
-        v1*m1*v2
-    }
-
     pub fn quadrance(&self, other: &Self) -> T {
-        let n = self.cross(&other);
+        let n = self.c.clone().quadrance(other.c.clone());
         let numer = n.clone() * n;
-        let d1 = self.dot_blue(&self);
-        let d2 = other.dot_blue(&other);
-        return numer / (d1*d2);
+        let d1 = self.c.clone().quadrance(self.c.clone());
+        let d2 = other.c.clone().quadrance(other.c.clone());
+        return T::one() - numer / (d1*d2)
     }
-
-    pub fn quadrance_red(&self, other: &Self) -> T {
-        let n = self.cross(&other);
-        let numer = T::zero() - n.clone() * n;
-        let d1 = self.dot_red(&self);
-        let d2 = other.dot_red(&other);
-        return numer / (d1*d2);
-    }
-    pub fn quadrance_green(&self, other: &Self) -> T {
-        let n = self.cross(&other);
-        let numer = T::zero() - n.clone() * n;
-        let d1 = self.dot_green(&self);
-        let d2 = other.dot_green(&other);
-        return numer / (d1*d2);
-    }
-
 }
 
 impl<T> ProjOnePoint<T>
 where
+    T: PartialEq,
+    T: Neg<Output = T>,
     T: Add<T, Output = T>,
     T: Sub<T, Output = T>,
     T: Mul<T, Output = T>,
-    T: Zero,
+    T: Div<T, Output = T>,
+    T: Zero + One,
     T: Clone,
 {
     pub fn is_perpendicular(&self, other: &Self) -> bool {
-        let x1 = self.x.a.clone();
-        let y1 = self.x.b.clone();
-        let x2 = other.x.a.clone();
-        let y2 = other.x.b.clone();
-        let r = x1*x2+y1*y2;
-        r.is_zero()
+        let q = self.c.clone().quadrance(other.c.clone());
+        q.is_zero()
     }
     pub fn perpendicular(&self) -> ProjOnePoint<T> {
-        let x = self.x.a.clone();
-        let y = self.x.b.clone();
-        ProjOnePoint::new(T::zero() - y, x)
-    }
-    pub fn is_perpendicular_red(&self, other: &Self) -> bool {
-        let x1 = self.x.a.clone();
-        let y1 = self.x.b.clone();
-        let x2 = other.x.a.clone();
-        let y2 = other.x.b.clone();
-        let r = x1*x2-y1*y2;
-        r.is_zero()
-    }
-    pub fn perpendicular_red(&self) -> ProjOnePoint<T> {
-        let x = self.x.a.clone();
-        let y = self.x.b.clone();
-        ProjOnePoint::new(y, x)
-    }
-    pub fn is_perpendicular_green(&self, other: &Self) -> bool {
-        let x1 = self.x.a.clone();
-        let y1 = self.x.b.clone();
-        let x2 = other.x.a.clone();
-        let y2 = other.x.b.clone();
-        let r = x1*y2+x2*y1;
-        r.is_zero()
-    }
-    pub fn perpendicular_green(&self) -> ProjOnePoint<T> {
-        let x = self.x.a.clone();
-        let y = self.x.b.clone();
-        ProjOnePoint::new(x, T::zero() - y)
+        let s = self.c.clone();
+        let cc = s.clone().complex_conjugate();
+        let p = s.clone()*(s.clone() - cc);
+        ProjOnePoint { c: p }
     }
 }
 
 impl<T> PartialEq for ProjOnePoint<T>
 where
-    TwoProportion<T>: PartialEq,
+    T: Zero + One,
+    T: PartialEq,
+    T: Neg<Output = T>,
+    T: Sub<Output = T>,
     T: Clone,
 {
     fn eq(&self, other: &Self) -> bool {
-        self.x == other.x
+        let sp = Proportion::new(
+            vec![self.c.matrix.get(0,0),self.c.matrix.get(0,1),
+                 self.c.matrix.get(1,0),self.c.matrix.get(1,1)]);
+
+        let op = Proportion::new(
+            vec![other.c.matrix.get(0,0),other.c.matrix.get(0,1),
+                 other.c.matrix.get(1,0),other.c.matrix.get(1,1)]);
+
+        sp == op
     }
 }
 
@@ -190,17 +135,44 @@ where
 /// Rotation
 #[derive(Debug,Clone)]
 pub struct Rotation<T> {
-    vector: TwoProportion<T>,
+    c: Complex<T>,
 }
 
 impl<T> Rotation<T>
 where
-    T: Zero,
+    T: Zero + One,
+    T: Neg<Output = T>,
+    T: Sub<Output = T>,
+    T: Div<Output = T>,
     T: Clone,
 {
     pub fn new(a: T, b: T) -> Rotation<T> {
-        Rotation { vector: TwoProportion::new(a, b) }
+        let _p = Proportion::new(vec![a.clone(), b.clone()]);
+        let c = Complex::new(a,b);
+        Rotation { c: c }
     }
+
+    pub fn new_red(a: T, b: T) -> Rotation<T> {
+        let _p = Proportion::new(vec![a.clone(), b.clone()]);
+        let c = Complex::new_red(a,b);
+        Rotation { c: c }
+    }
+
+    pub fn new_blue(a: T, b: T) -> Rotation<T> {
+        let _p = Proportion::new(vec![a.clone(), b.clone()]);
+        let c = Complex::new_blue(a,b);
+        Rotation { c: c }
+    }
+
+    pub fn new_green(a: T, b: T) -> Rotation<T> {
+        let two = T::one() + T::one();
+        let x = (a.clone()+b.clone())/two.clone();
+        let y = (a.clone()-b.clone())/two;
+        let _p = Proportion::new(vec![a.clone(), b.clone()]);
+        let c = Complex::new_green(x,y);
+        Rotation { c: c }
+    }
+
 }
 
 impl<T> Mul<Rotation<T>> for ProjOnePoint<T>
@@ -214,13 +186,8 @@ where
     type Output = ProjOnePoint<T>;
 
     fn mul(self, r: Rotation<T>) -> ProjOnePoint<T> {
-        let x = self.x.a.clone();
-        let y = self.x.b.clone();
-        let a = r.vector.a.clone();
-        let b = r.vector.b.clone();
-        let rx = a.clone()*x.clone() - b.clone()*y.clone();
-        let ry = b*x + a*y;
-        ProjOnePoint::new(rx,ry)
+        let pr = self.c * r.c;
+        ProjOnePoint { c: pr }
     }
 }
 
@@ -235,21 +202,17 @@ where
     type Output = Rotation<T>;
 
     fn mul(self, other: Self) -> Rotation<T> {
-        let a = self.vector.a.clone();
-        let b = self.vector.b.clone();
-        let c = other.vector.a.clone();
-        let d = other.vector.b.clone();
-        let ra = a.clone()*c.clone() - b.clone()*d.clone();
-        let rb = a*d + b*c;
-        Rotation::new(ra,rb)
+        let r = self.c * other.c;
+        Rotation { c: r }
     }
 }
 
 impl<T> One for Rotation<T>
 where
-    T: Sub<T, Output = T>,
-    T: Zero,
-    T: One,
+    T: Zero + One,
+    T: Neg<Output = T>,
+    T: Sub<Output = T>,
+    T: Div<Output = T>,
     T: Clone,
 {
     fn one() -> Rotation<T> {
@@ -260,37 +223,39 @@ where
 /// Reflection
 #[derive(Debug,Clone)]
 pub struct Reflection<T> {
-    vector: TwoProportion<T>,
+    c: Complex<T>,
 }
 
 impl<T> Reflection<T>
 where
-    T: Zero,
+    T: PartialEq,
+    T: Zero + One,
+    T: Neg<Output = T>,
+    T: Sub<Output = T>,
+    T: Div<Output = T>,
     T: Clone,
 {
     pub fn new(a: T, b: T) -> Reflection<T> {
-        Reflection { vector: TwoProportion::new(a, b) }
+        let _p = Proportion::new(vec![a.clone(), b.clone()]);
+        let c = Complex::new(a,-b);
+        Reflection { c: c }
     }
 }
 
 impl<T> Mul<Reflection<T>> for ProjOnePoint<T>
 where
-    T: Add<T, Output = T>,
-    T: Sub<T, Output = T>,
-    T: Mul<T, Output = T>,
-    T: Zero,
+    T: PartialEq,
+    T: Zero + One,
+    T: Neg<Output = T>,
+    T: Sub<Output = T>,
+    T: Div<Output = T>,
     T: Clone,
 {
     type Output = ProjOnePoint<T>;
 
     fn mul(self, r: Reflection<T>) -> ProjOnePoint<T> {
-        let x = self.x.a.clone();
-        let y = self.x.b.clone();
-        let a = r.vector.a.clone();
-        let b = r.vector.b.clone();
-        let rx = a.clone()*x.clone() + b.clone()*y.clone();
-        let ry = b*x - a*y;
-        ProjOnePoint::new(rx,ry)
+        let r = self.c * r.c;
+        ProjOnePoint { c: r.complex_conjugate() }
     }
 }
 
@@ -305,13 +270,8 @@ where
     type Output = Rotation<T>;
 
     fn mul(self, other: Self) -> Rotation<T> {
-        let a = self.vector.a.clone();
-        let b = self.vector.b.clone();
-        let c = other.vector.a.clone();
-        let d = other.vector.b.clone();
-        let ra = a.clone()*c.clone() + b.clone()*d.clone();
-        let rb = a*d - b*c;
-        Rotation::new(ra,rb)
+        let r = self.c * other.c;
+        Rotation { c: r }
     }
 }
 
@@ -326,13 +286,8 @@ where
     type Output = Reflection<T>;
 
     fn mul(self, other: Reflection<T>) -> Reflection<T> {
-        let a = self.vector.a.clone();
-        let b = self.vector.b.clone();
-        let c = other.vector.a.clone();
-        let d = other.vector.b.clone();
-        let sa = a.clone()*c.clone() + b.clone()*d.clone();
-        let sb = a*d - b*c;
-        Reflection::new(sa,sb)
+        let r = self.c * other.c;
+        Reflection { c: r }
     }
 }
 
@@ -347,357 +302,11 @@ where
     type Output = Reflection<T>;
 
     fn mul(self, other: Rotation<T>) -> Reflection<T> {
-        let a = self.vector.a.clone();
-        let b = self.vector.b.clone();
-        let c = other.vector.a.clone();
-        let d = other.vector.b.clone();
-        let sa = a.clone()*c.clone() - b.clone()*d.clone();
-        let sb = a*d + b*c;
-        Reflection::new(sa,sb)
+        let r = self.c * other.c;
+        Reflection { c: r }
     }
 }
 
-/// red Rotation
-#[derive(Debug,Clone)]
-pub struct RotationRed<T> {
-    vector: TwoProportion<T>,
-}
-
-impl<T> RotationRed<T>
-where
-    T: Zero,
-    T: Clone,
-{
-    pub fn new(a: T, b: T) -> RotationRed<T> {
-        RotationRed { vector: TwoProportion::new(a, b) }
-    }
-}
-
-impl<T> Mul<RotationRed<T>> for ProjOnePoint<T>
-where
-    T: Add<T, Output = T>,
-    T: Sub<T, Output = T>,
-    T: Mul<T, Output = T>,
-    T: Zero,
-    T: Clone,
-{
-    type Output = ProjOnePoint<T>;
-
-    fn mul(self, r: RotationRed<T>) -> ProjOnePoint<T> {
-        let x = self.x.a.clone();
-        let y = self.x.b.clone();
-        let a = r.vector.a.clone();
-        let b = r.vector.b.clone();
-        let rx = a.clone()*x.clone() + b.clone()*y.clone();
-        let ry = b*x + a*y;
-        ProjOnePoint::new(rx,ry)
-    }
-}
-
-impl<T> Mul<RotationRed<T>> for RotationRed<T>
-where
-    T: Add<T, Output = T>,
-    T: Sub<T, Output = T>,
-    T: Mul<T, Output = T>,
-    T: Zero,
-    T: Clone,
-{
-    type Output = RotationRed<T>;
-
-    fn mul(self, other: Self) -> RotationRed<T> {
-        let a = self.vector.a.clone();
-        let b = self.vector.b.clone();
-        let c = other.vector.a.clone();
-        let d = other.vector.b.clone();
-        let ra = a.clone()*c.clone() + b.clone()*d.clone();
-        let rb = a*d + b*c;
-        RotationRed::new(ra,rb)
-    }
-}
-
-impl<T> One for RotationRed<T>
-where
-    T: Sub<T, Output = T>,
-    T: Zero,
-    T: One,
-    T: Clone,
-{
-    fn one() -> RotationRed<T> {
-        RotationRed::new(T::one(),T::zero())
-    }
-}
-
-
-/// red Reflection
-#[derive(Debug,Clone)]
-pub struct ReflectionRed<T> {
-    vector: TwoProportion<T>,
-}
-
-impl<T> ReflectionRed<T>
-where
-    T: Zero,
-    T: Clone,
-{
-    pub fn new(a: T, b: T) -> ReflectionRed<T> {
-        ReflectionRed { vector: TwoProportion::new(a, b) }
-    }
-}
-
-impl<T> Mul<ReflectionRed<T>> for ProjOnePoint<T>
-where
-    T: Add<T, Output = T>,
-    T: Sub<T, Output = T>,
-    T: Mul<T, Output = T>,
-    T: Zero,
-    T: Clone,
-{
-    type Output = ProjOnePoint<T>;
-
-    fn mul(self, r: ReflectionRed<T>) -> ProjOnePoint<T> {
-        let x = self.x.a.clone();
-        let y = self.x.b.clone();
-        let a = r.vector.a.clone();
-        let b = r.vector.b.clone();
-        let rx = a.clone()*x.clone() - b.clone()*y.clone();
-        let ry = b*x - a*y;
-        ProjOnePoint::new(rx,ry)
-    }
-}
-
-impl<T> Mul<ReflectionRed<T>> for ReflectionRed<T>
-where
-    T: Add<T, Output = T>,
-    T: Sub<T, Output = T>,
-    T: Mul<T, Output = T>,
-    T: Zero,
-    T: Clone,
-{
-    type Output = RotationRed<T>;
-
-    fn mul(self, other: Self) -> RotationRed<T> {
-        let a = self.vector.a.clone();
-        let b = self.vector.b.clone();
-        let c = other.vector.a.clone();
-        let d = other.vector.b.clone();
-        let ra = a.clone()*c.clone() - b.clone()*d.clone();
-        let rb = a*d - b*c;
-        RotationRed::new(ra,rb)
-    }
-}
-
-impl<T> Mul<ReflectionRed<T>> for RotationRed<T>
-where
-    T: Add<T, Output = T>,
-    T: Sub<T, Output = T>,
-    T: Mul<T, Output = T>,
-    T: Zero,
-    T: Clone,
-{
-    type Output = ReflectionRed<T>;
-
-    fn mul(self, other: ReflectionRed<T>) -> ReflectionRed<T> {
-        let a = self.vector.a.clone();
-        let b = self.vector.b.clone();
-        let c = other.vector.a.clone();
-        let d = other.vector.b.clone();
-        let sa = a.clone()*c.clone() - b.clone()*d.clone();
-        let sb = a*d - b*c;
-        ReflectionRed::new(sa,sb)
-    }
-}
-
-impl<T> Mul<RotationRed<T>> for ReflectionRed<T>
-where
-    T: Add<T, Output = T>,
-    T: Sub<T, Output = T>,
-    T: Mul<T, Output = T>,
-    T: Zero,
-    T: Clone,
-{
-    type Output = ReflectionRed<T>;
-
-    fn mul(self, other: RotationRed<T>) -> ReflectionRed<T> {
-        let a = self.vector.a.clone();
-        let b = self.vector.b.clone();
-        let c = other.vector.a.clone();
-        let d = other.vector.b.clone();
-        let sa = a.clone()*c.clone() + b.clone()*d.clone();
-        let sb = a*d + b*c;
-        ReflectionRed::new(sa,sb)
-    }
-}
-
-
-/// green Rotation
-#[derive(Debug,Clone)]
-pub struct RotationGreen<T> {
-    vector: TwoProportion<T>,
-}
-
-impl<T> RotationGreen<T>
-where
-    T: Zero,
-    T: Clone,
-{
-    pub fn new(a: T, b: T) -> RotationGreen<T> {
-        RotationGreen { vector: TwoProportion::new(a, b) }
-    }
-}
-
-impl<T> Mul<RotationGreen<T>> for ProjOnePoint<T>
-where
-    T: Add<T, Output = T>,
-    T: Sub<T, Output = T>,
-    T: Mul<T, Output = T>,
-    T: Zero,
-    T: Clone,
-{
-    type Output = ProjOnePoint<T>;
-
-    fn mul(self, r: RotationGreen<T>) -> ProjOnePoint<T> {
-        let x = self.x.a.clone();
-        let y = self.x.b.clone();
-        let a = r.vector.a.clone();
-        let b = r.vector.b.clone();
-        let rx = a.clone()*x.clone() + b.clone()*y.clone();
-        let ry = b*x + a*y;
-        ProjOnePoint::new(rx,ry)
-    }
-}
-
-impl<T> Mul<RotationGreen<T>> for RotationGreen<T>
-where
-    T: Add<T, Output = T>,
-    T: Sub<T, Output = T>,
-    T: Mul<T, Output = T>,
-    T: Zero,
-    T: Clone,
-{
-    type Output = RotationGreen<T>;
-
-    fn mul(self, other: Self) -> RotationGreen<T> {
-        let a = self.vector.a.clone();
-        let b = self.vector.b.clone();
-        let c = other.vector.a.clone();
-        let d = other.vector.b.clone();
-        let ra = a.clone()*c.clone() + b.clone()*d.clone();
-        let rb = a*d + b*c;
-        RotationGreen::new(ra,rb)
-    }
-}
-
-impl<T> One for RotationGreen<T>
-where
-    T: Sub<T, Output = T>,
-    T: Zero,
-    T: One,
-    T: Clone,
-{
-    fn one() -> RotationGreen<T> {
-        RotationGreen::new(T::one(),T::zero())
-    }
-}
-
-/// green Reflection
-#[derive(Debug,Clone)]
-pub struct ReflectionGreen<T> {
-    vector: TwoProportion<T>,
-}
-
-impl<T> ReflectionGreen<T>
-where
-    T: Zero,
-    T: Clone,
-{
-    pub fn new(a: T, b: T) -> ReflectionGreen<T> {
-        ReflectionGreen { vector: TwoProportion::new(a, b) }
-    }
-}
-
-impl<T> Mul<ReflectionGreen<T>> for ProjOnePoint<T>
-where
-    T: Add<T, Output = T>,
-    T: Sub<T, Output = T>,
-    T: Mul<T, Output = T>,
-    T: Zero,
-    T: Clone,
-{
-    type Output = ProjOnePoint<T>;
-
-    fn mul(self, r: ReflectionGreen<T>) -> ProjOnePoint<T> {
-        let x = self.x.a.clone();
-        let y = self.x.b.clone();
-        let a = r.vector.a.clone();
-        let b = r.vector.b.clone();
-        let rx = a.clone()*x.clone() - b.clone()*y.clone();
-        let ry = b*x - a*y;
-        ProjOnePoint::new(rx,ry)
-    }
-}
-
-impl<T> Mul<ReflectionGreen<T>> for ReflectionGreen<T>
-where
-    T: Add<T, Output = T>,
-    T: Sub<T, Output = T>,
-    T: Mul<T, Output = T>,
-    T: Zero,
-    T: Clone,
-{
-    type Output = RotationGreen<T>;
-
-    fn mul(self, other: Self) -> RotationGreen<T> {
-        let a = self.vector.a.clone();
-        let b = self.vector.b.clone();
-        let c = other.vector.a.clone();
-        let d = other.vector.b.clone();
-        let ra = a.clone()*c.clone() - b.clone()*d.clone();
-        let rb = a*d - b*c;
-        RotationGreen::new(ra,rb)
-    }
-}
-
-impl<T> Mul<ReflectionGreen<T>> for RotationGreen<T>
-where
-    T: Add<T, Output = T>,
-    T: Sub<T, Output = T>,
-    T: Mul<T, Output = T>,
-    T: Zero,
-    T: Clone,
-{
-    type Output = ReflectionGreen<T>;
-
-    fn mul(self, other: ReflectionGreen<T>) -> ReflectionGreen<T> {
-        let a = self.vector.a.clone();
-        let b = self.vector.b.clone();
-        let c = other.vector.a.clone();
-        let d = other.vector.b.clone();
-        let sa = a.clone()*c.clone() - b.clone()*d.clone();
-        let sb = a*d - b*c;
-        ReflectionGreen::new(sa,sb)
-    }
-}
-
-impl<T> Mul<RotationGreen<T>> for ReflectionGreen<T>
-where
-    T: Add<T, Output = T>,
-    T: Sub<T, Output = T>,
-    T: Mul<T, Output = T>,
-    T: Zero,
-    T: Clone,
-{
-    type Output = ReflectionGreen<T>;
-
-    fn mul(self, other: RotationGreen<T>) -> ReflectionGreen<T> {
-        let a = self.vector.a.clone();
-        let b = self.vector.b.clone();
-        let c = other.vector.a.clone();
-        let d = other.vector.b.clone();
-        let sa = a.clone()*c.clone() + b.clone()*d.clone();
-        let sb = a*d + b*c;
-        ReflectionGreen::new(sa,sb)
-    }
-}
 
 
 #[cfg(test)]
@@ -719,39 +328,39 @@ mod tests {
     }
     #[test]
     fn one_dimensional_red_relativistic_projective_quadrance() {
-        let a1 = ProjOnePoint::new(Ratio::new(3,1),Ratio::new(1,1));
-        let a2 = ProjOnePoint::new(Ratio::new(1,1),Ratio::new(2,1));
-        assert_eq!(a1.quadrance_red(&a2),Ratio::new(25,24));
+        let a1 = ProjOnePoint::new_red(Ratio::new(3,1),Ratio::new(1,1));
+        let a2 = ProjOnePoint::new_red(Ratio::new(1,1),Ratio::new(2,1));
+        assert_eq!(a1.quadrance(&a2),Ratio::new(25,24));
     }
     #[test]
     fn one_dimensional_red_relativistic_projective_quadrance_2() {
-        let a1 = ProjOnePoint::new(Ratio::new(1,1),Ratio::new(2,1));
-        let a2 = ProjOnePoint::new(Ratio::new(2,1),Ratio::new(-3,1));
-        assert_eq!(a1.quadrance_red(&a2),Ratio::new(-49,15));
+        let a1 = ProjOnePoint::new_red(Ratio::new(1,1),Ratio::new(2,1));
+        let a2 = ProjOnePoint::new_red(Ratio::new(2,1),Ratio::new(-3,1));
+        assert_eq!(a1.quadrance(&a2),Ratio::new(-49,15));
     }
     #[test]
     fn one_dimensional_red_relativistic_projective_quadrance_3() {
-        let a1 = ProjOnePoint::new(Ratio::new(3,1),Ratio::new(1,1));
-        let a2 = ProjOnePoint::new(Ratio::new(2,1),Ratio::new(-3,1));
-        assert_eq!(a1.quadrance_red(&a2),Ratio::new(121,40));
+        let a1 = ProjOnePoint::new_red(Ratio::new(3,1),Ratio::new(1,1));
+        let a2 = ProjOnePoint::new_red(Ratio::new(2,1),Ratio::new(-3,1));
+        assert_eq!(a1.quadrance(&a2),Ratio::new(121,40));
     }
     #[test]
     fn one_dimensional_green_relativistic_projective_quadrance() {
-        let a1 = ProjOnePoint::new(Ratio::new(3,1),Ratio::new(1,1));
-        let a2 = ProjOnePoint::new(Ratio::new(1,1),Ratio::new(2,1));
-        assert_eq!(a1.quadrance_green(&a2),Ratio::new(-25,24));
+        let a1 = ProjOnePoint::new_green(Ratio::new(3,1),Ratio::new(1,1));
+        let a2 = ProjOnePoint::new_green(Ratio::new(1,1),Ratio::new(2,1));
+        assert_eq!(a1.quadrance(&a2),Ratio::new(-25,24));
     }
     #[test]
     fn one_dimensional_green_relativistic_projective_quadrance_2() {
-        let a1 = ProjOnePoint::new(Ratio::new(1,1),Ratio::new(2,1));
-        let a2 = ProjOnePoint::new(Ratio::new(2,1),Ratio::new(-3,1));
-        assert_eq!(a1.quadrance_green(&a2),Ratio::new(49,48));
+        let a1 = ProjOnePoint::new_green(Ratio::new(1,1),Ratio::new(2,1));
+        let a2 = ProjOnePoint::new_green(Ratio::new(2,1),Ratio::new(-3,1));
+        assert_eq!(a1.quadrance(&a2),Ratio::new(49,48));
     }
     #[test]
     fn one_dimensional_green_relativistic_projective_quadrance_3() {
-        let a1 = ProjOnePoint::new(Ratio::new(3,1),Ratio::new(1,1));
-        let a2 = ProjOnePoint::new(Ratio::new(2,1),Ratio::new(-3,1));
-        assert_eq!(a1.quadrance_green(&a2),Ratio::new(121,72));
+        let a1 = ProjOnePoint::new_green(Ratio::new(3,1),Ratio::new(1,1));
+        let a2 = ProjOnePoint::new_green(Ratio::new(2,1),Ratio::new(-3,1));
+        assert_eq!(a1.quadrance(&a2),Ratio::new(121,72));
     }
     #[test]
     fn one_dimensional_euclidean_projective_perpendicularity() {
@@ -773,28 +382,28 @@ mod tests {
     }
     #[test]
     fn one_dimensional_red_relativistic_projective_perpendicularity() {
-        let a1 = ProjOnePoint::new(Ratio::new(1,1),Ratio::new(1,1));
-        let a2 = ProjOnePoint::new(Ratio::new(1,1),Ratio::new(-1,1));
-        assert!(a1.is_perpendicular_red(&a1));
-        assert!(a2.is_perpendicular_red(&a2));
+        let a1 = ProjOnePoint::new_red(Ratio::new(1,1),Ratio::new(1,1));
+        let a2 = ProjOnePoint::new_red(Ratio::new(1,1),Ratio::new(-1,1));
+        assert!(a1.is_perpendicular(&a1));
+        assert!(a2.is_perpendicular(&a2));
     }
     #[test]
     fn perpendicular_of_one_dimensional_projective_point_red() {
-        let a1 = ProjOnePoint::new(Ratio::new(1,1),Ratio::new(2,1));
-        let a2 = ProjOnePoint::new(Ratio::new(2,1),Ratio::new(1,1));
-        assert_eq!(a1.perpendicular_red(),a2);
+        let a1 = ProjOnePoint::new_red(Ratio::new(1,1),Ratio::new(2,1));
+        let a2 = ProjOnePoint::new_red(Ratio::new(2,1),Ratio::new(1,1));
+        assert_eq!(a1.perpendicular(),a2);
     }
     #[test]
     fn one_dimensional_green_relativistic_projective_perpendicularity() {
-        let a1 = ProjOnePoint::new(Ratio::new(3,1),Ratio::new(1,1));
-        let a2 = ProjOnePoint::new(Ratio::new(3,1),Ratio::new(-1,1));
-        assert!(a1.is_perpendicular_green(&a2));
+        let a1 = ProjOnePoint::new_green(Ratio::new(3,1),Ratio::new(1,1));
+        let a2 = ProjOnePoint::new_green(Ratio::new(3,1),Ratio::new(-1,1));
+        assert!(a1.is_perpendicular(&a2));
     }
     #[test]
     fn perpendicular_of_one_dimensional_projective_point_green() {
-        let a1 = ProjOnePoint::new(Ratio::new(1,1),Ratio::new(2,1));
-        let a2 = ProjOnePoint::new(Ratio::new(1,1),Ratio::new(-2,1));
-        assert_eq!(a1.perpendicular_green(),a2);
+        let a1 = ProjOnePoint::new_green(Ratio::new(1,1),Ratio::new(2,1));
+        let a2 = ProjOnePoint::new_green(Ratio::new(1,1),Ratio::new(-2,1));
+        assert_eq!(a1.perpendicular(),a2);
     }
     #[test]
     fn rotation_of_one_dimensional_projective_points() {
@@ -875,11 +484,11 @@ mod tests {
     }
     #[test]
     fn one_dimensional_red_relativistic_projective_rotation() {
-        let v1 = ProjOnePoint::new(Ratio::new(1,1),Ratio::new(3,4));
-        let v2 = ProjOnePoint::new(Ratio::new(1,1),Ratio::new(1,5));
-        let v3 = RotationRed::new(Ratio::new(1,1),Ratio::new(1,2));
-        assert_eq!(v1.quadrance_red(&v2),Ratio::new(-121,168));
-        assert_eq!((v1*v3.clone()).quadrance_red(&(v2*v3)),Ratio::new(-121,168));
+        let v1 = ProjOnePoint::new_red(Ratio::new(1,1),Ratio::new(3,4));
+        let v2 = ProjOnePoint::new_red(Ratio::new(1,1),Ratio::new(1,5));
+        let v3 = Rotation::new_red(Ratio::new(1,1),Ratio::new(1,2));
+        assert_eq!(v1.quadrance(&v2),Ratio::new(-121,168));
+        assert_eq!((v1*v3.clone()).quadrance(&(v2*v3)),Ratio::new(-121,168));
     }
 }
 

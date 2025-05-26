@@ -1,5 +1,5 @@
 /*
-Copyright 2023 Norbert Fröhlich
+Copyright 2023 - 2025 Norbert Fröhlich
 
 
 Licensed under the Apache License, Version 2.0 (the "License");
@@ -20,27 +20,32 @@ use std::ops::{Mul, Add};
 
 
 
-/// Represents a 2-proportion
+/// Represents a proportion
 #[derive(Debug, Clone)]
-pub struct TwoProportion<T> {
-    pub a : T,
-    pub b : T,
+pub struct Proportion<T> {
+    p : Vec<T>,
 }
 
-impl<T> TwoProportion<T>
+impl<T> Proportion<T>
 where
     T: Zero,
     T: Clone,
 {
-    pub fn new(a: T, b: T) -> TwoProportion<T> {
-        if a.is_zero() && b.is_zero() {
+    pub fn new(elem: Vec<T>) -> Proportion<T> {
+        let mut all_zero = true;
+        for (_, e) in elem.iter().enumerate() {
+            if !e.is_zero() {
+                all_zero = false;
+            }
+        }
+        if all_zero {
             panic!("Proportions cannot have all zero entries");
         }
-        return TwoProportion{ a: a, b: b };
+        return Proportion{ p: elem };
     }
 }
 
-impl<T> PartialEq for TwoProportion<T>
+impl<T> PartialEq for Proportion<T>
 where
     T: PartialEq,
     T: Zero,
@@ -49,12 +54,21 @@ where
     T: Clone,
 {
     fn eq(&self, other: &Self) -> bool {
-        let lhs = self.a.clone() * other.b.clone();
-        let rhs = self.b.clone() * other.a.clone();
-        let s_non_zero = !self.a.is_zero() || !self.b.is_zero();
-        let o_non_zero = !other.a.is_zero() || !other.b.is_zero();
+        let sl = self.p.len();
+        let ol = other.p.len();
+        if sl != ol {
+            return false;
+        }
 
-        return (lhs == rhs) && s_non_zero && o_non_zero ;
+        for i in 0..(sl-1) {
+            let lhs = self.p[i].clone() * other.p[i+1].clone();
+            let rhs = self.p[i+1].clone() * other.p[i].clone();
+
+            if lhs != rhs {
+                return false;
+            }
+        }
+        return true;
     }
 }
 
@@ -65,23 +79,23 @@ mod tests {
     #[test]
     #[should_panic]
     fn invalid_2proportion() {
-        TwoProportion::new(0,0);
+        Proportion::new(vec![0,0]);
     }
     #[test]
     fn equality_of_2proportions() {
-        let a1 = TwoProportion::new(3,4);
-        let b1 = TwoProportion::new(6,8);
+        let a1 = Proportion::new(vec![3,4]);
+        let b1 = Proportion::new(vec![6,8]);
         assert_eq!(a1,b1);
-        let a2 = TwoProportion::new(Ratio::new(1,2),Ratio::new(3,1));
-        let b2 = TwoProportion::new(Ratio::new(3,2),Ratio::new(9,1));
+        let a2 = Proportion::new(vec![Ratio::new(1,2),Ratio::new(3,1)]);
+        let b2 = Proportion::new(vec![Ratio::new(3,2),Ratio::new(9,1)]);
         assert_eq!(a2,b2);
-        let a3 = TwoProportion::new(Ratio::new(1,1),Ratio::new(0,1));
-        let b3 = TwoProportion::new(Ratio::new(7,1),Ratio::new(0,1));
-        let c3 = TwoProportion::new(Ratio::new(-7,4),Ratio::new(0,1));
+        let a3 = Proportion::new(vec![Ratio::new(1,1),Ratio::new(0,1)]);
+        let b3 = Proportion::new(vec![Ratio::new(7,1),Ratio::new(0,1)]);
+        let c3 = Proportion::new(vec![Ratio::new(-7,4),Ratio::new(0,1)]);
         assert_eq!(a3,b3);
         assert_eq!(a3,c3);
-        let a4 = TwoProportion::new(Ratio::new(0,1),Ratio::new(-5,1));
-        let b4 = TwoProportion::new(Ratio::new(0,1),Ratio::new(17,19));
+        let a4 = Proportion::new(vec![Ratio::new(0,1),Ratio::new(-5,1)]);
+        let b4 = Proportion::new(vec![Ratio::new(0,1),Ratio::new(17,19)]);
         assert_eq!(a4,b4);
     }
 }

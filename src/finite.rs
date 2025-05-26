@@ -17,7 +17,7 @@ limitations under the License.
 
 
 pub use num::{Zero,One};
-pub use std::ops::{Add,Sub,Mul,Div};
+pub use std::ops::{Add,Sub,Mul,Div,Neg};
 pub use paste::paste;
 
 
@@ -113,6 +113,14 @@ macro_rules! create_finite_field {
                 }
             }
 
+            impl Neg for [<Finite $N>]
+            {
+                type Output = [<Finite $N>];
+
+                fn neg(self) -> Self {
+                    Self::zero() - self
+                }
+            }
         }
     }
 }

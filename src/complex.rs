@@ -24,7 +24,7 @@ use crate::matrix::*;
 /// Represents a complex number as 2x2 matrix
 #[derive(Debug,Clone)]
 pub struct Complex<T> {
-    matrix: Matrix<T>,
+    pub matrix: Matrix<T>,
 }
 
 impl<T> PartialEq for Complex<T>
@@ -137,14 +137,14 @@ where
         Complex{ matrix: self.matrix.adjugate() }
     }
 
-    pub fn quadrance(self) -> T {
+    pub fn quadrance(self,other: Self) -> T {
         let two = T::one() + T::one();
-        let q = self.clone() * self.complex_conjugate();
+        let q = self.clone() * other.complex_conjugate();
         return q.matrix.trace()/two;
     }
 
     pub fn inverse(self) -> Self {
-        self.clone().complex_conjugate()*(T::one()/self.quadrance())
+        self.clone().complex_conjugate()*(T::one()/self.clone().quadrance(self.clone()))
     }
 }
 
@@ -275,7 +275,7 @@ mod tests {
         let w = Complex::new_red(Ratio::new(1,1),Ratio::new(1,2));
         let w2 = w.clone()*w.clone();
         let w2_ = Complex::new_red(Ratio::new(5,4),Ratio::new(1,1));
-        let q = w.clone().quadrance();
+        let q = w.clone().quadrance(w.clone());
 
         assert_eq!(q,Ratio::new(3,4));
         assert_eq!(z,z_);
