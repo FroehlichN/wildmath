@@ -25,7 +25,7 @@ use crate::radical::Root;
 
 #[derive(Debug, Clone)]
 pub struct RowVector<T> {
-    elem: Vec<T>,
+    pub elem: Vec<T>,
 }
 
 impl<T> RowVector<T>
@@ -138,6 +138,23 @@ where
     }
 }
 
+impl<T> Div<T> for RowVector<T>
+where
+    T: Zero,
+    T: Div<Output = T>,
+    T: Clone,
+{
+    type Output = RowVector<T>;
+
+    fn div(self, other: T) -> RowVector<T> {
+        let mut elems = Vec::new();
+        for (_, v) in self.elem.iter().enumerate() {
+            elems.push(v.clone()/other.clone());
+        }
+        RowVector::new(elems)
+    }
+}
+
 
 
 #[derive(Debug, Clone)]
@@ -244,6 +261,45 @@ where
         for ri in 0..rows {
             let d = self.get(ri) * scalar.clone();
             elems.push(d);
+        }
+        ColumnVector::new(elems)
+    }
+}
+
+impl<T> Mul<RowVector<T>> for ColumnVector<T>
+where
+    T: Zero + One,
+    T: Mul<Output = T>,
+    T: Clone,
+{
+    type Output = Matrix<T>;
+
+    fn mul(self, other: RowVector<T>) -> Matrix<T> {
+        let mut cme = Vec::new();
+        for (_, v) in self.elem.iter().enumerate() {
+            cme.push(vec![v.clone()]);
+        }
+        let cm = Matrix::new(cme);
+
+        let rme = vec![other.elem];
+        let rm = Matrix::new(rme);
+
+        cm*rm
+    }
+}
+
+impl<T> Div<T> for ColumnVector<T>
+where
+    T: Zero,
+    T: Div<Output = T>,
+    T: Clone,
+{
+    type Output = ColumnVector<T>;
+
+    fn div(self, other: T) -> ColumnVector<T> {
+        let mut elems = Vec::new();
+        for (_, v) in self.elem.iter().enumerate() {
+            elems.push(v.clone()/other.clone());
         }
         ColumnVector::new(elems)
     }
@@ -519,6 +575,27 @@ where
             let mut row : Vec<T> = Vec::new();
             for mci in 0..self.cols {
                 row.push(self.get(mri,mci)*scalar.clone());
+            }
+            elem.push(row);
+        }
+        Matrix { rows: self.rows, cols: self.cols, elem: elem }
+    }
+}
+
+impl<T> Div<T> for Matrix<T>
+where
+    T: Zero,
+    T: Div<Output = T>,
+    T: Clone,
+{
+    type Output = Matrix<T>;
+
+    fn div(self, scalar: T) -> Matrix<T> {
+        let mut elem : Vec<Vec<T>> = Vec::new();
+        for mri in 0..self.rows {
+            let mut row : Vec<T> = Vec::new();
+            for mci in 0..self.cols {
+                row.push(self.get(mri,mci)/scalar.clone());
             }
             elem.push(row);
         }

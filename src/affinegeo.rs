@@ -16,7 +16,7 @@ limitations under the License.
 */
 
 use num::{Zero, One};
-use std::ops::{Mul, Add, Sub, Div};
+use std::ops::{Mul, Add, Sub, Div, Neg};
 use crate::matrix::{ColumnVector, RowVector, Matrix};
 
 
@@ -299,6 +299,22 @@ where
     }
 }
 
+impl<T> Neg for Vector<T>
+where
+    T: Zero + One,
+    T: Neg<Output = T>,
+    T: Sub<Output = T>,
+    T: Mul<Output = T>,
+    T: Clone,
+{
+    type Output = Vector<T>;
+
+    fn neg(self) -> Vector<T> {
+        let mone = -T::one();
+        self*mone
+    }
+}
+
 
 /// Represents an n-D plane
 /// a1*x1 + a2*x2 + a3*x3 + ... = d
@@ -413,6 +429,47 @@ where
     }
 }
 
+
+/// Represents an reflection
+#[derive(Debug, Clone)]
+pub struct Reflection<T> {
+    matrix: Matrix<T>,
+}
+
+impl<T> Reflection<T>
+where
+    T: Zero + One,
+    T: Add<Output = T>,
+    T: Sub<Output = T>,
+    T: Div<Output = T>,
+    T: Clone,
+{
+    pub fn new(coords: Vec<T>) -> Reflection<T> {
+        let n = coords.clone().len();
+        let i = Matrix::identity(n,n);
+        let two = T::one() + T::one();
+        let rv = RowVector::new(coords.clone());
+        let cv = ColumnVector::new(coords);
+        let m = i - cv.clone() * rv.clone() / (rv * cv) * two;
+        Reflection{ matrix: m }
+    }
+}
+
+impl<T> Mul<Reflection<T>> for Vector<T>
+where
+    T: Zero,
+    T: Sub<Output = T>,
+    T: Mul<Output = T>,
+    T: Clone,
+{
+    type Output = Vector<T>;
+
+    fn mul(self, other: Reflection<T>) -> Vector<T> {
+        let rv = self.rowvector();
+        let nv = rv * other.matrix;
+        Vector::from(nv.elem)
+    }
+}
 
 #[cfg(test)]
 mod tests {
@@ -663,6 +720,25 @@ mod tests {
 
         assert_eq!(mmv1,v1);
         assert_eq!(mmv2,v2);
+    }
+
+    #[test]
+    fn reflection_matrix() {
+        let elem1 = vec![Ratio::from(1),Ratio::from(2),Ratio::from(3)];
+        let r = Reflection::new(elem1.clone());
+        let v11 = Vector::from(elem1);
+        let v12 = v11.clone() * r.clone();
+        assert_eq!(v11,-v12);
+
+        let elem2 = vec![Ratio::from(-2),Ratio::from(1),Ratio::from(0)];
+        let v21 = Vector::from(elem2);
+        let v22 = v21.clone() * r.clone();
+        assert_eq!(v21,v22);
+
+        let elem3 = vec![Ratio::from(-3),Ratio::from(0),Ratio::from(1)];
+        let v31 = Vector::from(elem3);
+        let v32 = v31.clone() * r;
+        assert_eq!(v31,v32);
     }
 }
 
