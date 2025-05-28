@@ -471,6 +471,22 @@ where
     }
 }
 
+impl<T> Mul for Reflection<T>
+where
+    T: Zero,
+    T: Add<Output = T>,
+    T: Mul<Output = T>,
+    T: Clone,
+{
+    type Output = Reflection<T>;
+
+    fn mul(self, other: Reflection<T>) -> Reflection<T> {
+        let m = self.matrix * other.matrix;
+        Reflection{ matrix: m }
+    }
+}
+
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -739,6 +755,22 @@ mod tests {
         let v31 = Vector::from(elem3);
         let v32 = v31.clone() * r;
         assert_eq!(v31,v32);
+    }
+
+    #[test]
+    fn multiplication_of_reflections() {
+        let elemv = vec![Ratio::from(1),Ratio::from(2),Ratio::from(3)];
+        let elemw = vec![Ratio::from(2),Ratio::from(1),Ratio::from(-1)];
+
+        let rv = Reflection::new(elemv);
+        let rw = Reflection::new(elemw);
+
+        let r= rv*rw;
+
+        let elemf = vec![Ratio::from(5),Ratio::from(-7),Ratio::from(3)];
+        let vf = Vector::from(elemf);
+
+        assert_eq!(vf.clone()*r,vf);
     }
 }
 
