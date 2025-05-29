@@ -430,32 +430,42 @@ where
 }
 
 
-/// Represents an reflection
+/// Represents reflections and rotations
 #[derive(Debug, Clone)]
-pub struct Reflection<T> {
+pub struct Isometry<T> {
     matrix: Matrix<T>,
 }
 
-impl<T> Reflection<T>
+impl<T> Isometry<T>
 where
     T: Zero + One,
+    T: PartialEq,
+    T: Neg<Output = T>,
     T: Add<Output = T>,
     T: Sub<Output = T>,
     T: Div<Output = T>,
     T: Clone,
 {
-    pub fn new(coords: Vec<T>) -> Reflection<T> {
+    pub fn new_reflection(coords: Vec<T>) -> Isometry<T> {
         let n = coords.clone().len();
         let i = Matrix::identity(n,n);
         let two = T::one() + T::one();
         let rv = RowVector::new(coords.clone());
         let cv = ColumnVector::new(coords);
         let m = i - cv.clone() * rv.clone() / (rv * cv) * two;
-        Reflection{ matrix: m }
+        Isometry{ matrix: m }
+    }
+
+    pub fn is_reflection(&self) -> bool {
+        self.matrix.determinant() == -T::one()
+    }
+
+    pub fn is_rotation(&self) -> bool {
+        self.matrix.determinant() == T::one()
     }
 }
 
-impl<T> Mul<Reflection<T>> for Vector<T>
+impl<T> Mul<Isometry<T>> for Vector<T>
 where
     T: Zero,
     T: Sub<Output = T>,
@@ -464,25 +474,25 @@ where
 {
     type Output = Vector<T>;
 
-    fn mul(self, other: Reflection<T>) -> Vector<T> {
+    fn mul(self, other: Isometry<T>) -> Vector<T> {
         let rv = self.rowvector();
         let nv = rv * other.matrix;
         Vector::from(nv.elem)
     }
 }
 
-impl<T> Mul for Reflection<T>
+impl<T> Mul for Isometry<T>
 where
     T: Zero,
     T: Add<Output = T>,
     T: Mul<Output = T>,
     T: Clone,
 {
-    type Output = Reflection<T>;
+    type Output = Isometry<T>;
 
-    fn mul(self, other: Reflection<T>) -> Reflection<T> {
+    fn mul(self, other: Isometry<T>) -> Isometry<T> {
         let m = self.matrix * other.matrix;
-        Reflection{ matrix: m }
+        Isometry{ matrix: m }
     }
 }
 
@@ -741,7 +751,7 @@ mod tests {
     #[test]
     fn reflection_matrix() {
         let elem1 = vec![Ratio::from(1),Ratio::from(2),Ratio::from(3)];
-        let r = Reflection::new(elem1.clone());
+        let r = Isometry::new_reflection(elem1.clone());
         let v11 = Vector::from(elem1);
         let v12 = v11.clone() * r.clone();
         assert_eq!(v11,-v12);
@@ -762,8 +772,8 @@ mod tests {
         let elemv = vec![Ratio::from(1),Ratio::from(2),Ratio::from(3)];
         let elemw = vec![Ratio::from(2),Ratio::from(1),Ratio::from(-1)];
 
-        let rv = Reflection::new(elemv);
-        let rw = Reflection::new(elemw);
+        let rv = Isometry::new_reflection(elemv);
+        let rw = Isometry::new_reflection(elemw);
 
         let r= rv*rw;
 
@@ -771,6 +781,18 @@ mod tests {
         let vf = Vector::from(elemf);
 
         assert_eq!(vf.clone()*r,vf);
+    }
+
+    #[test]
+    fn rotations_in_3d() {
+        let elemv1 = vec![Ratio::from(1),Ratio::from(2),Ratio::from(3)];
+        let elemv2 = vec![Ratio::from(2),Ratio::from(-1),Ratio::from(5)];
+
+        let sigmav1 = Isometry::new_reflection(elemv1);
+        let sigmav2 = Isometry::new_reflection(elemv2);
+
+        let rho = sigmav1*sigmav2;
+        assert!(rho.is_rotation());
     }
 }
 
