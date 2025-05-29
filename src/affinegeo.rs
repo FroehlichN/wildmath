@@ -196,6 +196,24 @@ where
 
 impl<T> Vector<T>
 where
+    T: Zero + One,
+    T: Add<Output = T>,
+    T: Sub<Output = T>,
+    T: Mul<Output = T>,
+    T: Div<Output = T>,
+    T: Clone,
+{
+    pub fn spread(&self, other: &Self) -> T {
+        let v1 = self.rowvector();
+        let v2 = other.columnvector();
+        let n = v1*v2;
+        let n2 = n.clone()*n;
+        T::one() - n2 / (self.quadrance() * other.quadrance())
+    }
+}
+
+impl<T> Vector<T>
+where
     T: Zero,
     T: Sub<Output = T>,
     T: Mul<Output = T>,
@@ -793,6 +811,31 @@ mod tests {
 
         let rho = sigmav1*sigmav2;
         assert!(rho.is_rotation());
+    }
+
+    #[test]
+    fn spread_between_2d_vectors() {
+        let o = Point::new(vec![Ratio::new(0,1), Ratio::new(0,1)]);
+        let a = Point::new(vec![Ratio::new(4,1), Ratio::new(2,1)]);
+        let b = Point::new(vec![Ratio::new(-1,1),Ratio::new(3,1)]);
+        let oa = Vector::new(o.clone(), a.clone());
+        let ob = Vector::new(o, b.clone());
+        let ab = Vector::new(a, b);
+        let s = oa.spread(&ob);
+        let t = ob.spread(&ab);
+        let r = oa.spread(&ab);
+        assert_eq!(s,Ratio::new(49,50));
+        assert_eq!(t,Ratio::new(49,65));
+        assert_eq!(r,Ratio::new(49,130));
+    }
+
+    #[test]
+    fn spread_between_3d_vectors() {
+        let elemv1 = vec![Ratio::from(1),Ratio::from(2),Ratio::from(3)];
+        let elemv2 = vec![Ratio::from(2),Ratio::from(-1),Ratio::from(5)];
+        let v1 = Vector::from(elemv1);
+        let v2 = Vector::from(elemv2);
+        assert_eq!(v1.spread(&v2),Ratio::new(13,28));
     }
 }
 
