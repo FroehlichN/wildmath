@@ -473,6 +473,34 @@ where
         let inv = self.adjugate()*(T::one()/det);
         Some(inv)
     }
+
+    pub fn cayley(&self) -> Option<Matrix<T>> {
+        if self.rows != self.cols {
+            return None;
+        }
+
+        let i = Self::identity(self.rows,self.cols);
+
+        let oinv = (i.clone()+self.clone()).inverse();
+        match oinv {
+            None => return None,
+            Some(inv) => return Some((i-self.clone())*inv),
+        }
+    }
+
+    pub fn little_cayley(&self) -> Option<Matrix<T>> {
+        if self.rows != self.cols {
+            return None;
+        }
+
+        let i = Self::identity(self.rows,self.cols);
+
+        let oinv = (i.clone()-self.clone()).inverse();
+        match oinv {
+            None => return None,
+            Some(inv) => return Some((i+self.clone())*inv),
+        }
+    }
 }
 
 impl<T> PartialEq for Matrix<T>
@@ -579,6 +607,20 @@ where
             elem.push(row);
         }
         Matrix { rows: self.rows, cols: self.cols, elem: elem }
+    }
+}
+
+impl<T> Neg for Matrix<T>
+where
+    T: Zero + One,
+    T: Neg<Output = T>,
+    T: Mul<Output = T>,
+    T: Clone,
+{
+    type Output = Matrix<T>;
+
+    fn neg(self) -> Matrix<T> {
+        self*(-T::one())
     }
 }
 

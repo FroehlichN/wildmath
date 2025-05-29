@@ -514,6 +514,33 @@ where
     }
 }
 
+impl<T> Isometry<T>
+where
+    T: Zero + One,
+    T: Neg<Output = T>,
+    T: Div<Output = T>,
+    T: Mul<Output = T>,
+    T: Sub<Output = T>,
+    T: Neg<Output = T>,
+    T: Clone,
+{
+    pub fn anchor(&self) -> Option<Matrix<T>> {
+        let ao = self.matrix.cayley();
+        match ao {
+            None => return None,
+            Some(a) => return Some(-a),
+        }
+    }
+
+    pub fn from_anchor(anchor: Matrix<T>) -> Option<Isometry<T>> {
+        let ro = anchor.little_cayley();
+        match ro {
+            None => return None,
+            Some(r) => return Some(Isometry{ matrix: r }),
+        }
+    }
+}
+
 
 #[cfg(test)]
 mod tests {
@@ -836,6 +863,38 @@ mod tests {
         let v1 = Vector::from(elemv1);
         let v2 = Vector::from(elemv2);
         assert_eq!(v1.spread(&v2),Ratio::new(13,28));
+    }
+
+    #[test]
+    fn anchor_of_rotations() {
+        let zero = Ratio::from(0);
+        let one = Ratio::from(1);
+        let two = Ratio::from(2);
+        let three = Ratio::from(3);
+        let four = Ratio::from(4);
+        let five = Ratio::from(5);
+        let r12 = Ratio::from(12);
+        let r19 = Ratio::from(19);
+        let r28 = Ratio::from(28);
+
+        let ma = Matrix::new(vec![vec![zero,five,-one],
+                                  vec![-five,zero,four],
+                                  vec![one,-four,zero]]);
+
+        let mb = Matrix::new(vec![vec![zero,two,-four],
+                                  vec![-two,zero,-three],
+                                  vec![four,three,zero]]);
+
+        let mc = Matrix::new(vec![vec![zero,r12,r28],
+                                  vec![-r12,zero,-r19],
+                                  vec![-r28,r19,zero]]);
+
+        let rho_a = Isometry::from_anchor(ma).unwrap();
+        let rho_b = Isometry::from_anchor(mb).unwrap();
+        let rho_c = rho_a*rho_b;
+        let mc2 = rho_c.anchor().unwrap();
+
+        assert_eq!(mc2,mc);
     }
 }
 
