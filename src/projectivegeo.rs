@@ -20,6 +20,7 @@ use crate::proportion::Proportion;
 use num::{Zero,One};
 use std::ops::{Mul, Add, Sub, Div, Neg};
 use crate::complex::Complex;
+use crate::matrix::Matrix;
 
 
 
@@ -307,6 +308,60 @@ where
     }
 }
 
+/// Represents a projective vector consisting of a
+/// scalar u and a
+/// vector v
+#[derive(Debug,Clone)]
+pub struct ProjVector<T> {
+    u: T,
+    v: Vec<T>,
+}
+
+impl<T> ProjVector<T>
+where
+    T: Zero,
+{
+    pub fn new(u: T, v: Vec<T>) -> ProjVector<T> {
+        if u.is_zero() {
+            let mut v_is_zero = true;
+            for (_, e) in v.iter().enumerate() {
+                if !e.is_zero() {
+                    v_is_zero = false;
+                    break;
+                }
+            }
+            if v_is_zero {
+                panic!("Projective vector must not be all zero");
+            }
+        }
+        ProjVector{ u: u, v: v }
+    }
+}
+
+impl<T> PartialEq for ProjVector<T>
+where
+    T: Zero,
+    T: Sub<Output = T>,
+    T: Mul<Output = T>,
+    T: Clone,
+{
+    fn eq(&self, other: &Self) -> bool {
+        let mut sv = Vec::new();
+        sv.push(self.u.clone());
+        for (_, e) in self.v.iter().enumerate() {
+            sv.push(e.clone());
+        }
+
+        let mut ov = Vec::new();
+        ov.push(other.u.clone());
+        for (_, e) in other.v.iter().enumerate() {
+            ov.push(e.clone());
+        }
+
+        let m = Matrix::new(vec![sv,ov]);
+        m.rank() == 1
+    }
+}
 
 
 #[cfg(test)]
@@ -489,6 +544,18 @@ mod tests {
         let v3 = Rotation::new_red(Ratio::new(1,1),Ratio::new(1,2));
         assert_eq!(v1.quadrance(&v2),Ratio::new(-121,168));
         assert_eq!((v1*v3.clone()).quadrance(&(v2*v3)),Ratio::new(-121,168));
+    }
+    #[should_panic]
+    fn invalid_projective_vector() {
+        ProjVector::new(0,vec![0,0]);
+    }
+    #[test]
+    fn equality_of_projective_vectors() {
+        let v1 = ProjVector::new(1,vec![2,3,4]);
+        let v2 = ProjVector::new(2,vec![4,6,8]);
+        let v3 = ProjVector::new(3,vec![3,1,2]);
+        assert_eq!(v1,v2);
+        assert!(!(v1==v3));
     }
 }
 
