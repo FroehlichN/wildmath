@@ -745,6 +745,78 @@ where
     }
 }
 
+impl<T> Matrix<T>
+where
+    T: Zero,
+    T: Sub<Output = T>,
+    T: Mul<Output = T>,
+    T: Clone,
+{
+    pub fn rank(&self) -> usize {
+        let sorted_rows = self.sort_rows();
+        let sorted = sorted_rows.transpose().sort_rows();
+
+        let p = sorted.get(0,0);
+        if p.is_zero() {
+            return 0;
+        }
+
+        // submatrix without first row and first column
+        let mut submatrix = Vec::new();
+        for ri in 1..sorted.rows {
+            let q = sorted.get(ri,0);
+
+            let mut row = Vec::new();
+            for ci in 1..sorted.cols {
+                let r = sorted.get(0,ci);
+                let s = sorted.get(ri,ci);
+                row.push(s*p.clone()-r*q.clone());
+            }
+            submatrix.push(row);
+        }
+        let subm = Matrix::new(submatrix);
+
+        return 1 + subm.rank();
+    }
+
+    // sort full rows first, then rows with some zero entries,
+    // remove rows with all zero entries.
+    fn sort_rows(&self) -> Matrix<T> {
+        let mut full_rows = Vec::new();
+        let mut mixed_rows = Vec::new();
+
+        for rowi in 0..self.rows {
+            let mut row_is_full = true;
+            let mut row_is_zero = true;
+            for coli in 0..self.cols {
+                if self.get(rowi,coli).is_zero() {
+                    row_is_full = false;
+                } else {
+                    row_is_zero = false;
+                }
+            }
+            if row_is_full {
+                full_rows.push(self.elem[rowi].clone());
+            } else if !row_is_zero {
+                mixed_rows.push(self.elem[rowi].clone());
+            }
+        }
+
+        let mut sorted_matrix = Vec::new();
+        for (_, row) in full_rows.iter().enumerate() {
+            sorted_matrix.push(row.clone());
+        }
+        for (_, row) in mixed_rows.iter().enumerate() {
+            sorted_matrix.push(row.clone());
+        }
+
+        Matrix::new(sorted_matrix)
+    }
+
+
+
+}
+
 
 #[cfg(test)]
 mod tests {
@@ -836,6 +908,36 @@ mod tests {
                                   vec![11,5,2],
                                   vec![6,12,-5]]);
         assert_eq!(m1.trace(), 1);
+    }
+    #[test]
+    fn rank_of_matrix() {
+        let m1 = Matrix::new(vec![vec![1,2,3],
+                                  vec![2,4,-4],
+                                  vec![3,-4,-4]]);
+        assert_eq!(m1.rank(),3);
+
+        let m2 = Matrix::new(vec![vec![1,2,3],
+                                  vec![2,4,-4]]);
+        assert_eq!(m2.rank(),2);
+
+        let m3 = Matrix::new(vec![vec![0,0,0],
+                                  vec![2,4,-4]]);
+        assert_eq!(m3.rank(),1);
+
+        let m4 = Matrix::new(vec![vec![0,0,0],
+                                  vec![0,0,0]]);
+        assert_eq!(m4.rank(),0);
+
+        let m5 = Matrix::new(vec![vec![1,2,3],
+                                  vec![2,4,6],
+                                  vec![3,-4,-4]]);
+        assert_eq!(m5.rank(),2);
+
+        let m5 = Matrix::new(vec![vec![1,2,3],
+                                  vec![2,4,6],
+                                  vec![3,6,9]]);
+        assert_eq!(m5.rank(),1);
+
     }
 }
 
