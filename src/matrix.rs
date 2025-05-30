@@ -308,8 +308,8 @@ where
 
 #[derive(Debug, Clone)]
 pub struct Matrix<T> {
-    rows: usize,
-    cols: usize,
+    pub rows: usize,
+    pub cols: usize,
     elem: Vec<Vec<T>>,
 }
 
@@ -812,9 +812,20 @@ where
 
         Matrix::new(sorted_matrix)
     }
+}
 
-
-
+impl<T> Matrix<T>
+where
+    T: Zero + One,
+    T: Add<Output = T>,
+    T: Mul<Output = T>,
+    T: Div<Output = T>,
+    T: Clone,
+{
+    pub fn dot(&self, other: &Self) -> T {
+        let two = T::one() + T::one();
+        (self.clone()*other.clone()).trace()/two
+    }
 }
 
 

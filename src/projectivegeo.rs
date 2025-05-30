@@ -363,6 +363,49 @@ where
     }
 }
 
+/// Represents reflections and rotations
+#[derive(Debug, Clone)]
+pub struct Isometry<T> {
+    matrix: Matrix<T>,
+}
+
+impl<T> Isometry<T>
+where
+    T: Zero + One,
+    T: Neg<Output = T>,
+    T: Div<Output = T>,
+    T: Mul<Output = T>,
+    T: Sub<Output = T>,
+    T: Neg<Output = T>,
+    T: Clone,
+{
+    pub fn anchor(&self) -> Option<Matrix<T>> {
+        let ao = self.matrix.cayley();
+        match ao {
+            None => return None,
+            Some(a) => return Some(-a),
+        }
+    }
+
+    pub fn from_anchor(u: T, anchor: Matrix<T>) -> Option<Isometry<T>> {
+        if anchor.rows != anchor.cols {
+            return None;
+        }
+
+        let q = anchor.dot(&anchor);
+        let denom = u.clone()*u.clone() - q;
+
+        if denom.is_zero() {
+            return None;
+        }
+
+        let i = Matrix::identity(anchor.rows,anchor.cols);
+        let two = T::one() + T::one();
+        let r = i + (anchor.clone()*u + anchor.clone()*anchor)*two/denom;
+        Some(Isometry{ matrix: r })
+    }
+}
+
 
 #[cfg(test)]
 mod tests {
