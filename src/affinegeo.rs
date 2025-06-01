@@ -111,6 +111,10 @@ where
     pub fn new(start: Point<T>, end: Point<T>) -> Vector<T> {
         Vector {start: start, end: end, dot: dot_blue}
     }
+
+    pub fn new_red(start: Point<T>, end: Point<T>) -> Vector<T> {
+        Vector {start: start, end: end, dot: dot_red}
+    }
 }
 
 
@@ -125,6 +129,21 @@ where
     let v2 = rhs.columnvector();
 
     v1*v2
+}
+
+fn dot_red<T>(lhs: Vector<T>, rhs: Vector<T>) -> T
+where
+    T: Zero,
+    T: Sub<Output = T>,
+    T: Mul<Output = T>,
+    T: Clone,
+{
+    let v1 = lhs.rowvector();
+    let v2 = rhs.columnvector();
+
+    let t = v1.get(0)*v2.get(0);
+    let t2 = t.clone() + t;
+    t2 - v1*v2
 }
 
 
@@ -190,7 +209,7 @@ where
     }
 
     pub fn quadrance(&self) -> T {
-        self.clone() * self.clone()
+        (self.dot)(self.clone(), self.clone())
     }
 }
 
@@ -900,6 +919,28 @@ mod tests {
         let mc2 = rho_c.anchor().unwrap();
 
         assert_eq!(mc2,mc);
+    }
+
+    #[test]
+    fn quadrance_in_red_geometry() {
+        let a1 = Point::new(vec![Ratio::new(1,1), Ratio::new(0,1)]);
+        let a2 = Point::new(vec![Ratio::new(13,12), Ratio::new(5,12)]);
+        let a3 = Point::new(vec![Ratio::new(-5,3), Ratio::new(4,3)]);
+        let a4 = Point::new(vec![Ratio::new(-17,15), Ratio::new(-8,15)]);
+
+        let v12 = Vector::new_red(a1.clone(),a2.clone());
+        let v23 = Vector::new_red(a2.clone(),a3.clone());
+        let v34 = Vector::new_red(a3.clone(),a4.clone());
+        let v14 = Vector::new_red(a1.clone(),a4.clone());
+        let v13 = Vector::new_red(a1,a3);
+        let v24 = Vector::new_red(a2,a4);
+
+        assert_eq!(v12.quadrance(), Ratio::new(-1,6));
+        assert_eq!(v23.quadrance(), Ratio::new(121,18));
+        assert_eq!(v34.quadrance(), Ratio::new(-16,5));
+        assert_eq!(v14.quadrance(), Ratio::new(64,15));
+        assert_eq!(v13.quadrance(), Ratio::new(16,3));
+        assert_eq!(v24.quadrance(), Ratio::new(361,90));
     }
 }
 
