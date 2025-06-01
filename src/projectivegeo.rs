@@ -393,7 +393,7 @@ where
         }
 
         let q = anchor.dot(&anchor);
-        let denom = u.clone()*u.clone() - q;
+        let denom = u.clone()*u.clone() + q;
 
         if denom.is_zero() {
             return None;

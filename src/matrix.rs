@@ -817,6 +817,7 @@ where
 impl<T> Matrix<T>
 where
     T: Zero + One,
+    T: Neg<Output = T>,
     T: Add<Output = T>,
     T: Mul<Output = T>,
     T: Div<Output = T>,
@@ -824,7 +825,7 @@ where
 {
     pub fn dot(&self, other: &Self) -> T {
         let two = T::one() + T::one();
-        (self.clone()*other.clone()).trace()/two
+        -(self.clone()*other.clone()).trace()/two
     }
 }
 
