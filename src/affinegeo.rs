@@ -474,6 +474,11 @@ where
         Isometry{ matrix: m }
     }
 
+    pub fn new_rotation(coords: Vec<T>) -> Isometry<T> {
+        let refl= Self::new_reflection(coords);
+        Isometry{ matrix: -refl.matrix }
+    }
+
     pub fn is_reflection(&self) -> bool {
         self.matrix.determinant() == -T::one()
     }
