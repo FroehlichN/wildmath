@@ -42,7 +42,7 @@ where
     T: Mul<Output = T>,
     T: Clone,
 {
-    pub fn lies_on(&self, pi: &Plane<T>) -> bool {
+    pub fn lies_on(&self, pi: &Slice<T>) -> bool {
         let pointv = RowVector::new(self.coords.clone());
         let planev = ColumnVector::new(pi.coords.clone());
         let r = pointv * planev;
@@ -353,37 +353,41 @@ where
 }
 
 
-/// Represents an n-D plane
+/// Represents the slicing of n-D
 /// a1*x1 + a2*x2 + a3*x3 + ... = d
+/// A slice in 1D is just a point, basically a single number.
+/// A slice in 2D is a line.
+/// A slice in 3D is a plane.
+/// A slice in 4D is a volume.
 #[derive(Debug, Clone)]
-pub struct Plane<T> {
+pub struct Slice<T> {
     coords: Vec<T>,
     d: T,
 }
 
-impl<T> Plane<T>
+impl<T> Slice<T>
 {
-    pub fn new(coords: Vec<T>, d: T) -> Plane<T> {
-        Plane { coords: coords, d: d }
+    pub fn new(coords: Vec<T>, d: T) -> Slice<T> {
+        Slice { coords: coords, d: d }
     }
 }
 
-impl<T> Plane<T>
+impl<T> Slice<T>
 where
     T: Zero,
     T: Sub<Output = T>,
     T: Mul<Output = T>,
     T: Clone,
 {
-    pub fn from(point: Point<T>, normal: Vector<T>) -> Plane<T> {
+    pub fn from(point: Point<T>, normal: Vector<T>) -> Slice<T> {
         let pv = Vector::from(point.coords.clone());
         let d = normal.clone() * pv;
         let ncv = normal.columnvector();
-        Plane::new(ncv.elem, d)
+        Slice::new(ncv.elem, d)
     }
 }
 
-impl<T> Plane<T>
+impl<T> Slice<T>
 where
     T: Zero + One,
     T: Add<Output = T>,
@@ -576,7 +580,7 @@ mod tests {
         let p1 = Point::new(vec![3,0,0]);
         let p2 = Point::new(vec![0,1,0]);
         let p3 = Point::new(vec![0,0,2]);
-        let pi = Plane::new(vec![2,6,3],6);
+        let pi = Slice::new(vec![2,6,3],6);
         assert!(p1.lies_on(&pi));
         assert!(p2.lies_on(&pi));
         assert!(p3.lies_on(&pi));
@@ -584,10 +588,10 @@ mod tests {
 
     #[test]
     fn point_normal_form_of_a_line() {
-        // In 2D, planes are lines
+        // In 2D, slices are lines
         let nv = Vector::from(vec![Ratio::from(2),Ratio::from(-1)]);
         let p = Point::new(vec![Ratio::from(-1),Ratio::from(3)]);
-        let l = Plane::from(p.clone(),nv);
+        let l = Slice::from(p.clone(),nv);
         assert!(p.lies_on(&l));
         // Adding a direction vector
         let dv = Vector::from(vec![Ratio::from(1),Ratio::from(2)]);
@@ -631,7 +635,7 @@ mod tests {
 
     #[test]
     fn projections_onto_a_plane() {
-        let pi1 = Plane::new(vec![Ratio::from(1),Ratio::from(-5),Ratio::from(2)],Ratio::from(0));
+        let pi1 = Slice::new(vec![Ratio::from(1),Ratio::from(-5),Ratio::from(2)],Ratio::from(0));
         let v1 = Vector::from(vec![Ratio::from(1),Ratio::from(1),Ratio::from(3)]);
         let v2 = Vector::from(vec![Ratio::from(1),Ratio::from(-5),Ratio::from(2)]);
         let pm1 = pi1.projection_on_plane_matrix(&v1);
@@ -661,9 +665,9 @@ mod tests {
 
     #[test]
     fn projection_onto_a_line_1() {
-        // In 2D planes are lines
+        // In 2D slices are lines
         let coords = vec![Ratio::from(4),Ratio::from(1)];
-        let l = Plane::new(coords.clone(),Ratio::from(0));
+        let l = Slice::new(coords.clone(),Ratio::from(0));
         // Projection along the normal to the plane (line)
         let nv = Vector::from(coords);
         let pm = l.projection_on_plane_matrix(&nv);
@@ -683,9 +687,9 @@ mod tests {
 
     #[test]
     fn projection_onto_a_line_2() {
-        // In 2D planes are lines
+        // In 2D slices are lines
         let coords = vec![Ratio::from(3),Ratio::from(2)];
-        let l = Plane::new(coords.clone(),Ratio::from(0));
+        let l = Slice::new(coords.clone(),Ratio::from(0));
         // Projection along the normal to the plane (line)
         let nv = Vector::from(coords);
         let pm = l.projection_on_plane_matrix(&nv);
@@ -705,10 +709,10 @@ mod tests {
 
     #[test]
     fn quadrance_from_line_to_point_1() {
-        // In 2D, planes are lines
+        // In 2D, slices are lines
         let nv = Vector::from(vec![Ratio::from(3),Ratio::from(4)]);
         let p = Point::new(vec![Ratio::from(0),Ratio::from(1)]);
-        let l = Plane::from(p.clone(),nv);
+        let l = Slice::from(p.clone(),nv);
 
         // Point A
         let a = Point::new(vec![Ratio::from(1),Ratio::from(2)]);
@@ -719,8 +723,8 @@ mod tests {
 
     #[test]
     fn quadrance_from_line_to_point_2() {
-        // In 2D, planes are lines
-        let l = Plane::new(vec![Ratio::from(1),Ratio::from(-2)],Ratio::from(5));
+        // In 2D, slices are lines
+        let l = Slice::new(vec![Ratio::from(1),Ratio::from(-2)],Ratio::from(5));
 
         // Point A
         let a = Point::new(vec![Ratio::from(5),Ratio::from(-2)]);
