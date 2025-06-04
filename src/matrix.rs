@@ -116,6 +116,28 @@ where
     }
 }
 
+impl<T> Add for RowVector<T>
+where
+    T: Zero,
+    T: Add<Output = T>,
+    T: Clone,
+{
+    type Output = RowVector<T>;
+
+    fn add(self, other: Self) -> RowVector<T> {
+        let scols = self.elem.len();
+        let ocols = other.elem.len();
+        let cols = if scols > ocols {scols} else {ocols};
+
+        let mut elems = Vec::new();
+        for ri in 0..cols {
+            let d = self.get(ri) + other.get(ri);
+            elems.push(d);
+        }
+        RowVector::new(elems)
+    }
+}
+
 impl<T> Sub for RowVector<T>
 where
     T: Zero,
@@ -777,6 +799,11 @@ where
         let subm = Matrix::new(submatrix);
 
         return 1 + subm.rank();
+    }
+
+    pub fn has_full_rank(&self) -> bool {
+        let min = if self.rows < self.cols {self.rows} else {self.cols};
+        self.rank() == min
     }
 
     // sort full rows first, then rows with some zero entries,

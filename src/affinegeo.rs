@@ -20,6 +20,19 @@ use std::ops::{Mul, Add, Sub, Div, Neg};
 use crate::matrix::{ColumnVector, RowVector, Matrix};
 
 
+/// Represents some geometric object consisting of a single point and
+/// none or multiple vectors.
+/// A point without a vector is just a point.
+/// A point with a vector is a line.
+/// A point with two vectors is a plane.
+/// A point with three vectors is a volume.
+#[derive(Debug, Clone)]
+pub struct GeoObj<T>
+{
+    point: Point<T>,
+    vectors: Vec<Vec<T>>,
+}
+
 
 /// Represents an n-D point
 #[derive(Debug, Clone)]
@@ -93,7 +106,7 @@ where
 }
 
 
-/// Represents an n-D vector
+/// Represents an n-D vector with a metric defined by its dot product
 #[derive(Debug, Clone)]
 pub struct Vector<T> {
     start: Point<T>,
@@ -391,6 +404,103 @@ impl<T> Slice<T>
 where
     T: Zero + One,
     T: Add<Output = T>,
+    T: Div<Output = T>,
+    T: Mul<Output = T>,
+    T: Sub<Output = T>,
+    T: Neg<Output = T>,
+    T: Clone,
+{
+    pub fn meet(&self, others: Vec<Self>) -> Option<GeoObj<T>> {
+        let mut m : Vec<Vec<T>> = Vec::new();
+        let mut d : Vec<T> = Vec::new();
+        let mut sumv = RowVector::new(self.coords.clone());
+
+        m.push(self.coords.clone());
+        d.push(self.d.clone());
+
+        for (_, o) in others.iter().enumerate() {
+            m.push(o.coords.clone());
+            d.push(o.d.clone());
+            let rv = RowVector::new(o.coords.clone());
+            sumv = sumv.clone() + rv;
+        }
+
+        let omatrix = Matrix::new(m.clone());
+
+        if omatrix.rows > omatrix.cols {
+            // Problem is overdetermined.
+            return None;
+        }
+
+        if !omatrix.has_full_rank() {
+            // If the matrix has not full rank, this means some of the slices
+            // are parallel. Either those slices meet in all or no points.
+            // In any case ...
+            return None;
+        }
+
+        // Number of vectors must be zero or positive, otherwise the matrix
+        // would have been rejected as overdetermined.
+        let nr_of_vectors = omatrix.cols - omatrix.rows;
+
+        for _n in 0..nr_of_vectors {
+            // Create new slices to fill up the original matrix based on the
+            // sum of all the previous rows and adding the column index to
+            // each entry, to ensure linear independence.
+            let mut rv = Vec::new();
+            let mut a = T::zero();
+            for (_, c) in sumv.elem.iter().enumerate() {
+                rv.push(c.clone() + a.clone());
+                a = a.clone() + T::one();
+            }
+            m.push(rv.clone());
+            sumv = sumv.clone() + RowVector::new(rv.clone());
+        }
+
+        let matrix = Matrix::new(m);
+        if matrix.determinant().is_zero() {
+            panic!("[BUG] Creation of linear independent slices for calculation
+ of meet not correct");
+        }
+
+        let mut d0 = d.clone();
+        for _n in 0..nr_of_vectors {
+            d0.push(T::zero());
+        }
+
+        let d0vector = ColumnVector::new(d0);
+
+        let inv = matrix.inverse().unwrap();
+        let p0 = inv.clone()*d0vector;
+        let point0 = Point::new(p0.elem);
+
+        let mut vectors = Vec::new();
+        for n in 0..nr_of_vectors {
+            // create more points to create vectors in the line / plane /
+            //volume ... or, in general, meet.
+            let mut d1 = d.clone();
+            for r in 0..nr_of_vectors {
+                if r == n {
+                    d1.push(T::one());
+                } else {
+                    d1.push(T::zero());
+                }
+            }
+            let d1vector = ColumnVector::new(d1);
+            let p1 = inv.clone()*d1vector;
+            let point1 = Point::new(p1.elem);
+            let v1 = Vector::new(point0.clone(),point1.clone());
+            vectors.push(v1.columnvector().elem);
+        }
+
+        return Some(GeoObj{ point: point0, vectors: vectors });
+    }
+}
+
+impl<T> Slice<T>
+where
+    T: Zero + One,
+    T: Add<Output = T>,
     T: Sub<Output = T>,
     T: Mul<Output = T>,
     T: Div<Output = T>,
@@ -584,6 +694,19 @@ mod tests {
         assert!(p1.lies_on(&pi));
         assert!(p2.lies_on(&pi));
         assert!(p3.lies_on(&pi));
+    }
+
+    #[test]
+    fn three_plains_meet_in_one_point() {
+        let pi1 = Slice::new(vec![Ratio::from(1),Ratio::from(2),Ratio::from(-1)],Ratio::from(-3));
+        let pi2 = Slice::new(vec![Ratio::from(3),Ratio::from(7),Ratio::from(2)],Ratio::from(1));
+        let pi3 = Slice::new(vec![Ratio::from(4),Ratio::from(-2),Ratio::from(1)],Ratio::from(-2));
+
+        let p1 = pi1.clone().meet(vec![pi2.clone(),pi3.clone()]).unwrap();
+        let p2 = Point::new(vec![Ratio::from(-1),Ratio::from(0),Ratio::from(2)]);
+        assert_eq!(p1.point,p2);
+        let emptyvec : Vec<Vec<Ratio<i64>>> = Vec::new();
+        assert_eq!(p1.vectors,emptyvec);
     }
 
     #[test]
