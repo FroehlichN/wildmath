@@ -36,6 +36,32 @@ pub struct GeoObj<T>
 impl<T> GeoObj<T>
 where
     T: Zero,
+    T: Sub<Output = T>,
+    T: Mul<Output = T>,
+    T: Clone,
+{
+    pub fn new(point: Point<T>, vectors: Vec<Vec<T>>) -> GeoObj<T> {
+        if vectors.len() < 2 {
+            return GeoObj{ point: point, vectors: vectors };
+        }
+
+        // If more than one vector is given, check all of them are linear
+        // independent. Skip the ones, that are.
+        let mut m = Vec::new();
+        for (_, v) in vectors.iter().enumerate() {
+            m.push(v.clone());
+            let matrix = Matrix::new(m.clone());
+            if !matrix.has_full_rank() {
+                m.pop();
+            }
+        }
+        GeoObj{ point: point, vectors: m }
+    }
+}
+
+impl<T> GeoObj<T>
+where
+    T: Zero,
     T: PartialEq,
     T: Sub<Output = T>,
     T: Mul<Output = T>,
@@ -807,7 +833,18 @@ mod tests {
         assert!(plane3.contains(&line1));
         assert!(plane3.contains(&line2));
         assert!(!plane3.contains(&line3));
+    }
 
+    #[test]
+    fn line_passes_through_point() {
+        let p1 = Point::new(vec![3,1,1]);
+        let p2 = Point::new(vec![2,2,-1]);
+        let p3 = GeoObj::new(Point::new(vec![1,3,-3]),vec![]);
+        let p4 = GeoObj::new(Point::new(vec![0,4,3]),vec![]);
+        let v = Vector::new(p1.clone(),p2).columnvector().elem;
+        let l = GeoObj::new(p1,vec![v]);
+        assert!(l.contains(&p3));
+        assert!(!l.contains(&p4));
     }
 
     #[test]
