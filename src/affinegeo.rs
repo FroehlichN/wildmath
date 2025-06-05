@@ -33,6 +33,60 @@ pub struct GeoObj<T>
     vectors: Vec<Vec<T>>,
 }
 
+impl<T> GeoObj<T>
+where
+    T: Zero,
+    T: PartialEq,
+    T: Sub<Output = T>,
+    T: Mul<Output = T>,
+    T: Clone,
+{
+    pub fn contains(&self, other: &Self) -> bool {
+        if self.vectors.len().is_zero() {
+            if other.vectors.len().is_zero() {
+                return self.point == other.point;
+            } else {
+                return false;
+            }
+        }
+
+        // Lines cannot be contained in points and planes cannot be contained
+        // in lines and volumes cannot be contained in planes etc. so ...
+        if self.vectors.len() < other.vectors.len() {
+            return false;
+        }
+
+        // If the vector from self.point to other.point can be described as a
+        // linear combination of the self.vectors, then other.point lies in
+        // self. This is the case exactly if the matrix formed by the
+        // coordinates of these vectors has not full rank.
+        let mut m = Vec::new();
+        for (_, sv) in self.vectors.iter().enumerate() {
+            m.push(sv.clone());
+        }
+
+        let spopv = Vector::new(self.point.clone(),other.point.clone());
+        let mut pm = m.clone();
+        pm.push(spopv.rowvector().elem);
+        let pmatrix = Matrix::new(pm);
+        if pmatrix.has_full_rank() {
+            return false;
+        }
+
+        // Additionally, if every other.vector can be described as a linear
+        // combination of self.vectors, then other is contained in self.
+        for (_, ov) in other.vectors.iter().enumerate() {
+            let mut vm = m.clone();
+            vm.push(ov.clone());
+            let vmatrix = Matrix::new(vm);
+            if vmatrix.has_full_rank() {
+                return false;
+            }
+        }
+        return true;
+    }
+}
+
 
 /// Represents an n-D point
 #[derive(Debug, Clone)]
@@ -453,15 +507,29 @@ where
                 rv.push(c.clone() + a.clone());
                 a = a.clone() + T::one();
             }
-            m.push(rv.clone());
+
+            loop {
+                let mut mt = m.clone();
+                mt.push(rv.clone());
+                let matrixt = Matrix::new(mt);
+
+                if matrixt.has_full_rank() {
+                    // matrix is invertible
+                    m.push(rv.clone());
+                    break;
+                } else {
+                    // Increase last entry in new row, to make it linear
+                    // independent.
+                    let mut c = rv.pop().unwrap();
+                    c = c.clone() + T::one();
+                    rv.push(c);
+                }
+            }
+
             sumv = sumv.clone() + RowVector::new(rv.clone());
         }
 
-        let matrix = Matrix::new(m);
-        if matrix.determinant().is_zero() {
-            panic!("[BUG] Creation of linear independent slices for calculation
- of meet not correct");
-        }
+        let matrix = Matrix::new(m.clone());
 
         let mut d0 = d.clone();
         for _n in 0..nr_of_vectors {
@@ -707,6 +775,39 @@ mod tests {
         assert_eq!(p1.point,p2);
         let emptyvec : Vec<Vec<Ratio<i64>>> = Vec::new();
         assert_eq!(p1.vectors,emptyvec);
+    }
+
+    #[test]
+    fn three_plains_contain_the_point_in_which_they_meet() {
+        let pi1 = Slice::new(vec![Ratio::from(1),Ratio::from(2),Ratio::from(-1)],Ratio::from(-3));
+        let pi2 = Slice::new(vec![Ratio::from(3),Ratio::from(7),Ratio::from(2)],Ratio::from(1));
+        let pi3 = Slice::new(vec![Ratio::from(4),Ratio::from(-2),Ratio::from(1)],Ratio::from(-2));
+
+        let point = pi1.clone().meet(vec![pi2.clone(),pi3.clone()]).unwrap();
+        let plane1 = pi1.clone().meet(vec![]).unwrap();
+        let plane2 = pi2.clone().meet(vec![]).unwrap();
+        let plane3 = pi3.clone().meet(vec![]).unwrap();
+
+        assert!(plane1.contains(&point));
+        assert!(plane2.contains(&point));
+        assert!(plane3.contains(&point));
+
+        let line1 = pi2.clone().meet(vec![pi3.clone()]).unwrap();
+        let line2 = pi3.clone().meet(vec![pi1.clone()]).unwrap();
+        let line3 = pi1.clone().meet(vec![pi2.clone()]).unwrap();
+
+        assert!(!plane1.contains(&line1));
+        assert!(plane1.contains(&line2));
+        assert!(plane1.contains(&line3));
+
+        assert!(plane2.contains(&line1));
+        assert!(!plane2.contains(&line2));
+        assert!(plane2.contains(&line3));
+
+        assert!(plane3.contains(&line1));
+        assert!(plane3.contains(&line2));
+        assert!(!plane3.contains(&line3));
+
     }
 
     #[test]
