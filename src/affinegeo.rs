@@ -57,6 +57,19 @@ where
         }
         GeoObj{ point: point, vectors: m }
     }
+
+    pub fn from(points: Vec<Point<T>>) -> GeoObj<T> {
+        let point = points[0].clone();
+
+        let mut vectors = Vec::new();
+        for i in 1..points.len() {
+            let point1 = points[i].clone();
+            let v = Vector::new(point.clone(),point1);
+            let cv = v.columnvector();
+            vectors.push(cv.elem.clone());
+        }
+        GeoObj::new(point, vectors)
+    }
 }
 
 impl<T> GeoObj<T>
@@ -1053,6 +1066,17 @@ mod tests {
         let v = vec![Ratio::from(-3),Ratio::from(1),Ratio::from(0)];
         let l2 = GeoObj::new(p,vec![v]);
         assert_eq!(go,l2);
+    }
+
+    #[test]
+    fn three_points_define_a_plane() {
+        let p1 = Point::new(vec![1,0,-1]);
+        let p2 = Point::new(vec![2,1,3]);
+        let p3 = Point::new(vec![-4,2,5]);
+        let pi = GeoObj::from(vec![p1.clone(),p2.clone(),p3.clone()]);
+        assert!(pi.contains(&GeoObj{point: p1, vectors: vec![]}));
+        assert!(pi.contains(&GeoObj{point: p2, vectors: vec![]}));
+        assert!(pi.contains(&GeoObj{point: p3, vectors: vec![]}));
     }
 
     #[test]
