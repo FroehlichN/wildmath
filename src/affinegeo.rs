@@ -1080,6 +1080,19 @@ mod tests {
     }
 
     #[test]
+    fn one_point_and_two_vectors_define_a_plane() {
+        let a = Point::new(vec![1,0,-1]);
+        let u = vec![1,1,4];
+        let uv = Vector::from(u.clone());
+        let v = vec![-5,2,6];
+        let vv = Vector::from(v.clone());
+        let pi = GeoObj::new(a.clone(),vec![u.clone(),v.clone()]);
+        assert!(pi.contains(&GeoObj{point: a.clone(), vectors: vec![]}));
+        assert!(pi.contains(&GeoObj{point: (a.clone()+uv), vectors: vec![]}));
+        assert!(pi.contains(&GeoObj{point: (a+vv), vectors: vec![]}));
+    }
+
+    #[test]
     fn point_normal_form_of_a_line() {
         // In 2D, slices are lines
         let nv = Vector::from(vec![Ratio::from(2),Ratio::from(-1)]);
