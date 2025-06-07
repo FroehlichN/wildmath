@@ -1040,6 +1040,22 @@ mod tests {
     }
 
     #[test]
+    fn two_planes_meet_in_one_line_2() {
+        let pi1 = Slice::new(vec![Ratio::from(1),Ratio::from(3),Ratio::from(-2)],Ratio::from(2));
+        let pi2 = Slice::new(vec![Ratio::from(2),Ratio::from(6),Ratio::from(-5)],Ratio::from(3));
+        let go = pi1.meet(vec![pi2.clone()]).unwrap();
+        let plane1 = pi1.meet(vec![]).unwrap();
+        let plane2 = pi2.meet(vec![]).unwrap();
+        assert!(plane1.contains(&go));
+        assert!(plane2.contains(&go));
+
+        let p = Point::new(vec![Ratio::from(4),Ratio::from(0),Ratio::from(1)]);
+        let v = vec![Ratio::from(-3),Ratio::from(1),Ratio::from(0)];
+        let l2 = GeoObj::new(p,vec![v]);
+        assert_eq!(go,l2);
+    }
+
+    #[test]
     fn point_normal_form_of_a_line() {
         // In 2D, slices are lines
         let nv = Vector::from(vec![Ratio::from(2),Ratio::from(-1)]);
