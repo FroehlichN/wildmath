@@ -113,6 +113,23 @@ where
     }
 }
 
+impl<T> PartialEq for GeoObj<T>
+where
+    T: Zero,
+    T: PartialEq,
+    T: Sub<Output = T>,
+    T: Mul<Output = T>,
+    T: Clone,
+{
+    fn eq(&self, other: &Self) -> bool {
+        if self.vectors.len() == other.vectors.len() {
+            return self.contains(&other);
+        } else {
+            return false;
+        }
+    }
+}
+
 impl<T> GeoObj<T>
 where
     T: Zero + One,
@@ -167,9 +184,11 @@ where
         let mut m2 = matrix1.elem.clone();
         let mut r2 = res1.elem.clone();
 
-        for _n in 0..(matrix1.rows - matrix1.cols) {
-            m2.pop();
-            r2.pop();
+        if matrix1.rows > matrix1.cols {
+            for _n in 0..(matrix1.rows - matrix1.cols) {
+                m2.pop();
+                r2.pop();
+            }
         }
         let matrix2 = Matrix::new(m2);
         let res2 = ColumnVector::new(r2.clone());
@@ -232,8 +251,16 @@ where
                 }
             }
             let d1vector = ColumnVector::new(d1);
-            let p1 = inv.clone()*d1vector;
-            let point1 = Point::new(p1.elem);
+            let sol4 = inv.clone()*d1vector;
+
+            let mut l1 = ColumnVector::new(self.point.coords.clone());
+            for (i, v) in self.vectors.iter().enumerate() {
+                let mu = sol4.get(i);
+                let cv = ColumnVector::new(v.clone());
+                l1 = l1 + cv*mu;
+            }
+            let point1 = Point::new(l1.elem);
+
             let v1 = Vector::new(point.clone(),point1.clone());
             vectors.push(v1.columnvector().elem);
         }
@@ -988,6 +1015,28 @@ mod tests {
         assert!(plane.contains(&pm));
         let pr = Point::new(vec![Ratio::new(3,2),Ratio::from(0),Ratio::new(-7,2)]);
         assert_eq!(pm.point,pr);
+    }
+
+    #[test]
+    fn two_planes_meet_in_one_line() {
+        let pi1 = Slice::new(vec![Ratio::from(1),Ratio::from(2),Ratio::from(-1)],Ratio::from(-3));
+        let pi2 = Slice::new(vec![Ratio::from(3),Ratio::from(7),Ratio::from(2)],Ratio::from(1));
+        let plane1 = pi1.meet(vec![]).unwrap();
+        let plane2 = pi2.meet(vec![]).unwrap();
+
+        let go1 = pi1.meet(vec![pi2.clone()]).unwrap();
+        assert!(plane1.contains(&go1));
+        assert!(plane2.contains(&go1));
+
+        let go2 = plane1.meet(&plane2).unwrap();
+        assert!(plane1.contains(&go2));
+        assert!(plane2.contains(&go2));
+        assert_eq!(go1,go2);
+
+        let p = Point::new(vec![Ratio::from(-23),Ratio::from(10),Ratio::from(0)]);
+        let v = vec![Ratio::from(11),Ratio::from(-5),Ratio::from(1)];
+        let l2 = GeoObj::new(p,vec![v]);
+        assert_eq!(go2,l2);
     }
 
     #[test]

@@ -739,7 +739,7 @@ where
     type Output = ColumnVector<T>;
 
     fn mul(self, other: ColumnVector<T>) -> ColumnVector<T> {
-        let vrows = self.elem.len();
+        let vrows = other.elem.len();
         let rows = if vrows < self.cols {vrows} else {self.cols};
 
         let mut elem : Vec<T> = Vec::new();
