@@ -113,6 +113,135 @@ where
     }
 }
 
+impl<T> GeoObj<T>
+where
+    T: Zero + One,
+    T: PartialEq,
+    T: Neg<Output = T>,
+    T: Sub<Output = T>,
+    T: Mul<Output = T>,
+    T: Div<Output = T>,
+    T: Clone,
+{
+    pub fn meet(&self, other: &Self) -> Option<GeoObj<T>> {
+
+        if self.contains(other) {
+            return Some(other.clone());
+        }
+
+        if other.contains(self) {
+            return Some(self.clone());
+        }
+
+        // From the vectors of self and other form the columns of a matrix.
+        // If the matrix is not solvable, remomve rows, until the matrix
+        // becomes solvable and put those rows in an auxilliary matrix.
+        // The found solution also hast to be consistent with the auxilliary
+        // matrix. If it is not, return None.
+        // If no solvable matrix can be formed, return None.
+        // self:  p0 + pv0*mu0 + pv1*mu1 + pv2*mu2 + ...
+        // other: q0 + qv0*nu0 + qv1*nu1 + qv2*nu2 + ...
+        // matrix: [pv0 pv1 pv2 ... -qv0 -qv1 -qv2 ...]
+        // vector of unknowns: (mu0 mu1 mu2 ... nu0 nu1 nu2 ...)^T
+        // result vector: (q0-p0)
+        let mut m1 = Vec::new();
+        for (_, v) in self.vectors.iter().enumerate() {
+            m1.push(v.clone());
+        }
+        for (_, v) in other.vectors.iter().enumerate() {
+            let cv = -ColumnVector::new(v.clone());
+            m1.push(cv.elem.clone());
+        }
+        let matrix1 = Matrix::new(m1).transpose();
+
+        let cvo = ColumnVector::new(other.point.coords.clone());
+        let cvs = ColumnVector::new(self.point.coords.clone());
+        let res1 = cvo - cvs;
+
+        // Check if parallel
+        if !matrix1.has_full_rank() {
+            return None;
+        }
+
+        // If we have more rows than needed, remove them.
+        let mut m2 = matrix1.elem.clone();
+        let mut r2 = res1.elem.clone();
+
+        for _n in 0..(matrix1.rows - matrix1.cols) {
+            m2.pop();
+            r2.pop();
+        }
+        let matrix2 = Matrix::new(m2);
+        let res2 = ColumnVector::new(r2.clone());
+
+        // Fill up missing rows. Every missing row corresponds with a vector in
+        // the resulting meet.
+        let nr_of_vectors = matrix1.cols - matrix1.rows;
+
+        let mut m3 = matrix2.elem.clone();
+        let mut matrix3 = Matrix::new(m3.clone());
+        let mut r3 = res2.elem.clone();
+        for _n in 0..nr_of_vectors {
+            let mut a = T::one();
+            let mut row = Vec::new();
+            r3.push(T::zero());
+            for _c in 0..matrix2.cols {
+                row.push(a.clone());
+                a = a.clone() + T::one();
+            }
+            loop {
+                m3.push(row.clone());
+                matrix3 = Matrix::new(m3.clone());
+                if matrix3.has_full_rank() {
+                    break;
+                }
+                row.pop();
+                a = a.clone() + T::one();
+                row.push(a.clone());
+            }
+        }
+        let res3 = ColumnVector::new(r3);
+
+        let inv = matrix3.inverse().unwrap();
+        let sol3 = inv.clone()*res3.clone();
+
+        let residual = matrix1*sol3.clone() - res1;
+        if !residual.is_zero() {
+            // No consistent solution could be found. There is not meet.
+            return None;
+        }
+
+        let mut l0 = ColumnVector::new(self.point.coords.clone());
+        for (i, v) in self.vectors.iter().enumerate() {
+            let mu = sol3.get(i);
+            let cv = ColumnVector::new(v.clone());
+            l0 = l0 + cv*mu;
+        }
+        let point = Point::new(l0.elem);
+
+        let mut vectors = Vec::new();
+        for n in 0..nr_of_vectors {
+            // create more points to create vectors in the line / plane /
+            //volume ... or, in general, meet.
+            let mut d1 = r2.clone();
+            for r in 0..nr_of_vectors {
+                if r == n {
+                    d1.push(T::one());
+                } else {
+                    d1.push(T::zero());
+                }
+            }
+            let d1vector = ColumnVector::new(d1);
+            let p1 = inv.clone()*d1vector;
+            let point1 = Point::new(p1.elem);
+            let v1 = Vector::new(point.clone(),point1.clone());
+            vectors.push(v1.columnvector().elem);
+        }
+
+        return Some(GeoObj{ point: point, vectors: vectors });
+    }
+}
+
 
 /// Represents an n-D point
 #[derive(Debug, Clone)]
@@ -845,6 +974,20 @@ mod tests {
         let l = GeoObj::new(p1,vec![v]);
         assert!(l.contains(&p3));
         assert!(!l.contains(&p4));
+    }
+
+    #[test]
+    fn meet_of_line_and_plane() {
+        let p = Point::new(vec![Ratio::from(1),Ratio::from(2),Ratio::from(-3)]);
+        let v = vec![Ratio::from(-1),Ratio::from(4),Ratio::from(1)];
+        let l = GeoObj::new(p,vec![v]);
+        let pi = Slice::new(vec![Ratio::from(1),Ratio::from(3),Ratio::from(-1)],Ratio::from(5));
+        let plane = pi.meet(vec![]).unwrap();
+        let pm = l.meet(&plane).unwrap();
+        assert!(l.contains(&pm));
+        assert!(plane.contains(&pm));
+        let pr = Point::new(vec![Ratio::new(3,2),Ratio::from(0),Ratio::new(-7,2)]);
+        assert_eq!(pm.point,pr);
     }
 
     #[test]

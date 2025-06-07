@@ -224,6 +224,22 @@ where
     }
 }
 
+impl<T> ColumnVector<T>
+where
+    T: Zero,
+    T: Clone,
+{
+    pub fn is_zero(&self) -> bool {
+        let rows = self.elem.len();
+        for ri in 0..rows {
+            if !self.get(ri).is_zero() {
+                return false;
+            }
+        }
+        return true;
+    }
+}
+
 impl<T> Add for ColumnVector<T>
 where
     T: Zero,
@@ -288,6 +304,20 @@ where
     }
 }
 
+impl<T> Neg for ColumnVector<T>
+where
+    T: Zero + One,
+    T: Neg<Output = T>,
+    T: Mul<Output = T>,
+    T: Clone,
+{
+    type Output = ColumnVector<T>;
+
+    fn neg(self) -> ColumnVector<T> {
+        self*(-T::one())
+    }
+}
+
 impl<T> Mul<RowVector<T>> for ColumnVector<T>
 where
     T: Zero + One,
@@ -332,7 +362,7 @@ where
 pub struct Matrix<T> {
     pub rows: usize,
     pub cols: usize,
-    elem: Vec<Vec<T>>,
+    pub elem: Vec<Vec<T>>,
 }
 
 impl<T> Matrix<T>
