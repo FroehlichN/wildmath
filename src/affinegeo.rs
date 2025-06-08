@@ -962,6 +962,14 @@ mod tests {
     }
 
     #[test]
+    fn point_lies_on_line() {
+        let a = Point::new(vec![Ratio::new( 6, 1), Ratio::new( -3, 2)]);
+        let l = Slice::new(vec![Ratio::new(1, 1),  Ratio::new(2, 1)],
+                           Ratio::new(3, 1));
+        assert!(a.lies_on(&l));
+    }
+
+    #[test]
     fn points_lie_on_a_plane() {
         let p1 = Point::new(vec![3,0,0]);
         let p2 = Point::new(vec![0,1,0]);
