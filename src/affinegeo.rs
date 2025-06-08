@@ -628,9 +628,16 @@ pub struct Slice<T> {
 }
 
 impl<T> Slice<T>
+where
+    T: Zero,
 {
     pub fn new(coords: Vec<T>, d: T) -> Slice<T> {
-        Slice { coords: coords, d: d }
+        for (_, v) in coords.iter().enumerate() {
+            if !v.is_zero() {
+                return Slice { coords: coords, d: d };
+            }
+        }
+        panic!("Slice has proportion of all zeros.");
     }
 }
 
@@ -947,6 +954,12 @@ where
 mod tests {
     use super::*;
     use num::rational::{Ratio};
+
+    #[test]
+    #[should_panic]
+    fn invalid_two_line() {
+        Slice::new(vec![0,0],-1);
+    }
 
     #[test]
     fn points_lie_on_a_plane() {
