@@ -659,6 +659,41 @@ where
 impl<T> Slice<T>
 where
     T: Zero + One,
+    T: PartialEq,
+    T: Neg<Output = T>,
+    T: Add<Output = T>,
+    T: Sub<Output = T>,
+    T: Mul<Output = T>,
+    T: Div<Output = T>,
+    T: Clone,
+{
+    pub fn join(points: Vec<Point<T>>) -> Option<Slice<T>> {
+        let mut m = Vec::new();
+        for (_, v) in points.iter().enumerate() {
+            m.push(v.coords.clone());
+        }
+        let matrix = Matrix::new(m);
+        let det = matrix.determinant();
+
+        if det.is_zero() {
+            return None;
+        }
+
+        let adj = matrix.adjugate();
+
+        let mut d = Vec::new();
+        for _n in 0..(points.len()) {
+            d.push(T::one());
+        }
+        let dcv = ColumnVector::new(d);
+        let slice = adj*dcv;
+        Some(Slice::new(slice.elem,det))
+    }
+}
+
+impl<T> Slice<T>
+where
+    T: Zero + One,
     T: Add<Output = T>,
     T: Div<Output = T>,
     T: Mul<Output = T>,
@@ -970,6 +1005,15 @@ mod tests {
     }
 
     #[test]
+    fn points_lie_on_join() {
+        let a = Point::new(vec![Ratio::new( 6, 1), Ratio::new( -3, 2)]);
+        let b = Point::new(vec![Ratio::new( 4, 3), Ratio::new( 3, 5)]);
+        let l = Slice::join(vec![a.clone(),b.clone()]).unwrap();
+        assert!(a.lies_on(&l));
+        assert!(b.lies_on(&l));
+    }
+
+    #[test]
     fn points_lie_on_a_plane() {
         let p1 = Point::new(vec![3,0,0]);
         let p2 = Point::new(vec![0,1,0]);
@@ -1098,6 +1142,17 @@ mod tests {
         assert!(pi.contains(&GeoObj{point: p1, vectors: vec![]}));
         assert!(pi.contains(&GeoObj{point: p2, vectors: vec![]}));
         assert!(pi.contains(&GeoObj{point: p3, vectors: vec![]}));
+    }
+
+    #[test]
+    fn three_points_define_a_plane_2() {
+        let p1 = Point::new(vec![1,0,-1]);
+        let p2 = Point::new(vec![2,1,3]);
+        let p3 = Point::new(vec![-4,2,5]);
+        let pi = Slice::join(vec![p1.clone(),p2.clone(),p3.clone()]).unwrap();
+        assert!(p1.lies_on(&pi));
+        assert!(p2.lies_on(&pi));
+        assert!(p3.lies_on(&pi));
     }
 
     #[test]
