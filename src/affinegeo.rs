@@ -693,6 +693,26 @@ where
 
 impl<T> Slice<T>
 where
+    T: Zero,
+    T: Sub<Output = T>,
+    T: Mul<Output = T>,
+    T: Clone,
+{
+    pub fn is_parallel(&self, other: &Self) -> bool {
+        let mut m : Vec<Vec<T>> = Vec::new();
+        m.push(self.coords.clone());
+        m.push(other.coords.clone());
+        let matrix = Matrix::new(m);
+        if matrix.has_full_rank() {
+            return false;
+        } else {
+            return true;
+        }
+    }
+}
+
+impl<T> Slice<T>
+where
     T: Zero + One,
     T: Add<Output = T>,
     T: Div<Output = T>,
@@ -1011,6 +1031,13 @@ mod tests {
         let l = Slice::join(vec![a.clone(),b.clone()]).unwrap();
         assert!(a.lies_on(&l));
         assert!(b.lies_on(&l));
+    }
+
+    #[test]
+    fn parallel_lines() {
+        let l1 = Slice::new(vec![3, 4], 1);
+        let l2 = Slice::new(vec![6, 8], -5);
+        assert!(l1.is_parallel(&l2));
     }
 
     #[test]
