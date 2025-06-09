@@ -920,6 +920,22 @@ where
     }
 }
 
+impl<T> Slice<T>
+where
+    T: Zero + One,
+    T: Add<Output = T>,
+    T: Sub<Output = T>,
+    T: Mul<Output = T>,
+    T: Div<Output = T>,
+    T: Clone,
+{
+    pub fn spread(&self, other: &Self) -> T {
+        let sn = Vector::from(self.coords.clone());
+        let on = Vector::from(other.coords.clone());
+        sn.spread(&on)
+    }
+}
+
 
 /// Represents reflections and rotations
 #[derive(Debug, Clone)]
@@ -1406,6 +1422,16 @@ mod tests {
         let p2 = Point::new(vec![Ratio::new(6,1), Ratio::new(2,1)]);
         let q  = Ratio::new(17,1);
         assert_eq!(p1.quadrance(&p2),q);
+    }
+
+    #[test]
+    fn spread() {
+        let l1 = Slice::new(vec![Ratio::new(3,1),
+            Ratio::new(2,1)], Ratio::new(-1,1));
+        let l2 = Slice::new(vec![Ratio::new(1,1),
+            Ratio::new(-4,1)], Ratio::new(-2,1));
+        let s  = Ratio::new(196, 221);
+        assert_eq!(l1.spread(&l2),s);
     }
 
     #[test]
