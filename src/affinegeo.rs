@@ -713,6 +713,21 @@ where
 
 impl<T> Slice<T>
 where
+    T: Zero,
+    T: Add<Output = T>,
+    T: Mul<Output = T>,
+    T: Clone,
+{
+    pub fn is_perpendicular(self, other: &Self) -> bool {
+        let sv = RowVector::new(self.coords.clone());
+        let ov = ColumnVector::new(other.coords.clone());
+        let r = sv*ov;
+        r.is_zero()
+    }
+}
+
+impl<T> Slice<T>
+where
     T: Zero + One,
     T: Add<Output = T>,
     T: Div<Output = T>,
@@ -1038,6 +1053,13 @@ mod tests {
         let l1 = Slice::new(vec![3, 4], 1);
         let l2 = Slice::new(vec![6, 8], -5);
         assert!(l1.is_parallel(&l2));
+    }
+
+    #[test]
+    fn perpendicular_lines() {
+        let l1 = Slice::new(vec![3, 4], 1);
+        let l2 = Slice::new(vec![-4, 3], -2);
+        assert!(l1.is_perpendicular(&l2));
     }
 
     #[test]
