@@ -1063,6 +1063,26 @@ mod tests {
     }
 
     #[test]
+    fn meet_lies_on_lines() {
+        let l1 = Slice::new(vec![Ratio::new(3, 1),
+            Ratio::new(4, 1)], Ratio::new(1, 1));
+        let line1 = l1.meet(vec![]).unwrap();
+        let l2 = Slice::new(vec![Ratio::new(-4, 1),
+            Ratio::new(3, 1)], Ratio::new(-2, 1));
+        let line2 = l2.meet(vec![]).unwrap();
+        let a = l1.meet(vec![l2.clone()]).unwrap();
+        assert!(line1.contains(&a));
+        assert!(line2.contains(&a));
+    }
+
+    #[test]
+    fn equal_points() {
+        let p1 = Point::new(vec![Ratio::new(-3,1), Ratio::new(4,1)]);
+        let p2 = Point::new(vec![Ratio::new(-3,1), Ratio::new(4,1)]);
+        assert_eq!(p1,p2);
+    }
+
+    #[test]
     fn points_lie_on_a_plane() {
         let p1 = Point::new(vec![3,0,0]);
         let p2 = Point::new(vec![0,1,0]);
