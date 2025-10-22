@@ -46,11 +46,11 @@ where
         RatInf {a: a, b: b}
     }
 
-    pub fn is_infinite(self) -> bool {
+    pub fn is_infinite(&self) -> bool {
         !self.a.is_zero() && self.b.is_zero()
     }
 
-    pub fn is_nil(self) -> bool {
+    pub fn is_nil(&self) -> bool {
         self.a.is_zero() && self.b.is_zero()
     }
 }
@@ -62,6 +62,9 @@ where
     T: Clone,
 {
     fn eq(&self, other: &Self) -> bool {
+        if self.is_nil() && other.is_nil() {
+            return true;
+        }
         let lhs = self.a.clone() * other.b.clone();
         let rhs = self.b.clone() * other.a.clone();
         let s_non_zero = !self.a.is_zero() || !self.b.is_zero();
@@ -244,6 +247,12 @@ mod tests {
     fn equality_of_extended_rational_numbers3() {
         let a1 = RatInf::new(0,7);
         let a2 = RatInf::new(0,-24);
+        assert_eq!(a1, a2);
+    }
+    #[test]
+    fn equality_of_extended_rational_numbers4() {
+        let a1 = RatInf::new(0,0);
+        let a2 = RatInf::new(0,0);
         assert_eq!(a1, a2);
     }
     #[test]
