@@ -46,6 +46,14 @@ where
         RatInf {a: a, b: b}
     }
 
+    pub fn is_finite(&self) -> bool {
+        !self.b.is_zero()
+    }
+
+    pub fn is_standard(&self) -> bool {
+        !self.a.is_zero() || !self.b.is_zero()
+    }
+
     pub fn is_infinite(&self) -> bool {
         !self.a.is_zero() && self.b.is_zero()
     }
@@ -53,6 +61,7 @@ where
     pub fn is_nil(&self) -> bool {
         self.a.is_zero() && self.b.is_zero()
     }
+
 }
 
 impl<T> PartialEq for RatInf<T>
@@ -272,6 +281,24 @@ mod tests {
         let a1 = RatInf::new(0,0);
         let a2 = RatInf::new(0,4);
         assert!(!(a1==a2));
+    }
+    #[test]
+    fn finite_extednded_ration_numbers() {
+        let a1 = RatInf::new(0,0);
+        let a2 = RatInf::new(0,4);
+        assert!(!a1.is_finite());
+        assert!(a2.is_finite());
+    }
+    #[test]
+    fn standard_extednded_ration_numbers() {
+        let a1 = RatInf::new(0,0);
+        let a2 = RatInf::new(0,4);
+        let a3 = RatInf::new(1,4);
+        let a4 = RatInf::new(1,0);
+        assert!(!a1.is_standard());
+        assert!(a2.is_standard());
+        assert!(a3.is_standard());
+        assert!(a4.is_standard());
     }
 }
 
