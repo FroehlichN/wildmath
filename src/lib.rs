@@ -20,6 +20,7 @@ pub mod affinegeo2d;
 pub mod algebra;
 pub mod complex;
 pub mod extrational;
+pub mod rduad;
 pub mod finite;
 pub mod matrix;
 pub mod polyratio;
