@@ -187,6 +187,22 @@ where
     }
 }
 
+impl<T> RDuad<T>
+where
+    T: Num,
+    T: Integer,
+    T: Neg<Output = T>,
+    T: Clone,
+{
+    fn subgation(self) -> RDuad<T> {
+        RDuad {a: self.a, b: -(self.b)}
+    }
+
+    fn antigation(self) -> RDuad<T> {
+        RDuad {a: -(self.a), b: -(self.b)}
+    }
+}
+
 impl<T> Mul<T> for RDuad<T>
 where
     T: Num,
@@ -302,6 +318,145 @@ mod tests {
         assert!(a2.is_standard());
         assert!(a3.is_standard());
         assert!(a4.is_standard());
+    }
+    #[test]
+    fn arithmetic_with_ray_rational_numbers_1() {
+        let a1 = RDuad::new(2,3);
+        let a2 = RDuad::new(4,5);
+        let a3 = RDuad::new(22,15);
+        assert_eq!(a1+a2,a3);
+    }
+    #[test]
+    fn arithmetic_with_ray_rational_numbers_2() {
+        let a1 = RDuad::new(-5,2);
+        let a2 = RDuad::new(-3,-7);
+        let a3 = RDuad::new(29,-14);
+        assert_eq!(a1+a2,a3);
+        let a4 = RDuad::new(58,-28);
+        assert_eq!(a3,a4);
+        let a5 = RDuad::new(-29,14);
+        assert_ne!(a4,a5);
+    }
+    #[test]
+    fn arithmetic_with_ray_rational_numbers_3() {
+        let a1 = RDuad::new(1,-3);
+        let a2 = RDuad::new(-6,5);
+        let a3 = RDuad::new(-6,-15);
+        assert_eq!(a1*a2,a3);
+    }
+    #[test]
+    fn arithmetic_with_ray_rational_numbers_4() {
+        let a1 = RDuad::new(1,-3);
+        let a2 = RDuad::new(-6,5);
+        let a3 = RDuad::new(5,18);
+        assert_eq!(a1/a2,a3);
+    }
+    #[test]
+    fn arithmetic_with_ray_rational_numbers_5() {
+        let a1 = RDuad::new(0,-1);
+        let a2 = RDuad::new(2,8);
+        let a3 = RDuad::new(-2,-8);
+        assert_eq!(a1+a2,a3);
+    }
+    #[test]
+    fn arithmetic_with_ray_rational_numbers_6() {
+        let a1 = RDuad::new(0,-1);
+        let a2 = RDuad::new(2,8);
+        let a3 = RDuad::new(0,-8);
+        assert_eq!(a1*a2,a3);
+    }
+    #[test]
+    fn arithmetic_with_ray_rational_numbers_7() {
+        let a1 = RDuad::new(1,-0);
+        let a2 = RDuad::new(-2,3);
+        let a3 = RDuad::new(3,0);
+        assert_eq!(a1+a2,a3);
+    }
+    #[test]
+    fn arithmetic_with_ray_rational_numbers_8() {
+        let a1 = RDuad::new(1,-0);
+        let a2 = RDuad::new(-2,3);
+        let a3 = RDuad::new(-2,0);
+        assert_eq!(a1*a2,a3);
+    }
+    #[test]
+    fn arithmetic_with_ray_rational_numbers_9() {
+        let a1 = RDuad::new(0,2);
+        let a2 = RDuad::new(-3,0);
+        let a3 = RDuad::new(-6,0);
+        assert_eq!(a1+a2,a3);
+    }
+    #[test]
+    fn arithmetic_with_ray_rational_numbers_10() {
+        let a1 = RDuad::new(-5,-2);
+        let a2 = RDuad::new(4,-3);
+        let a3 = RDuad::new(23,6);
+        assert_eq!(a1-a2,a3);
+    }
+    #[test]
+    fn arithmetic_with_ray_rational_numbers_11() {
+        let a1 = RDuad::new(-5,-2);
+        let a2 = RDuad::new(-4,3);
+        let a3 = RDuad::new(-23,-6);
+        assert_eq!(a1-a2,a3);
+    }
+    #[test]
+    fn arithmetic_with_ray_rational_numbers_12() {
+        let a1 = RDuad::new(5,2);
+        let a2 = RDuad::new(4,-3);
+        let a3 = RDuad::new(-23,-6);
+        assert_eq!(a1-a2,a3);
+    }
+    #[test]
+    fn arithmetic_with_ray_rational_numbers_13() {
+        let a1 = RDuad::new(5,2);
+        let a2 = RDuad::new(-4,3);
+        let a3 = RDuad::new(23,6);
+        assert_eq!(a1-a2,a3);
+    }
+    #[test]
+    fn arithmetic_with_ray_rational_numbers_14() {
+        let a1 = RDuad::new(1,0);
+        let a2 = RDuad::new(-1,0);
+        let a3 = RDuad::new(0,0);
+        assert_eq!(a1+a2,a3);
+    }
+    #[test]
+    fn arithmetic_with_ray_rational_numbers_15() {
+        let a1 = RDuad::new(0,-1);
+        let a2 = RDuad::new(-2,-0);
+        let a3 = RDuad::new(2,0);
+        assert_eq!(a1+a2,a3);
+    }
+    #[test]
+    fn arithmetic_with_ray_rational_numbers_16() {
+        let a1 = RDuad::new(2,0);
+        let a2 = RDuad::new(-3,0);
+        let a3 = RDuad::new(-6,0);
+        assert_eq!(a1*a2,a3);
+    }
+    #[test]
+    fn negation_of_ray_rational_numbers() {
+        let a1 = RDuad::new(2,1);
+        let a2 = RDuad::new(-2,1);
+        assert_eq!(-a1,a2);
+    }
+    #[test]
+    fn subgation_of_ray_rational_numbers() {
+        let a1 = RDuad::new(4,3);
+        let a2 = RDuad::new(4,-3);
+        let a3 = RDuad::new(-4,3);
+        assert_eq!(a1.subgation(),a2);
+        assert_ne!(a2,a3);
+    }
+    #[test]
+    fn antigation_of_ray_rational_numbers() {
+        let a1 = RDuad::new(2,1);
+        let a2 = RDuad::new(4,2);
+        let a3 = RDuad::new(-2,-1);
+        assert_eq!(a1,a2);
+        assert_ne!(a1,a3);
+        assert_eq!(a1.antigation(),a3);
     }
 }
 
