@@ -18,6 +18,7 @@ limitations under the License.
 pub mod affinegeo;
 pub mod affinegeo2d;
 pub mod algebra;
+pub mod belnap;
 pub mod complex;
 pub mod extrational;
 pub mod rduad;
