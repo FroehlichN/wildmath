@@ -100,5 +100,16 @@ mod tests {
             }
         }
     }
+    #[test]
+    fn belnap_de_morgan() {
+        let v = [Belnap::True, Belnap::False, Belnap::Both, Belnap::Neither];
+
+        for a in v {
+            for b in v {
+                assert_eq!(!(a & b), !a | !b);
+                assert_eq!(!(a | b), !a & !b);
+            }
+        }
+    }
 }
 
