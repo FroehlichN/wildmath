@@ -21,7 +21,7 @@ use std::ops::{Not,BitOr,BitAnd};
 
 /// Implementation of Belnap's logic with four possible values
 #[derive(Debug,Clone,Copy,PartialEq)]
-enum Belnap {
+pub enum Belnap {
     True,
     False,
     Both,
@@ -72,6 +72,14 @@ impl BitAnd for Belnap {
             (Belnap::Neither,Belnap::Neither) => Belnap::Neither,
             (Belnap::Neither,Belnap::Both) => Belnap::False,
         }
+    }
+}
+
+impl Belnap
+{
+    /// Material implication
+    pub fn mimplies(self,other: Self) -> Belnap {
+        !self | other
     }
 }
 

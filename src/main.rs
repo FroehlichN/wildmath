@@ -21,12 +21,14 @@ use wildmath::create_polynumber_var;
 use wildmath::create_polynumber_one;
 use num::rational::{Ratio};
 use wildmath::matrix::{Matrix,ColumnVector};
+use wildmath::belnap::Belnap;
 
 fn main() {
     meet_of_fermat_and_bernoulli();
     eigenvalues_of_2d_matracies();
     line_trough_two_point();
     parabola_through_three_points();
+    belnap_logic_of_penguins_birds_flying();
 }
 
 fn meet_of_fermat_and_bernoulli() {
@@ -103,6 +105,28 @@ fn parabola_through_three_points() {
     println!("Parabola going through [-3,4], [0,-2], and [1,5]: y = {:?} + {:?} * x + {:?} * x^2",v2.get(0),v2.get(1),v2.get(2));
 }
 
+fn belnap_logic_of_penguins_birds_flying() {
+    println!("");
+    println!("phi = is it a penguin AND penguins are birds AND birds can fly AND penguins cannot fly.");
+    println!("In Belnap logic, there are non-false cases for this normally inconsistent truth statement phi:");
+    let v = [Belnap::True, Belnap::False, Belnap::Both, Belnap::Neither];
+
+    // is it a penguin?
+    for p in v {
+        // it is a bird?
+        for b in v {
+            // can it fly?
+            for f in v {
+                // is always false in classical two-valued logic
+                let phi = p & p.mimplies(b) & b.mimplies(f) & p.mimplies(!f);
+                // list the cases, when it is not
+                if !(phi == Belnap::False) {
+                    println!("phi = {:?}, P = {:?}, B = {:?}, F = {:?}",phi,p,b,f);
+                }
+            }
+        }
+    }
+}
 
 #[cfg(test)]
 mod tests {
