@@ -993,8 +993,8 @@ mod tests {
     #[test]
     fn left_translate_poly_numbers() {
         let p = PolyNumber::new_var(vec![1,3,4], "a" );
-        let L3p = PolyNumber::new_var(vec![46,27,4], "a" );
-        assert_eq!(p.ltrans(3),L3p);
+        let l3p = PolyNumber::new_var(vec![46,27,4], "a" );
+        assert_eq!(p.ltrans(3),l3p);
     }
     #[test]
     fn adding_bi_poly_numbers() {
@@ -1318,7 +1318,7 @@ mod tests {
         assert_eq!(a2,one.clone()*(bone.clone()*821)/(bone.clone()*441));
         let a3 = p.clone().newton_approx(five.clone(),a2);
         assert_eq!(a3,one.clone()*(bone.clone()*1535605927)/(bone.clone()*891756243));
-        let a4 = p.clone().newton_approx(five.clone(),a3.clone());
+        let _a4 = p.clone().newton_approx(five.clone(),a3.clone());
     }
     #[test]
     fn float_cube_root_of_five() {
@@ -1329,7 +1329,7 @@ mod tests {
         assert_approx_eq!(a2, 821.0f64/441.0f64, 0.0000001f64);
         let a3 = p.clone().newton_approx(5.0f64,a2);
         assert_approx_eq!(a3, 1535605927.0f64/891756243.0f64, 0.0000001f64);
-        let a4 = p.clone().newton_approx(5.0f64,a3);
+        let _a4 = p.clone().newton_approx(5.0f64,a3);
     }
     #[test]
     fn solving_polynumbers_with_roots() {

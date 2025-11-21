@@ -17,8 +17,6 @@ limitations under the License.
 
 use wildmath::affinegeo2d::*;
 use wildmath::polynumber::*;
-use wildmath::create_polynumber_var;
-use wildmath::create_polynumber_one;
 use num::rational::{Ratio};
 use wildmath::matrix::{Matrix,ColumnVector};
 use wildmath::belnap::Belnap;
@@ -136,8 +134,9 @@ mod tests {
     use wildmath::finite::*;
     use wildmath::create_finite_field;
     use wildmath::projectivegeo::*;
-    use wildmath::projectivegeo::Rotation;
     use num::rational::Ratio;
+    use wildmath::create_polynumber_var;
+    use wildmath::create_polynumber_one;
 
     create_finite_field!(3);
     create_finite_field!(5);
@@ -337,7 +336,6 @@ mod tests {
     }
     #[test]
     fn rotations_of_projective_one_points_in_f5() {
-        let am2 = ProjOnePoint::new(Finite5::new(1),Finite5::new(-2));
         let am1 = ProjOnePoint::new(Finite5::new(1),Finite5::new(-1));
         let a0 = ProjOnePoint::new(Finite5::new(1),Finite5::new(0));
         let a1 = ProjOnePoint::new(Finite5::new(1),Finite5::new(1));

@@ -21,7 +21,7 @@ use std::fmt::Debug;
 
 
 #[derive(Debug)]
-enum LinSummand<T> {
+pub enum LinSummand<T> {
     Number(T),
     Unknown(T),
 }

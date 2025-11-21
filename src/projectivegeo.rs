@@ -588,6 +588,7 @@ mod tests {
         assert_eq!(v1.quadrance(&v2),Ratio::new(-121,168));
         assert_eq!((v1*v3.clone()).quadrance(&(v2*v3)),Ratio::new(-121,168));
     }
+    #[test]
     #[should_panic]
     fn invalid_projective_vector() {
         ProjVector::new(0,vec![0,0]);

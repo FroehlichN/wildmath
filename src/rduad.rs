@@ -194,11 +194,11 @@ where
     T: Neg<Output = T>,
     T: Clone,
 {
-    fn subgation(self) -> RDuad<T> {
+    pub fn subgation(self) -> RDuad<T> {
         RDuad {a: self.a, b: -(self.b)}
     }
 
-    fn antigation(self) -> RDuad<T> {
+    pub fn antigation(self) -> RDuad<T> {
         RDuad {a: -(self.a), b: -(self.b)}
     }
 }
