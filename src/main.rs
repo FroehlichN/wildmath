@@ -28,6 +28,7 @@ fn main() {
     parabola_through_three_points();
     belnap_logic_of_penguins_birds_flying();
     belnap_logic_identity();
+    belnap_logic_implication();
 }
 
 fn meet_of_fermat_and_bernoulli() {
@@ -144,6 +145,29 @@ fn belnap_logic_identity() {
         let mut line = format!("{:<8}|",format!("{:?}",a));
         for b in v {
             let c = a.mimplies(b) & b.mimplies(a);
+            line = format!("{line}{:<8}",format!("{:?}",c));
+        }
+        println!("{line}");
+    }
+}
+
+fn belnap_logic_implication() {
+    println!("");
+    println!("Belnap logic of a => b AND -a => -b");
+    let v = [Belnap::True, Belnap::False, Belnap::Both, Belnap::Neither];
+
+    let mut header = format!("        |");
+    for a in v {
+        header = format!("{header}{:<8}",format!("{:?}",a));
+    }
+
+    println!("{header}");
+    println!("-----------------------------------------");
+
+    for a in v {
+        let mut line = format!("{:<8}|",format!("{:?}",a));
+        for b in v {
+            let c = a.mimplies(b) & (!a).mimplies(!b);
             line = format!("{line}{:<8}",format!("{:?}",c));
         }
         println!("{line}");
