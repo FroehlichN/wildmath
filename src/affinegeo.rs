@@ -491,6 +491,12 @@ where
         let n2 = n.clone()*n;
         T::one() - n2 / (self.quadrance() * other.quadrance())
     }
+    pub fn cross(&self, other: &Self) -> T {
+        T::one() - self.spread(&other)
+    }
+    pub fn twist(&self, other: &Self) -> T {
+        self.spread(&other)/self.cross(&other)
+    }
 }
 
 impl<T> Vector<T>
@@ -933,6 +939,12 @@ where
         let sn = Vector::from(self.coords.clone());
         let on = Vector::from(other.coords.clone());
         sn.spread(&on)
+    }
+    pub fn cross(&self, other: &Self) -> T {
+        T::one() - self.spread(&other)
+    }
+    pub fn twist(&self, other: &Self) -> T {
+        self.spread(&other)/self.cross(&other)
     }
 }
 
@@ -1622,6 +1634,81 @@ mod tests {
         assert_eq!(v14.quadrance(), Ratio::new(64,15));
         assert_eq!(v13.quadrance(), Ratio::new(16,3));
         assert_eq!(v24.quadrance(), Ratio::new(361,90));
+    }
+
+    #[test]
+    fn triple_spread_formula() {
+        let a0 = Point::new(vec![Ratio::new(0,1), Ratio::new(0,1)]);
+        let a1 = Point::new(vec![Ratio::new(3,1), Ratio::new(4,1)]);
+        let a2 = Point::new(vec![Ratio::new(7,1), Ratio::new(2,1)]);
+        let a3 = Point::new(vec![Ratio::new(2,1), Ratio::new(-3,1)]);
+
+        let v1 = Vector::new(a0.clone(),a1.clone());
+        let v2 = Vector::new(a0.clone(),a2.clone());
+        let v3 = Vector::new(a0.clone(),a3.clone());
+
+        let s1 = v2.spread(&v3);
+        let s2 = v1.spread(&v3);
+        let s3 = v1.spread(&v2);
+
+        let lh = s1 + s2 + s3;
+        let lhs = lh * lh;
+
+        let two = Ratio::new(2,1);
+        let four = Ratio::new(4,1);
+        let rh = s1*s1+s2*s2+s3*s3;
+        let rhs = two*rh + four*s1*s2*s3;
+
+        assert_eq!(lhs,rhs);
+    }
+
+    #[test]
+    fn triple_cross_formula() {
+        let a0 = Point::new(vec![Ratio::new(0,1), Ratio::new(0,1)]);
+        let a1 = Point::new(vec![Ratio::new(3,1), Ratio::new(4,1)]);
+        let a2 = Point::new(vec![Ratio::new(7,1), Ratio::new(2,1)]);
+        let a3 = Point::new(vec![Ratio::new(2,1), Ratio::new(-3,1)]);
+
+        let v1 = Vector::new(a0.clone(),a1.clone());
+        let v2 = Vector::new(a0.clone(),a2.clone());
+        let v3 = Vector::new(a0.clone(),a3.clone());
+
+        let c1 = v2.cross(&v3);
+        let c2 = v1.cross(&v3);
+        let c3 = v1.cross(&v2);
+
+        let lh = c1 + c2 + c3 - Ratio::new(1,1);
+        let lhs = lh * lh;
+
+        let four = Ratio::new(4,1);
+        let rhs = four*c1*c2*c3;
+
+        assert_eq!(lhs,rhs);
+    }
+
+    #[test]
+    fn triple_twist_formula() {
+        let a0 = Point::new(vec![Ratio::new(0,1), Ratio::new(0,1)]);
+        let a1 = Point::new(vec![Ratio::new(3,1), Ratio::new(4,1)]);
+        let a2 = Point::new(vec![Ratio::new(7,1), Ratio::new(2,1)]);
+        let a3 = Point::new(vec![Ratio::new(2,1), Ratio::new(-3,1)]);
+
+        let v1 = Vector::new(a0.clone(),a1.clone());
+        let v2 = Vector::new(a0.clone(),a2.clone());
+        let v3 = Vector::new(a0.clone(),a3.clone());
+
+        let t1 = v2.twist(&v3);
+        let t2 = v1.twist(&v3);
+        let t3 = v1.twist(&v2);
+
+        let lh = t1 + t2 + t3 - t1*t2*t3;
+        let lhs = lh * lh;
+
+        let two = Ratio::new(2,1);
+        let four = Ratio::new(4,1);
+        let rhs = four*(t1*t2+t2*t3+t3*t1+two*t1*t2*t3);
+
+        assert_eq!(lhs,rhs);
     }
 }
 
