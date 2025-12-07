@@ -758,25 +758,34 @@ where
 
         v1*(*metric).clone()*v2
     }
-    pub fn cross(&self, other: &Self) -> T {
-        let a = self.dx();
-        let b = self.dy();
-        let c = other.dx();
-        let d = other.dy();
-
-        let v1 = RowVector::new(vec![a, b]);
-        let m1 = Matrix::new(vec![vec![T::zero(), T::one()],
-                                  vec![T::zero() - T::one(), T::zero()]]);
-        let v2 = ColumnVector::new(vec![c, d]);
-
-        v1*m1*v2
-    }
     pub fn area(&self) -> T {
         (self.start.x.clone() * self.end.y.clone()
          - self.end.x.clone() * self.start.y.clone()) / (T::one() + T::one())
     }
     pub fn spread(&self, other: &Self) -> T {
         self.spread_blue(&other)
+    }
+    pub fn cross(&self, other: &Self) -> T {
+        T::one() - self.spread(&other)
+    }
+    pub fn twist(&self, other: &Self) -> T {
+        self.spread(&other)/self.cross(&other)
+    }
+    pub fn turn(&self, other: &Self) -> T {
+        let a = self.dx();
+        let b = self.dy();
+        let c = other.dx();
+        let d = other.dy();
+
+        (a.clone()*d.clone()-b.clone()*c.clone())/(a*c+b*d)
+    }
+    pub fn coturn(&self, other: &Self) -> T {
+        let a = self.dx();
+        let b = self.dy();
+        let c = other.dx();
+        let d = other.dy();
+
+        (a.clone()*c.clone()+b.clone()*d.clone())/(a*d-b*c)
     }
     pub fn quadrance_blue(&self) -> T {
         self.dot_blue(&self)
@@ -1733,4 +1742,101 @@ mod tests {
         let c = TwoCircle::new(a,r);
         assert_eq!(c.curvature(),Ratio::new(1,5));
     }
+    #[test]
+    fn triple_spread_formula() {
+        let a0 = TwoPoint::new(Ratio::new(0,1), Ratio::new(0,1));
+        let a1 = TwoPoint::new(Ratio::new(3,1), Ratio::new(4,1));
+        let a2 = TwoPoint::new(Ratio::new(7,1), Ratio::new(2,1));
+        let a3 = TwoPoint::new(Ratio::new(2,1), Ratio::new(-3,1));
+
+        let v1 = TwoVector::newse(a0.clone(),a1.clone());
+        let v2 = TwoVector::newse(a0.clone(),a2.clone());
+        let v3 = TwoVector::newse(a0.clone(),a3.clone());
+
+        let s1 = v2.spread(&v3);
+        let s2 = v1.spread(&v3);
+        let s3 = v1.spread(&v2);
+
+        let lh = s1 + s2 + s3;
+        let lhs = lh * lh;
+
+        let two = Ratio::new(2,1);
+        let four = Ratio::new(4,1);
+        let rh = s1*s1+s2*s2+s3*s3;
+        let rhs = two*rh + four*s1*s2*s3;
+
+        assert_eq!(lhs,rhs);
+    }
+    #[test]
+    fn triple_cross_formula() {
+        let a0 = TwoPoint::new(Ratio::new(0,1), Ratio::new(0,1));
+        let a1 = TwoPoint::new(Ratio::new(3,1), Ratio::new(4,1));
+        let a2 = TwoPoint::new(Ratio::new(7,1), Ratio::new(2,1));
+        let a3 = TwoPoint::new(Ratio::new(2,1), Ratio::new(-3,1));
+
+        let v1 = TwoVector::newse(a0.clone(),a1.clone());
+        let v2 = TwoVector::newse(a0.clone(),a2.clone());
+        let v3 = TwoVector::newse(a0.clone(),a3.clone());
+
+        let c1 = v2.cross(&v3);
+        let c2 = v1.cross(&v3);
+        let c3 = v1.cross(&v2);
+
+        let lh = c1 + c2 + c3 - Ratio::new(1,1);
+        let lhs = lh * lh;
+
+        let four = Ratio::new(4,1);
+        let rhs = four*c1*c2*c3;
+
+        assert_eq!(lhs,rhs);
+    }
+    #[test]
+    fn triple_twist_formula() {
+        let a0 = TwoPoint::new(Ratio::new(0,1), Ratio::new(0,1));
+        let a1 = TwoPoint::new(Ratio::new(3,1), Ratio::new(4,1));
+        let a2 = TwoPoint::new(Ratio::new(7,1), Ratio::new(2,1));
+        let a3 = TwoPoint::new(Ratio::new(2,1), Ratio::new(-3,1));
+
+        let v1 = TwoVector::newse(a0.clone(),a1.clone());
+        let v2 = TwoVector::newse(a0.clone(),a2.clone());
+        let v3 = TwoVector::newse(a0.clone(),a3.clone());
+
+        let t1 = v2.twist(&v3);
+        let t2 = v1.twist(&v3);
+        let t3 = v1.twist(&v2);
+
+        let lh = t1 + t2 + t3 - t1*t2*t3;
+        let lhs = lh * lh;
+
+        let two = Ratio::new(2,1);
+        let four = Ratio::new(4,1);
+        let rhs = four*(t1*t2+t2*t3+t3*t1+two*t1*t2*t3);
+
+        assert_eq!(lhs,rhs);
+    }
+    #[test]
+    fn triple_turn_formula() {
+        let v1 = TwoVector::new(Ratio::new(3,1),Ratio::new(4,1));
+        let v2 = TwoVector::new(Ratio::new(7,1),Ratio::new(2,1));
+        let v3 = TwoVector::new(Ratio::new(2,1),Ratio::new(-3,1));
+
+        let u1 = v2.turn(&v3);
+        let u2 = v3.turn(&v1);
+        let u3 = v1.turn(&v2);
+
+        assert_eq!(u1+u2+u3,u1*u2*u3);
+    }
+    #[test]
+    fn triple_coturn_formula() {
+        let v1 = TwoVector::new(Ratio::new(3,1),Ratio::new(4,1));
+        let v2 = TwoVector::new(Ratio::new(7,1),Ratio::new(2,1));
+        let v3 = TwoVector::new(Ratio::new(2,1),Ratio::new(-3,1));
+
+        let o1 = v2.coturn(&v3);
+        let o2 = v3.coturn(&v1);
+        let o3 = v1.coturn(&v2);
+
+        assert_eq!(o1*o2+o2*o3+o3*o1,Ratio::new(1,1));
+    }
+
 }
