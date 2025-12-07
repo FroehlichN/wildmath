@@ -19,6 +19,7 @@ limitations under the License.
 use num::{Num, Integer, Zero, One, Signed, signum};
 use std::ops::{Mul, Add, Sub, Div, Neg};
 use std::fmt;
+use crate::algebra::prime_factors;
 
 
 
@@ -61,7 +62,65 @@ where
     pub fn is_nil(&self) -> bool {
         self.a.is_zero() && self.b.is_zero()
     }
+}
 
+impl<T> RDuad<T>
+where
+    T: Num,
+    T: Integer,
+    T: Neg<Output = T>,
+    T: Clone,
+{
+    fn reduce(&self) -> RDuad<T> {
+        if self.a.clone().is_zero() {
+            return self.clone();
+        }
+
+        if self.b.clone().is_zero() {
+            return self.clone();
+        }
+
+
+        let mut af = prime_factors(self.a.clone());
+        let mut bf = prime_factors(self.b.clone());
+
+        let mut common_factor_found = false;
+        for (ai, av) in af.clone().iter().enumerate() {
+            if *av == -T::one() {
+                continue;
+            } else {
+                for (bi, bv) in bf.clone().iter().enumerate() {
+                    if *av == *bv {
+                        af.remove(ai);
+                        bf.remove(bi);
+                        common_factor_found = true;
+                        break;
+                    }
+                }
+            }
+            if common_factor_found {
+                break;
+            }
+        }
+
+        let mut ar = T::one();
+        for (_,v) in af.iter().enumerate() {
+            ar = ar*v.clone();
+        }
+
+        let mut br = T::one();
+        for (_,v) in bf.iter().enumerate() {
+            br = br*v.clone();
+        }
+
+        let result = RDuad::new(ar,br);
+
+        if common_factor_found {
+            return result.reduce();
+        } else {
+            return result;
+        }
+    }
 }
 
 impl<T> PartialEq for RDuad<T>
@@ -90,6 +149,7 @@ impl<T> Add for RDuad<T>
 where
     T: Num,
     T: Integer,
+    T: Neg<Output = T>,
     T: Clone,
 {
     type Output = RDuad<T>;
@@ -98,7 +158,8 @@ where
         let na = self.a.clone() * other.b.clone()
                 + self.b.clone() * other.a.clone();
         let nb = self.b.clone() * other.b.clone();
-        return RDuad {a: na, b: nb };
+        let n = RDuad {a: na, b: nb };
+        return n.reduce();
     }
 }
 
@@ -106,6 +167,7 @@ impl<T> Sub for RDuad<T>
 where
     T: Num,
     T: Integer,
+    T: Neg<Output = T>,
     T: Clone,
 {
     type Output = RDuad<T>;
@@ -114,7 +176,8 @@ where
         let na = self.a.clone() * other.b.clone()
                 - self.b.clone() * other.a.clone();
         let nb = self.b.clone() * other.b.clone();
-        return RDuad {a: na, b: nb };
+        let n = RDuad {a: na, b: nb };
+        return n.reduce();
     }
 }
 
@@ -122,6 +185,7 @@ impl<T> Mul for RDuad<T>
 where
     T: Num,
     T: Integer,
+    T: Neg<Output = T>,
     T: Clone,
 {
     type Output = RDuad<T>;
@@ -129,7 +193,8 @@ where
     fn mul(self, other: Self) -> RDuad<T> {
         let na = self.a.clone() * other.a.clone();
         let nb = self.b.clone() * other.b.clone();
-        return RDuad {a: na, b: nb };
+        let n = RDuad {a: na, b: nb };
+        return n.reduce();
     }
 }
 
@@ -137,6 +202,7 @@ impl<T> Div for RDuad<T>
 where
     T: Num,
     T: Integer,
+    T: Neg<Output = T>,
     T: Clone,
 {
     type Output = RDuad<T>;
@@ -144,7 +210,8 @@ where
     fn div(self, other: Self) -> RDuad<T> {
         let na = self.a.clone() * other.b.clone();
         let nb = self.b.clone() * other.a.clone();
-        return RDuad {a: na, b: nb };
+        let n = RDuad {a: na, b: nb };
+        return n.reduce();
     }
 }
 
@@ -152,6 +219,7 @@ impl<T> Zero for RDuad<T>
 where
     T: Num,
     T: Integer,
+    T: Neg<Output = T>,
     T: Clone,
 {
     fn zero() -> RDuad<T> {
@@ -167,6 +235,7 @@ impl<T> One for RDuad<T>
 where
     T: Num,
     T: Integer,
+    T: Neg<Output = T>,
     T: Clone,
 {
     fn one() -> RDuad<T> {
@@ -178,6 +247,7 @@ impl<T> Neg for RDuad<T>
 where
     T: Num,
     T: Integer,
+    T: Neg<Output = T>,
     T: Clone,
 {
     type Output = RDuad<T>;
@@ -207,6 +277,7 @@ impl<T> Mul<T> for RDuad<T>
 where
     T: Num,
     T: Integer,
+    T: Neg<Output = T>,
     T: Clone,
 {
     type Output = RDuad<T>;
@@ -220,6 +291,7 @@ impl<T> Div<T> for RDuad<T>
 where
     T: Num,
     T: Integer,
+    T: Neg<Output = T>,
     T: Clone,
 {
     type Output = RDuad<T>;
@@ -276,6 +348,20 @@ where
         let c = other.a.clone();
         let d = other.b.clone();
         RDuad::new(a.clone()*c.clone()+b.clone()*d.clone(), a*d-b*c)
+    }
+    pub fn turn_red(&self, other: &Self) -> RDuad<T> {
+        let a = self.a.clone();
+        let b = self.b.clone();
+        let c = other.a.clone();
+        let d = other.b.clone();
+        RDuad::new(a.clone()*d.clone()-b.clone()*c.clone(), a*c-b*d)
+    }
+    pub fn coturn_red(&self, other: &Self) -> RDuad<T> {
+        let a = self.a.clone();
+        let b = self.b.clone();
+        let c = other.a.clone();
+        let d = other.b.clone();
+        RDuad::new(a.clone()*c.clone()-b.clone()*d.clone(), a*d-b*c)
     }
 }
 
@@ -504,6 +590,30 @@ mod tests {
         let ro3 = v1.coturn(&v2);
 
         assert_eq!(ro1*ro2+ro2*ro3+ro3*ro1,RDuad::new(1,1));
+    }
+    #[test]
+    fn red_triple_turn_formula() {
+        let v1 = RDuad::new(3,4);
+        let v2 = RDuad::new(7,2);
+        let v3 = RDuad::new(2,-3);
+
+        let ru1 = v2.turn_red(&v3);
+        let ru2 = v3.turn_red(&v1);
+        let ru3 = v1.turn_red(&v2);
+
+        assert_eq!(ru1+ru2+ru3,-ru1*ru2*ru3);
+    }
+    #[test]
+    fn red_triple_coturn_formula() {
+        let v1 = RDuad::new(3,4);
+        let v2 = RDuad::new(7,2);
+        let v3 = RDuad::new(2,-3);
+
+        let ro1 = v2.coturn_red(&v3);
+        let ro2 = v3.coturn_red(&v1);
+        let ro3 = v1.coturn_red(&v2);
+
+        assert_eq!(ro1*ro2+ro2*ro3+ro3*ro1,RDuad::new(-1,1));
     }
 }
 

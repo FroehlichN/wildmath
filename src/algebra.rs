@@ -347,7 +347,7 @@ pub fn prime_factors<T>(number: T) -> Vec<T>
 where
     T: Integer,
     T: Neg<Output = T>,
-    T: Copy,
+    T: Clone,
 {
     let mut pf = Vec::new();
 
@@ -365,17 +365,17 @@ where
         rest = number;
     }
 
-    while rest != T::one() {
+    while rest.clone() != T::one() {
         loop {
-            let n = rest / factor;
-            if n * factor == rest {
-                pf.push(factor);
-                rest = n;
+            let n = rest.clone() / factor.clone();
+            if n.clone() * factor.clone() == rest.clone() {
+                pf.push(factor.clone());
+                rest = n.clone();
             } else {
                 break;
             }
         }
-        factor = factor + T::one();
+        factor = factor.clone() + T::one();
     }
     pf
 }
