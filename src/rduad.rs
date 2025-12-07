@@ -237,7 +237,7 @@ where
     T: std::fmt::Display,
 {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "({})/({})", self.a, self.b)
+        write!(f, "({})//({})", self.a, self.b)
     }
 }
 
@@ -253,6 +253,29 @@ where
          .field("numerator", &self.a)
          .field("denominator", &self.b)
          .finish()
+    }
+}
+
+impl<T> RDuad<T>
+where
+    T: Num,
+    T: Integer,
+    T: Neg<Output = T>,
+    T: Clone,
+{
+    pub fn turn(&self, other: &Self) -> RDuad<T> {
+        let a = self.a.clone();
+        let b = self.b.clone();
+        let c = other.a.clone();
+        let d = other.b.clone();
+        RDuad::new(a.clone()*d.clone()-b.clone()*c.clone(), a*c+b*d)
+    }
+    pub fn coturn(&self, other: &Self) -> RDuad<T> {
+        let a = self.a.clone();
+        let b = self.b.clone();
+        let c = other.a.clone();
+        let d = other.b.clone();
+        RDuad::new(a.clone()*c.clone()+b.clone()*d.clone(), a*d-b*c)
     }
 }
 
@@ -457,6 +480,30 @@ mod tests {
         assert_eq!(a1,a2);
         assert_ne!(a1,a3);
         assert_eq!(a1.antigation(),a3);
+    }
+    #[test]
+    fn triple_turn_formula() {
+        let v1 = RDuad::new(3,4);
+        let v2 = RDuad::new(7,2);
+        let v3 = RDuad::new(2,-3);
+
+        let ru1 = v2.turn(&v3);
+        let ru2 = v3.turn(&v1);
+        let ru3 = v1.turn(&v2);
+
+        assert_eq!(ru1+ru2+ru3,ru1*ru2*ru3);
+    }
+    #[test]
+    fn triple_coturn_formula() {
+        let v1 = RDuad::new(3,4);
+        let v2 = RDuad::new(7,2);
+        let v3 = RDuad::new(2,-3);
+
+        let ro1 = v2.coturn(&v3);
+        let ro2 = v3.coturn(&v1);
+        let ro3 = v1.coturn(&v2);
+
+        assert_eq!(ro1*ro2+ro2*ro3+ro3*ro1,RDuad::new(1,1));
     }
 }
 
