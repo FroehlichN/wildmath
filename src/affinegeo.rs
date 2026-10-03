@@ -1038,7 +1038,7 @@ where
         }
     }
 
-    pub fn from_anchor(anchor: Matrix<T>) -> Option<Isometry<T>> {
+    pub fn cap(anchor: Matrix<T>) -> Option<Isometry<T>> {
         let ro = anchor.little_cayley();
         match ro {
             None => return None,
@@ -1606,8 +1606,8 @@ mod tests {
                                   vec![-r12,zero,-r19],
                                   vec![-r28,r19,zero]]);
 
-        let rho_a = Isometry::from_anchor(ma).unwrap();
-        let rho_b = Isometry::from_anchor(mb).unwrap();
+        let rho_a = Isometry::cap(ma).unwrap();
+        let rho_b = Isometry::cap(mb).unwrap();
         let rho_c = rho_a*rho_b;
         let mc2 = rho_c.anchor().unwrap();
 
