@@ -975,7 +975,7 @@ where
         Isometry{ matrix: m }
     }
 
-    pub fn new_rotation(coords: Vec<T>) -> Isometry<T> {
+    pub fn half_turn(coords: Vec<T>) -> Isometry<T> {
         let refl= Self::new_reflection(coords);
         Isometry{ matrix: -refl.matrix }
     }
@@ -1044,6 +1044,28 @@ where
             None => return None,
             Some(r) => return Some(Isometry{ matrix: r }),
         }
+    }
+
+    pub fn half_spread(&self) -> T {
+        let three = T::one() + T::one() + T::one();
+        let four = three.clone() + T::one();
+        (three - self.matrix.trace())/four
+    }
+}
+
+impl<T> Isometry<T>
+where
+    T: Zero + One,
+    T: Neg<Output = T>,
+    T: Div<Output = T>,
+    T: Mul<Output = T>,
+    T: Sub<Output = T>,
+    T: Neg<Output = T>,
+    T: PartialEq,
+    T: Clone,
+{
+    pub fn is_half_turn(&self) -> bool {
+        self.half_spread() == T::one()
     }
 }
 
@@ -1555,6 +1577,45 @@ mod tests {
 
         let rho = sigmav1*sigmav2;
         assert!(rho.is_rotation());
+    }
+
+    #[test]
+    fn half_spread_identities() {
+        let zero = Ratio::from(0);
+        let one = Ratio::from(1);
+        let two = Ratio::from(2);
+        let t = Ratio::from(1);
+        let r = Ratio::from(2);
+        let s = Ratio::from(3);
+        let av = Matrix::new(vec![vec![zero,s,-r],
+                                  vec![-s,zero,t],
+                                  vec![r,-t,zero]]);
+        let elemv1 = vec![t,r,s];
+        let v1 = Vector::from(elemv1.clone());
+        let rho1 = Isometry::cap(av.clone()).unwrap();
+        assert!(rho1.is_rotation());
+        let anchor = rho1.anchor().unwrap();
+        assert_eq!(av,anchor);
+
+        let p = rho1.half_spread();
+        let q = v1.quadrance();
+
+        assert_eq!(p,q/(one+q));
+        assert_eq!(one-p,one/(one+q));
+        assert_eq!(one-two*p,(one-q)/(one+q));
+        assert_eq!(p*(one-p),q/((one+q)*(one+q)));
+        assert_eq!(q,p/(one-p));
+    }
+
+    #[test]
+    fn half_turn() {
+        let t = Ratio::from(1);
+        let r = Ratio::from(2);
+        let s = Ratio::from(3);
+        let elemv1 = vec![t,r,s];
+        let rho2 = Isometry::half_turn(elemv1);
+        assert!(rho2.is_rotation());
+        assert!(rho2.is_half_turn());
     }
 
     #[test]
