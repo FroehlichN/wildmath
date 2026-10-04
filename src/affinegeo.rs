@@ -1051,6 +1051,12 @@ where
         let four = three.clone() + T::one();
         (three - self.matrix.trace())/four
     }
+
+    pub fn spread(&self) -> T {
+        let p = self.half_spread();
+        let four = T::one() + T::one() + T::one() + T::one();
+        four*p.clone()*(T::one() - p)
+    }
 }
 
 impl<T> Isometry<T>
@@ -1616,6 +1622,20 @@ mod tests {
         let rho2 = Isometry::half_turn(elemv1);
         assert!(rho2.is_rotation());
         assert!(rho2.is_half_turn());
+    }
+
+    #[test]
+    fn spread_of_rotation_between_vectors() {
+        let ev1 = vec![Ratio::from(1),Ratio::from(2),Ratio::from(3)];
+        let ev2 = vec![Ratio::from(2),Ratio::from(1),Ratio::from(-1)];
+        let sigma1 = Isometry::new_reflection(ev1.clone());
+        let sigma2 = Isometry::new_reflection(ev2.clone());
+        let rho = sigma1*sigma2;
+        let p = rho.half_spread();
+        let v1 = Vector::from(ev1);
+        let v2 = Vector::from(ev2);
+        let s = v1.spread(&v2);
+        assert_eq!(p,s);
     }
 
     #[test]
